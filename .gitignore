@@ -1,0 +1,4 @@
+### Github File Push Ignore
+
+build
+*.fd
