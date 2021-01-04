@@ -19,7 +19,6 @@ typedef unsigned int uint32_t;
 typedef signed long long int int64_t;
 typedef unsigned long long int uint64_t;
 typedef uint64_t size_t;
-typedef uint64_t physaddr_t;
 
 
 

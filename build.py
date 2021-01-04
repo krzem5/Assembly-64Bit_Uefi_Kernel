@@ -29,9 +29,9 @@ for r,_,fl in os.walk("src"):
 				e_fl+=[f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-2:]==".c"):
 			print(f"Compiling C File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
-			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-mno-mmx","-mno-sse","-mno-sse2","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o","-Isrc\\include"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]).returncode!=0):
+			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-mno-mmx","-mno-sse","-mno-sse2","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 				quit()
-			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]
+			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-4:]==".asm"):
 			print(f"Compiling ASM File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
 			if (subprocess.run(["nasm.exe",ntpath.join(r,f).replace(chr(92),'/'),"-f","elf64","-Wall","-Werror","-o",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):

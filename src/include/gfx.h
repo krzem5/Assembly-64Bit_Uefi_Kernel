@@ -1,0 +1,24 @@
+#ifndef __KERNEL_GFX_H__
+#define __KERNEL_GFX_H__
+#include <types.h>
+#include <kmain.h>
+
+
+
+#define COLOR(r,g,b) ((color_t)(((r)<<16)|((g)<<8)|(b)))
+
+
+
+typedef uint32_t color_t;
+
+
+
+void gfx_init(KernelArgs ka);
+
+
+
+void gfx_print_char(char c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint8_t sc);
+
+
+
+#endif

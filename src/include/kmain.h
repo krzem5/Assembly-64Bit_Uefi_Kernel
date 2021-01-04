@@ -6,15 +6,23 @@
 
 
 
-typedef struct _KERNEL_ARGS{
-	void* vmem;
+typedef struct __KERNEL_ARGS{
+	uint32_t* vmem;
 	uint64_t vmem_l;
-} __attribute__((packed))* KernelArgs;
+	uint64_t vmem_w;
+	uint64_t vmem_h;
+	uint64_t mmap_l;
+	struct __KERNEL_ARGS_MEM_ENTRY{
+		uint64_t b;
+		uint64_t l;
+	} mmap[];
+} KernelArgs;
+typedef struct __KERNEL_ARGS_MEM_ENTRY KernelArgsMemEntry;
 
 
 
 #ifndef KERNEL_ARGS_STRUCT_ONLY
-void __attribute__((ms_abi)) kmain(KernelArgs a);
+void __attribute__((ms_abi)) kmain(KernelArgs ka);
 
 
 

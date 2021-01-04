@@ -4,6 +4,7 @@ section .entry
 	global _start
 	extern kmain
 	_start:
+		cli
 		mov rbp, (stack+STACKSIZE)
 		mov rsp, rbp
 		call kmain

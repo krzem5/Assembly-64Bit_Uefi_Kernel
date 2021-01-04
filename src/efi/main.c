@@ -24,7 +24,7 @@ extern void __attribute__((ms_abi)) asm_halt(void);
 
 
 
-typedef void (*kmain)(KernelArgs a);
+typedef void __attribute__((ms_abi)) (*kmain)(KernelArgs ka);
 
 
 
@@ -62,22 +62,6 @@ struct ELF_PROGRAM_HEADER{
 	uint64_t f_sz;
 	uint64_t m_sz;
 	uint64_t a;
-} __attribute__((packed));
-
-
-
-
-struct ELF_SECTION_HEADER{
-	uint32_t nm;
-	uint32_t t;
-	uint64_t f;
-	uint64_t va;
-	uint64_t off;
-	uint64_t sz;
-	uint32_t lnk;
-	uint32_t inf;
-	uint64_t a;
-	uint64_t e_sz;
 } __attribute__((packed));
 
 
@@ -197,7 +181,6 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	struct ELF_HEADER* kh=(struct ELF_HEADER*)k_dt;
-	uint64_t __TEMP_E=kh->e;
 	if (kh->m!=ELF_HEADER_MAGIC){
 		Print(L"Invalid ELF Magic: 0x%lx\r\n",kh->m);
 		goto _end;
@@ -222,21 +205,6 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Unsupported ELF Target Machine: %u\r\n",kh->tm);
 		goto _end;
 	}
-	// struct ELF_PROGRAM_HEADER* k_ph=(struct ELF_PROGRAM_HEADER*)((uint8_t*)k_dt+kh->ph_off);
-	// for (uint16_t i=0;i<kh->ph_n;i++){
-	// 	if ((k_ph+i)->t!=ELF_PT_LOAD){
-	// 		continue;
-	// 	}
-	// 	Print(L"Program Header: %lx, %lx, %llx, %llx, %llx, %llx, %llx, %llx\r\n",(k_ph+i)->t,(k_ph+i)->f,(k_ph+i)->off,(k_ph+i)->va,(k_ph+i)->pa,(k_ph+i)->f_sz,(k_ph+i)->m_sz,(k_ph+i)->a);
-	// }
-	// struct ELF_SECTION_HEADER* k_sh=(struct ELF_SECTION_HEADER*)((uint8_t*)k_dt+kh->sh_off);
-	// for (uint16_t i=0;i<kh->sh_n;i++){
-	// 	if ((k_sh+i)->t==0){
-	// 		continue;
-	// 	}
-	// 	Print(L"Section Header: %lu, %lx, %llx, %llx, %llx, %llx, %lx, %lx, %llx, %llx\r\n",(k_sh+i)->nm,(k_sh+i)->t,(k_sh+i)->f,(k_sh+i)->va,(k_sh+i)->off,(k_sh+i)->sz,(k_sh+i)->lnk,(k_sh+i)->inf,(k_sh+i)->a,(k_sh+i)->e_sz);
-	// }
-	// goto _end;
 	struct ELF_PROGRAM_HEADER* k_ph=(struct ELF_PROGRAM_HEADER*)((uint8_t*)k_dt+kh->ph_off);
 	uint64_t pb=-1;
 	uint64_t pe=0;
@@ -262,6 +230,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 	}
+	uint64_t ke=kh->e;
 	Print(L"Kernel Data: %llx - +%llx (%llu Pages); Entrypoint: %llx\r\n",pb,pe-pb,k_pg_c,kh->e);
 	void* k_pg;
 	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(pe-pb+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&k_pg);
@@ -275,6 +244,11 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 		st->BootServices->CopyMem(k_pg+(k_ph+i)->va-pb,k_dt+(k_ph+i)->off,(k_ph+i)->f_sz);
 		Print(L"Kernel Section#%u: %llx -> %llx\r\n",i,k_pg,(k_ph+i)->va);
+	}
+	s=st->BootServices->FreePages((EFI_PHYSICAL_ADDRESS)k_dt,(kf_i->FileSize+PAGE_SIZE-1)>>12);
+	if (EFI_ERROR(s)){
+		Print(L"Error Freeing Kernel File Pages!\r\n");
+		goto _end;
 	}
 	uint64_t mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	uint64_t mm_k=0;
@@ -311,31 +285,37 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 		nbf+=mm_ds;
 	}
-	uint64_t* mm=AllocatePool(sz*sizeof(uint64_t));
+	KernelArgs ka={
+		(uint32_t*)gop->Mode->FrameBufferBase,
+		gop->Mode->FrameBufferSize/sizeof(uint32_t),
+		gop->Mode->Info->HorizontalResolution,
+		gop->Mode->Info->VerticalResolution,
+		sz
+	};
 	uint64_t tm=0;
 	uint64_t j=0;
 	lt=0;
 	le=0;
-	*mm=0;
-	*(mm+1)=0;
+	ka.mmap[0].b=0;
+	ka.mmap[0].l=0;
 	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
 		if (((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory){
 			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory);
 			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
-				Print(L"  %llx - +%llx (%d)\r\n",(*(mm+j))&0x7fffffffffffffff,*(mm+j+1),*(mm+j)>>63);
-				j+=2;
-				*(mm+j)=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
-				*(mm+j+1)=0;
+				Print(L"  %llx - +%llx (%d)\r\n",(ka.mmap[j].b)&0x7fffffffffffffff,ka.mmap[j].l,ka.mmap[j].b>>63);
+				j++;
+				ka.mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
+				ka.mmap[j].l=0;
 				lt=t;
 			}
-			*(mm+j+1)+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
+			ka.mmap[j].l+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
 			le=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
 			tm+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
 		}
 		bf+=mm_ds;
 	}
 	FreePool(bf);
-	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(*(mm+j))&0x7fffffffffffffff,*(mm+j+1),*(mm+j)>>63,tm,sz);
+	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(ka.mmap[j].b)&0x7fffffffffffffff,ka.mmap[j].l,ka.mmap[j].b>>63,tm,sz);
 	uint64_t* pml4;
 	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,k_pg_c,(EFI_PHYSICAL_ADDRESS*)&pml4);
 	st->BootServices->SetMem(pml4,k_pg_c*PAGE_TABLE_MAX_ENTRIES*sizeof(uint64_t),0);
@@ -369,14 +349,6 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Not All Kernel Pages Used (%llu / %llu)!\r\n",pg_id,k_pg_c);
 		goto _end;
 	}
-	KernelArgs ka;
-	s=st->BootServices->AllocatePool(0x80000000,sizeof(struct _KERNEL_ARGS),(void**)&ka);
-	if (EFI_ERROR(s)){
-		Print(L"Failed to Allocate Memory for Kernel!\r\n");
-		goto _end;
-	}
-	ka->vmem=(void*)gop->Mode->FrameBufferBase;
-	ka->vmem_l=gop->Mode->FrameBufferSize;
 	uint64_t* cr3;
 	__asm__ volatile("mov %%cr3,%0":"=r"(cr3));
 	for (uint16_t i=0;i<PAGE_TABLE_MAX_ENTRIES/2;i++){
@@ -390,7 +362,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	do{
 		s=st->BootServices->AllocatePool(0x80000000,mm_sz,(void**)&bf);
 		if (EFI_ERROR(s)){
-			Print(L"AAA\r\n");
+			Print(L"This shouldn't happen?\r\n");
 			goto _end;
 		}
 		if (bf==NULL){
@@ -416,7 +388,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Failed to Virtualize EFI!\r\n");
 		goto _end;
 	}
-	((kmain)__TEMP_E)(ka);
+	((kmain)ke)(ka);
 _end:
 	asm_halt();
 }
