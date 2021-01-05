@@ -305,11 +305,12 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 	}
-	uint64_t* k_pg_pa=AllocatePool(((pe-pb+PAGE_SIZE-1)>>12)*sizeof(uint64_t));
+	ka->kp=(pe-pb+PAGE_SIZE-1)>>12;
+	uint64_t* k_pg_pa=AllocatePool(ka->kp*sizeof(uint64_t));
 	uint64_t i=0;
 	j=0;
 	uint64_t k=ka->mmap[0].b&0x7fffffffffffffff;
-	while (i<(pe-pb+PAGE_SIZE-1)>>12){
+	while (i<ka->kp){
 		if (k>=(ka->mmap[j].b&0x7fffffffffffffff)+ka->mmap[j].l){
 			j++;
 			if (j>=ka->mmap_l){
@@ -324,10 +325,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		k+=PAGE_SIZE;
 	}
 	uint64_t ke=kh->e;
-	Print(L"Kernel Data: %llx - +%llx (%llu Page Tables + %llu Pages); Entrypoint: %llx\r\n",pb,pe-pb,k_pg_c,(pe-pb+PAGE_SIZE-1)>>12,kh->e);
+	Print(L"Kernel Data: %llx - +%llx (%llu Page Tables + %llu Pages); Entrypoint: %llx\r\n",pb,pe-pb,k_pg_c,ka->kp,kh->e);
 	j=0;
 	k=-1;
-	for (uint64_t i=0;i<(pe-pb+PAGE_SIZE-1)>>12;i++){
+	for (uint64_t i=0;i<ka->kp;i++){
 		while ((k_ph+j)->t!=ELF_PT_LOAD){
 			j++;
 		}

@@ -16,6 +16,7 @@ typedef struct __KERNEL_ARGS{
 	uint64_t vmem_w;
 	uint64_t vmem_h;
 	void* acpi;
+	uint64_t kp;
 	uint64_t mmap_l;
 	KernelArgsMemEntry mmap[];
 } KernelArgs;
