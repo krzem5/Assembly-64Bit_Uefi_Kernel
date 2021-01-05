@@ -1,5 +1,6 @@
-#include <types.h>
 #include <cpu/isr.h>
+#include <libc/stdint.h>
+#include <libc/stddef.h>
 #include <cpu/idt.h>
 #include <driver/console.h>
 #include <fatal_error.h>

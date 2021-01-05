@@ -1,5 +1,5 @@
 #include <gfx.h>
-#include <types.h>
+#include <libc/stdint.h>
 #include <kmain.h>
 
 
@@ -11,11 +11,11 @@ uint64_t _gfx_vmem_h;
 
 
 
-void gfx_init(KernelArgs ka){
-	_gfx_vmem=ka.vmem;
-	_gfx_vmem_l=ka.vmem_l;
-	_gfx_vmem_w=ka.vmem_w;
-	_gfx_vmem_h=ka.vmem_h;
+void gfx_init(KernelArgs* ka){
+	_gfx_vmem=ka->vmem;
+	_gfx_vmem_l=ka->vmem_l;
+	_gfx_vmem_w=ka->vmem_w;
+	_gfx_vmem_h=ka->vmem_h;
 	for (uint64_t i=0;i<_gfx_vmem_l;i++){
 		*(_gfx_vmem+i)=0;
 	}

@@ -24,7 +24,7 @@ extern void __attribute__((ms_abi)) asm_halt(void);
 
 
 
-typedef void __attribute__((ms_abi)) (*kmain)(KernelArgs ka);
+typedef void __attribute__((ms_abi)) (*kmain)(KernelArgs* ka);
 
 
 
@@ -135,6 +135,77 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	Print(L"Found ACPI Table: %llx\r\n",acpi);
+	uint64_t mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
+	uint64_t mm_k=0;
+	uint64_t mm_ds=0;
+	uint32_t mm_v=0;
+	uint8_t* bf=NULL;
+	do{
+		bf=AllocatePool(mm_sz);
+		if (bf==NULL){
+			break;
+		}
+		s=st->BootServices->GetMemoryMap(&mm_sz,(EFI_MEMORY_DESCRIPTOR*)bf,&mm_k,&mm_ds,&mm_v);
+		if (s!=EFI_SUCCESS){
+			FreePool(bf);
+			mm_sz+=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
+		}
+	} while (s!=EFI_SUCCESS);
+	if (bf==NULL){
+		Print(L"Error!\r\n");
+		goto _end;
+	}
+	uint64_t sz=0;
+	uint8_t lt=0;
+	uint64_t le=-1;
+	uint8_t* nbf=bf;
+	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
+		if (((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory){
+			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory);
+			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart){
+				sz++;
+				lt=t;
+			}
+			le=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)nbf)->NumberOfPages*PAGE_SIZE;
+		}
+		nbf+=mm_ds;
+	}
+	KernelArgs* ka;
+	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(sizeof(KernelArgs)+sizeof(KernelArgsMemEntry)*sz+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&ka);
+	if (EFI_ERROR(s)){
+		Print(L"Unable Allocate Pages for Kernel Code!\r\n");
+		goto _end;
+	}
+	ka->vmem=(uint32_t*)gop->Mode->FrameBufferBase;
+	ka->vmem_l=gop->Mode->FrameBufferSize/sizeof(uint32_t);
+	ka->vmem_w=gop->Mode->Info->HorizontalResolution;
+	ka->vmem_h=gop->Mode->Info->VerticalResolution;
+	ka->acpi=acpi;
+	ka->mmap_l=sz;
+	uint64_t tm=0;
+	uint64_t j=0;
+	lt=0;
+	le=0;
+	ka->mmap[0].b=0;
+	ka->mmap[0].l=0;
+	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
+		if (((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory){
+			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory);
+			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
+				Print(L"  %llx - +%llx (%d)\r\n",(ka->mmap[j].b)&0x7fffffffffffffff,ka->mmap[j].l,ka->mmap[j].b>>63);
+				j++;
+				ka->mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
+				ka->mmap[j].l=0;
+				lt=t;
+			}
+			ka->mmap[j].l+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
+			le=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
+			tm+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
+		}
+		bf+=mm_ds;
+	}
+	FreePool(bf);
+	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(ka->mmap[j].b)&0x7fffffffffffffff,ka->mmap[j].l,ka->mmap[j].b>>63,tm,sz);
 	EFI_LOADED_IMAGE_PROTOCOL* lip;
 	s=st->BootServices->HandleProtocol(ih,&efi_lip_guid,(void**)&lip);
 	if (EFI_ERROR(s)){
@@ -160,7 +231,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	uint8_t kf_i_bf[sizeof(EFI_FILE_INFO)+128];
-	uint64_t sz=sizeof(EFI_FILE_INFO)+128;
+	sz=sizeof(EFI_FILE_INFO)+128;
 	s=kf->GetInfo(kf,&efi_fi_guid,&sz,&kf_i_bf);
 	if (EFI_ERROR(s)){
 		Print(L"Unable to Retrive Kernel File Info!\r\n");
@@ -212,6 +283,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if ((k_ph+i)->t!=ELF_PT_LOAD){
 			continue;
 		}
+		if (pb!=-1){
+			Print(L"Multiple PT_LOAD Section not Supported!\r\n");
+			goto _end;
+		}
 		if ((k_ph+i)->va<pb){
 			pb=(k_ph+i)->va;
 		}
@@ -230,92 +305,44 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 	}
-	uint64_t ke=kh->e;
-	Print(L"Kernel Data: %llx - +%llx (%llu Pages); Entrypoint: %llx\r\n",pb,pe-pb,k_pg_c,kh->e);
-	void* k_pg;
-	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(pe-pb+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&k_pg);
-	if (EFI_ERROR(s)){
-		Print(L"Unable Allocate Pages for Kernel Code!\r\n");
-		goto _end;
-	}
-	for (uint16_t i=0;i<kh->ph_n;i++){
-		if ((k_ph+i)->t!=ELF_PT_LOAD){
-			continue;
+	uint64_t* k_pg_pa=AllocatePool(((pe-pb+PAGE_SIZE-1)>>12)*sizeof(uint64_t));
+	uint64_t i=0;
+	j=0;
+	uint64_t k=ka->mmap[0].b&0x7fffffffffffffff;
+	while (i<(pe-pb+PAGE_SIZE-1)>>12){
+		if (k>=(ka->mmap[j].b&0x7fffffffffffffff)+ka->mmap[j].l){
+			j++;
+			if (j>=ka->mmap_l){
+				Print(L"Not enought Memory to Map the Kernel\r\n");
+				goto _end;
+			}
+			k=ka->mmap[j].b&0x7fffffffffffffff;
 		}
-		st->BootServices->CopyMem(k_pg+(k_ph+i)->va-pb,k_dt+(k_ph+i)->off,(k_ph+i)->f_sz);
-		Print(L"Kernel Section#%u: %llx -> %llx\r\n",i,k_pg,(k_ph+i)->va);
+		*(k_pg_pa+i)=k;
+		Print(L"Page[%llu] = %llx\r\n",i,k);
+		i++;
+		k+=PAGE_SIZE;
+	}
+	uint64_t ke=kh->e;
+	Print(L"Kernel Data: %llx - +%llx (%llu Page Tables + %llu Pages); Entrypoint: %llx\r\n",pb,pe-pb,k_pg_c,(pe-pb+PAGE_SIZE-1)>>12,kh->e);
+	j=0;
+	k=-1;
+	for (uint64_t i=0;i<(pe-pb+PAGE_SIZE-1)>>12;i++){
+		while ((k_ph+j)->t!=ELF_PT_LOAD){
+			j++;
+		}
+		if (k==-1){
+			k=(k_ph+j)->f_sz;
+		}
+		st->BootServices->CopyMem((void*)*(k_pg_pa+i),k_dt+(k_ph+j)->off+i*PAGE_SIZE,(k>PAGE_SIZE?PAGE_SIZE:k));
+		Print(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,k_dt+(k_ph+j)->off+i*PAGE_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_SIZE);
+		k-=PAGE_SIZE;
 	}
 	s=st->BootServices->FreePages((EFI_PHYSICAL_ADDRESS)k_dt,(kf_i->FileSize+PAGE_SIZE-1)>>12);
 	if (EFI_ERROR(s)){
 		Print(L"Error Freeing Kernel File Pages!\r\n");
 		goto _end;
 	}
-	uint64_t mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
-	uint64_t mm_k=0;
-	uint64_t mm_ds=0;
-	uint32_t mm_v=0;
-	uint8_t* bf=NULL;
-	do{
-		bf=AllocatePool(mm_sz);
-		if (bf==NULL){
-			break;
-		}
-		s=st->BootServices->GetMemoryMap(&mm_sz,(EFI_MEMORY_DESCRIPTOR*)bf,&mm_k,&mm_ds,&mm_v);
-		if (s!=EFI_SUCCESS){
-			FreePool(bf);
-			mm_sz+=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
-		}
-	} while (s!=EFI_SUCCESS);
-	if (bf==NULL){
-		Print(L"Error!\r\n");
-		goto _end;
-	}
-	sz=0;
-	uint8_t lt=0;
-	uint64_t le=-1;
-	uint8_t* nbf=bf;
-	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
-		if (((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory){
-			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory);
-			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart){
-				sz++;
-				lt=t;
-			}
-			le=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)nbf)->NumberOfPages*PAGE_SIZE;
-		}
-		nbf+=mm_ds;
-	}
-	KernelArgs ka={
-		(uint32_t*)gop->Mode->FrameBufferBase,
-		gop->Mode->FrameBufferSize/sizeof(uint32_t),
-		gop->Mode->Info->HorizontalResolution,
-		gop->Mode->Info->VerticalResolution,
-		sz
-	};
-	uint64_t tm=0;
-	uint64_t j=0;
-	lt=0;
-	le=0;
-	ka.mmap[0].b=0;
-	ka.mmap[0].l=0;
-	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
-		if (((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory){
-			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory);
-			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
-				Print(L"  %llx - +%llx (%d)\r\n",(ka.mmap[j].b)&0x7fffffffffffffff,ka.mmap[j].l,ka.mmap[j].b>>63);
-				j++;
-				ka.mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
-				ka.mmap[j].l=0;
-				lt=t;
-			}
-			ka.mmap[j].l+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
-			le=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
-			tm+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
-		}
-		bf+=mm_ds;
-	}
-	FreePool(bf);
-	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(ka.mmap[j].b)&0x7fffffffffffffff,ka.mmap[j].l,ka.mmap[j].b>>63,tm,sz);
 	uint64_t* pml4;
 	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,k_pg_c,(EFI_PHYSICAL_ADDRESS*)&pml4);
 	st->BootServices->SetMem(pml4,k_pg_c*PAGE_TABLE_MAX_ENTRIES*sizeof(uint64_t),0);
@@ -324,8 +351,9 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	li[1]=-1;
 	li[2]=-1;
 	li[3]=-1;
-	uint64_t* pt[4]={pml4,0,0,0};
+	uint64_t* pt[4]={pml4,NULL,NULL,NULL};
 	uint64_t pg_id=1;
+	j=0;
 	for (uint64_t i=pb;i<pe;i+=PAGE_SIZE){
 		for (uint8_t k=0;k<4;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;
@@ -338,13 +366,13 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 					pg_id++;
 				}
 				else{
-					*(pt[3]+l)=((uint64_t)k_pg+(i-pb))|0x003;
+					*(pt[3]+l)=(*(k_pg_pa+j))|0x003;
+					j++;
 				}
 			}
 		}
 		Print(L"Kernel Page: [%u : %u : %u : %u] ->  %llx\r\n",li[0],li[1],li[2],li[3],i);
 	}
-	(void)pt;
 	if (pg_id!=k_pg_c){
 		Print(L"Not All Kernel Pages Used (%llu / %llu)!\r\n",pg_id,k_pg_c);
 		goto _end;

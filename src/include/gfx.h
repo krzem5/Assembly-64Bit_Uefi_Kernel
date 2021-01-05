@@ -1,6 +1,6 @@
 #ifndef __KERNEL_GFX_H__
-#define __KERNEL_GFX_H__
-#include <types.h>
+#define __KERNEL_GFX_H__ 1
+#include <libc/stdint.h>
 #include <kmain.h>
 
 
@@ -13,7 +13,7 @@ typedef uint32_t color_t;
 
 
 
-void gfx_init(KernelArgs ka);
+void gfx_init(KernelArgs* ka);
 
 
 

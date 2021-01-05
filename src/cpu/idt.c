@@ -1,6 +1,7 @@
-#include <types.h>
 #include <cpu/idt.h>
-#include <heap.h>
+#include <libc/stdint.h>
+#include <libc/stddef.h>
+#include <libc/stdlib.h>
 
 
 
@@ -17,7 +18,7 @@ IDTR idtr={
 
 
 void setup_idt(void){
-	idt_l=heap_alloc(4096,16);
+	idt_l=malloc(4096);
 	idtr.b=(uint64_t)idt_l;
 	_asm_setup_idt();
 }

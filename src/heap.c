@@ -1,48 +1,22 @@
 #include <heap.h>
-#include <types.h>
+#include <libc/stdint.h>
+#include <libc/stddef.h>
+#include <kmain.h>
 #include <driver/console.h>
+#include <libc/_libc_internal.h>
 
 
 
-// extern uint64_t __KERNEL_OFFSET__[];
-// extern uint64_t __KERNEL_END__[];
-// extern uint64_t __MAX_KERNEL_HEAP_SIZE__[];
-#define __KERNEL_OFFSET__ 0
-#define __KERNEL_END__ 0
-#define __MAX_KERNEL_HEAP_SIZE__ 0x1000000
-uint64_t _kheap_ptr;
+struct __PAGE_TABLE_ENTRY{
+	void* pg;
+} _pg_h={
+	NULL
+};
 
 
 
-void init_heap(void){
-	_kheap_ptr=(uint64_t)__KERNEL_OFFSET__+(uint64_t)__KERNEL_END__;
+void init_heap(KernelArgs* ka){
+	__set_pg_func(NULL,NULL);
+	console_warn("AAA");
+	(void)ka;
 }
-
-
-
-void* heap_alloc(uint64_t sz,uint8_t a){
-	_kheap_ptr+=(_kheap_ptr%a!=0?a-(_kheap_ptr%a):0);
-	void* o=(void*)_kheap_ptr;
-	_kheap_ptr+=sz;
-	if (_kheap_ptr-(uint64_t)__KERNEL_OFFSET__-(uint64_t)__KERNEL_END__>=(uint64_t)__MAX_KERNEL_HEAP_SIZE__){
-		console_error("Kernel Heap Overflow!");
-		for(;;);
-	}
-	return o;
-}
-
-
-
-void* kmalloc(size_t sz);
-
-
-
-void* kcalloc(size_t c,size_t sz);
-
-
-
-void* krealloc(void* p,size_t sz);
-
-
-
-void kfree(void* p);

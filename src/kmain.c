@@ -1,5 +1,5 @@
 #include <kmain.h>
-#include <types.h>
+#include <libc/stdint.h>
 #include <gfx.h>
 #include <heap.h>
 #include <driver/console.h>
@@ -10,16 +10,15 @@
 
 
 
-void __attribute__((ms_abi)) kmain(KernelArgs ka){
+void __attribute__((ms_abi)) kmain(KernelArgs* ka){
+	init_heap(ka);
 	gfx_init(ka);
 	console_init(ka);
 	console_log("Starting System...");
-	console_log("Memory Map:");
-	for (uint64_t i=0;i<ka.mmap_l;i++){
-		console_continue("  d");
-	}
-	console_log("Initialising Heap...");
-	init_heap();
+	// console_log("Memory Map (%llu):",ka.mmap_l);
+	// for (uint64_t i=0;i<ka.mmap_l;i++){
+	// 	console_continue("  %llx - +%llx",ka.mmap[i].b,ka.mmap[i].l);
+	// }
 	console_log("Setting Up GDT...");
 	asm_setup_gdt();
 	console_log("Setting Up IDT...");
@@ -34,6 +33,7 @@ void __attribute__((ms_abi)) kmain(KernelArgs ka){
 	console_log("Enabling IDT...");
 	enable_idt();
 	console_ok("Reached the End!");
+	// *((char*)0xffffffffbfffffff)=0;
 	for (;;){
 		__asm__ volatile("cli");
 	}

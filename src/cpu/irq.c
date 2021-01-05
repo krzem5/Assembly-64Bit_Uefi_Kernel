@@ -1,5 +1,6 @@
-#include <types.h>
 #include <cpu/irq.h>
+#include <libc/stdint.h>
+#include <libc/stddef.h>
 #include <cpu/ports.h>
 #include <cpu/idt.h>
 

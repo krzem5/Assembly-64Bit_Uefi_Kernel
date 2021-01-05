@@ -1,7 +1,11 @@
 #include <driver/console.h>
-#include <types.h>
+#include <libc/stdint.h>
 #include <kmain.h>
 #include <gfx.h>
+#include <libc/stdio.h>
+#include <libc/stdarg.h>
+#include <libc/_libc_internal.h>
+#include <libc/stdlib.h>
 #include <font_8x8.h>
 
 
@@ -36,16 +40,7 @@ void _print_char(char c,color_t cl,uint64_t f[]){
 
 
 
-void console_init(KernelArgs ka){
-	_console_x=0;
-	_console_y=0;
-	_console_w=ka.vmem_w/(8*SCALE);
-	_console_h=ka.vmem_h/(8*SCALE);
-}
-
-
-
-void console_print(char* s,enum CONSOLE_PRINT_LEVEL l){
+void _print_header(enum CONSOLE_PRINT_LEVEL l){
 	if (l==CONSOLE_PRINT_LEVEL_CONTINUE){
 		_console_x+=8;
 	}
@@ -79,6 +74,21 @@ void console_print(char* s,enum CONSOLE_PRINT_LEVEL l){
 		_print_char(']',CONSOLE_PRINT_LEVEL_COLOR,DEFAULT_FONT);
 		_console_x++;
 	}
+}
+
+
+
+void console_init(KernelArgs* ka){
+	_console_x=0;
+	_console_y=0;
+	_console_w=ka->vmem_w/(8*SCALE);
+	_console_h=ka->vmem_h/(8*SCALE);
+}
+
+
+
+void console_print(const char* s,enum CONSOLE_PRINT_LEVEL l){
+	_print_header(l);
 	while (*s){
 		if (*s=='\n'){
 			_console_x=8;
@@ -91,4 +101,16 @@ void console_print(char* s,enum CONSOLE_PRINT_LEVEL l){
 	}
 	_console_x=0;
 	_console_y++;
+}
+
+
+
+void console_vprint(const char* s,enum CONSOLE_PRINT_LEVEL l,...){
+	char* bf;
+	va_list v;
+	va_start(v,l);
+	__vprintf_buffer(&bf,s,v);
+	console_print(bf,l);
+	va_end(v);
+	free(bf);
 }

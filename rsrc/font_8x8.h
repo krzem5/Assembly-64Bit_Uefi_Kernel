@@ -1,6 +1,6 @@
-#ifndef __KERNEL_FONT_8X8_FONT_H__
-#define __KERNEL_FONT_8X8_FONT_H__ 1
-#include <types.h>
+#ifndef __RSRC_FONT_8X8_FONT_H__
+#define __RSRC_FONT_8X8_FONT_H__ 1
+#include <libc/stdint.h>
 
 
 

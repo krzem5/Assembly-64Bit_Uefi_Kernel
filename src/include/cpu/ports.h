@@ -1,6 +1,6 @@
 #ifndef __KERNEL_CPU_PORTS_H__
-#define __KERNEL_CPU_PORTS_H__
-#include <types.h>
+#define __KERNEL_CPU_PORTS_H__ 1
+#include <libc/stdint.h>
 
 
 

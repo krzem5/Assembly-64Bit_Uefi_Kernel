@@ -5,8 +5,8 @@ section .entry
 	extern kmain
 	_start:
 		cli
-		mov rbp, (stack+STACKSIZE)
-		mov rsp, rbp
+		; mov rbp, (stack+STACKSIZE)
+		; mov rsp, rbp
 		call kmain
 		cli
 		._s_loop:

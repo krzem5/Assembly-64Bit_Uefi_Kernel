@@ -1,5 +1,5 @@
 #ifndef __KERNEL_FATAL_ERROR_H__
-#define __KERNEL_FATAL_ERROR_H__
+#define __KERNEL_FATAL_ERROR_H__ 1
 
 
 

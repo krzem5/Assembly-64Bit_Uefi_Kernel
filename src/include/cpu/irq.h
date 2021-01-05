@@ -1,6 +1,7 @@
 #ifndef __KERNEL_CPU_IRQ_H__
-#define __KERNEL_CPU_IRQ_H__
+#define __KERNEL_CPU_IRQ_H__ 1
 #include <cpu/idt.h>
+#include <libc/stdint.h>
 
 
 
