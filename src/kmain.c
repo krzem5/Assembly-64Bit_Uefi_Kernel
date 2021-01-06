@@ -11,30 +11,26 @@
 
 
 void __attribute__((ms_abi)) kmain(KernelArgs* ka){
-	init_heap(ka);
 	gfx_init(ka);
 	console_init(ka);
-	console_log("Starting System...");
-	// console_log("Memory Map (%llu):",ka.mmap_l);
-	// for (uint64_t i=0;i<ka.mmap_l;i++){
-	// 	console_continue("  %llx - +%llx",ka.mmap[i].b,ka.mmap[i].l);
-	// }
-	console_log("Setting Up GDT...");
+	init_heap(ka);
+	console_log("Starting System...\n");
+	console_log("Memory Map (%llu):\n",ka->mmap_l);
+	for (uint64_t i=0;i<ka->mmap_l;i++){
+		console_log("  %llx - +%llx (%u)\n",ka->mmap[i].b&0x7fffffffffffffff,ka->mmap[i].l,ka->mmap[i].b>>63);
+	}
+	console_log("Setting Up GDT...\n");
 	asm_setup_gdt();
-	console_log("Setting Up IDT...");
+	console_log("Setting Up IDT...\n");
 	setup_idt();
-	console_log("Setting Up Default ISRs...");
+	console_log("Setting Up Default ISRs...\n");
 	setup_isr();
-	console_log("Setting Up Default IRQs...");
+	console_log("Setting Up Default IRQs...\n");
 	setup_irq();
-	console_log("Setting Up IRQ Handlers...");
+	// console_log("Setting Up IRQ Handlers...\n");
 	// setup_keyboard();
 	// setup_timer();
-	console_log("Enabling IDT...");
+	console_log("Enabling IDT...\n");
 	enable_idt();
-	console_ok("Reached the End!");
-	// *((char*)0xffffffffbfffffff)=0;
-	for (;;){
-		__asm__ volatile("cli");
-	}
+	console_ok("Reached the End!\n");
 }

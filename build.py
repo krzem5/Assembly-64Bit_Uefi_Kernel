@@ -19,22 +19,22 @@ for r,_,fl in os.walk("src"):
 		if (r[:7]=="src\\efi"):
 			if (f[-2:]==".c"):
 				print(f"Compiling EFI-C File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o")
-				if (subprocess.run(["bash.exe","-c",f"gcc -Isrc/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {ntpath.join(r,f).replace(chr(92),'/')} -o build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]).returncode!=0):
+				if (subprocess.run(["bash.exe","-c",f"gcc -Isrc/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {ntpath.join(r,f).replace(chr(92),'/')} -o build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]).returncode!=0):
 					quit()
 				e_fl+=[f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]
 			elif (f[-4:]==".asm"):
 				print(f"Compiling EFI-ASM File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o")
-				if (subprocess.run(["nasm.exe",ntpath.join(r,f),"-f","elf64","-Wall","-Werror","-o",f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["nasm.exe",ntpath.join(r,f),"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 					quit()
 				e_fl+=[f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-2:]==".c"):
 			print(f"Compiling C File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
-			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-mno-mmx","-mno-sse","-mno-sse2","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-mno-mmx","-mno-sse","-mno-sse2","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 				quit()
 			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-4:]==".asm"):
 			print(f"Compiling ASM File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
-			if (subprocess.run(["nasm.exe",ntpath.join(r,f).replace(chr(92),'/'),"-f","elf64","-Wall","-Werror","-o",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+			if (subprocess.run(["nasm.exe",ntpath.join(r,f).replace(chr(92),'/'),"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 				quit()
 			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]
 print(f"Linking EFI OS Loader: {', '.join([e.replace(chr(92)+'$','$') for e in e_fl])}")

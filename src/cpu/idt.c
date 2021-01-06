@@ -2,6 +2,7 @@
 #include <libc/stdint.h>
 #include <libc/stddef.h>
 #include <libc/stdlib.h>
+#include <fatal_error.h>
 
 
 
@@ -18,7 +19,7 @@ IDTR idtr={
 
 
 void setup_idt(void){
-	idt_l=malloc(4096);
+	idt_l=CHECK_NOT_NULL(malloc(4096));
 	idtr.b=(uint64_t)idt_l;
 	_asm_setup_idt();
 }

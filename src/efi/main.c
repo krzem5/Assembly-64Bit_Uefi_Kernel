@@ -295,7 +295,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 	}
 	uint64_t k_pg_c=1;
-	uint16_t li[3]={-1,-1,-1};
+	uint16_t li[4]={-1,-1,-1,0};
 	for (uint64_t i=pb;i<pe;i+=PAGE_SIZE){
 		for (uint8_t k=0;k<3;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;

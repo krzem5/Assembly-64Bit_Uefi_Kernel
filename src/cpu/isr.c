@@ -85,13 +85,7 @@ void _handle_isr(exception_registers_t* r){
 		isr_hl[r->t](r);
 	}
 	else{
-		console_error(_f_msg[r->t]);
-		console_continue(" Exception Occured (");
-		// print_uint32(r->t);
-		console_continue("). Stopping Execution.\r\nRIP = ");
-		// print_laddr(r->rip);
-		console_continue(", Error Code = ");
-		// print_uint32(r->ec);
+		console_error("%s: Exception Occured (%lu). Stopping Execution\nRIP = %llx, Error Code = %lu\n",_f_msg[r->t],r->t,r->rip,r->ec);
 		asm_halt_cpu();
 	}
 }
