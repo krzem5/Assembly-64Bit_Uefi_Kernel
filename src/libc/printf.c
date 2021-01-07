@@ -22,6 +22,11 @@
 
 
 
+__vprintf_reserve_func_t __printf_rs;
+__vprintf_write_func_t __printf_cb;
+
+
+
 struct __VPRINTF_BUFFER_CTX{
 	char** bf;
 	uint64_t sz;
@@ -268,6 +273,13 @@ void __vprintf_buffer_reserve_func(uint64_t sz,void* ctx){
 void __vprintf_buffer_write_func(char c,void* ctx){
 	*(*((struct __VPRINTF_BUFFER_CTX*)ctx)->bf+((struct __VPRINTF_BUFFER_CTX*)ctx)->i)=c;
 	((struct __VPRINTF_BUFFER_CTX*)ctx)->i++;
+}
+
+
+
+void __printf_set_console_func(__vprintf_reserve_func_t rs,__vprintf_write_func_t cb){
+	__printf_rs=rs;
+	__printf_cb=cb;
 }
 
 
@@ -559,4 +571,14 @@ int __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t c
 		cb(0,ctx);
 	}
 	return i+1;
+}
+
+
+
+int printf(const char* t,...){
+	va_list v;
+	va_start(v,t);
+	int o=__vprintf_raw(NULL,__printf_rs,__printf_cb,t,v);
+	va_end(v);
+	return o;
 }

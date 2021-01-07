@@ -16,6 +16,10 @@ void __set_pg_func(__set_pg_acquire_func_t af,__set_pg_release_func_t rf);
 
 
 
+void __printf_set_console_func(__vprintf_reserve_func_t rs,__vprintf_write_func_t cb);
+
+
+
 int __vprintf_buffer(char** bf,const char* t,va_list v);
 
 

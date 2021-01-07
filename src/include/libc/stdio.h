@@ -3,4 +3,8 @@
 
 
 
+int printf(const char* t,...);
+
+
+
 #endif
