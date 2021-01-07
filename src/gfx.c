@@ -23,13 +23,34 @@ void gfx_init(KernelArgs* ka){
 
 
 
-void gfx_print_char(char c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint8_t sc){
-	if (c>0x7f){
-		c=0;
-	}
-	uint64_t g=f[(uint8_t)c];
+void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint8_t sc){
+	uint64_t g=f[(uint16_t)c*2];
 	uint64_t i=x+y*_gfx_vmem_w;
 	uint8_t j=0;
+	while (j<64){
+		if (sc==1){
+			*(_gfx_vmem+i)=(g&1?cl:0);
+		}
+		else{
+			color_t v=(g&1?cl:0);
+			uint64_t k=i;
+			for (uint8_t l=0;l<sc;l++){
+				for (uint8_t m=0;m<sc;m++){
+					*(_gfx_vmem+k+m)=v;
+				}
+				k+=_gfx_vmem_w;
+			}
+		}
+		g>>=1;
+		i+=sc;
+		j++;
+		if (j%8==0){
+			i+=_gfx_vmem_w*sc-8*sc;
+		}
+	}
+	g=f[(uint16_t)c*2+1];
+	i=x+(y+8*sc)*_gfx_vmem_w;
+	j=0;
 	while (j<64){
 		if (sc==1){
 			*(_gfx_vmem+i)=(g&1?cl:0);

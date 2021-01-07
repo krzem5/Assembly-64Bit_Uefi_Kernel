@@ -6,11 +6,11 @@
 #include <libc/stdarg.h>
 #include <libc/_libc_internal.h>
 #include <libc/stdlib.h>
-#include <font_8x8.h>
+#include <font_8x16.h>
 
 
 
-#define DEFAULT_FONT FONT_8X8_FONT
+#define DEFAULT_FONT FONT_8X16_FONT
 #define SCALE 2
 
 
@@ -29,7 +29,7 @@ void _console_print_char(char c,color_t cl,uint64_t f[]){
 		return;
 	}
 	if (c!=' '){
-		gfx_print_char(c,_console_x*SCALE*8,_console_y*SCALE*8,cl,f,SCALE);
+		gfx_print_char(c,_console_x*SCALE*8,_console_y*SCALE*16,cl,f,SCALE);
 	}
 	_console_x++;
 	if (_console_x==_console_w){
@@ -52,7 +52,7 @@ void console_init(KernelArgs* ka){
 	_console_x=0;
 	_console_y=0;
 	_console_w=ka->vmem_w/(8*SCALE);
-	_console_h=ka->vmem_h/(8*SCALE);
+	_console_h=ka->vmem_h/(16*SCALE);
 }
 
 

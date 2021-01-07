@@ -9,6 +9,9 @@
 
 #define PAGE_SIZE 0x1000
 #define PAGE_TABLE_MAX_ENTRIES 0x200
+#define MAX_KERNEL_SIZE 0x1000000
+#define PML4_PHYSICAL_ADDRESS 0x100000000
+#define EXTRA_KERNEL_PAGE_TABLES 512
 #define ELF_HEADER_MAGIC 0x464c457f
 #define ELF_HEADER_WORD_SIZE 2
 #define ELF_HEADER_ENDIANESS 1
@@ -102,7 +105,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if (EFI_ERROR(s)){
 			goto _end;
 		}
-		if (mi->PixelFormat!=PixelRedGreenBlueReserved8BitPerColor&&mi->PixelFormat!=PixelBlueGreenRedReserved8BitPerColor){
+		if (mi->PixelFormat!=PixelBlueGreenRedReserved8BitPerColor){
 			continue;
 		}
 		UINT64 p=(UINT64)mi->HorizontalResolution*mi->VerticalResolution;
@@ -120,7 +123,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	else{
-		Print(L"%x -> +%d, %d x %d @ %s\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution,(gop->Mode->Info->PixelFormat==PixelRedGreenBlueReserved8BitPerColor?L"RGB":L"BGR"));
+		Print(L"%x -> +%d, %d x %d\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution);
 	}
 	Print(L"Starting Loader...\r\n");
 	void* acpi=NULL;
@@ -173,7 +176,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	KernelArgs* ka;
 	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(sizeof(KernelArgs)+sizeof(KernelArgsMemEntry)*sz+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&ka);
 	if (EFI_ERROR(s)){
-		Print(L"Unable Allocate Pages for Kernel Code!\r\n");
+		Print(L"Unable Allocate Pages for Kernel Args!\r\n");
 		goto _end;
 	}
 	ka->vmem=(uint32_t*)gop->Mode->FrameBufferBase;
@@ -238,6 +241,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	EFI_FILE_INFO* kf_i=(EFI_FILE_INFO*)kf_i_bf;
+	if (kf_i->FileSize>MAX_KERNEL_SIZE){
+		Print(L"Kernel Too Big! (0x%llx > 0x%llx)\r\n",kf_i->FileSize,MAX_KERNEL_SIZE);
+		goto _end;
+	}
 	Print(L"Kernel File Size: %llu (%llu Pages)\r\n",kf_i->FileSize,(kf_i->FileSize+PAGE_SIZE-1)>>12);
 	void* k_dt;
 	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(kf_i->FileSize+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&k_dt);
@@ -294,17 +301,20 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			pe=(k_ph+i)->va+(k_ph+i)->m_sz;
 		}
 	}
-	uint64_t k_pg_c=1;
+	uint64_t pg_c=1+PAGE_TABLE_MAX_ENTRIES+EXTRA_KERNEL_PAGE_TABLES;
 	uint16_t li[4]={-1,-1,-1,0};
 	for (uint64_t i=pb;i<pe;i+=PAGE_SIZE){
 		for (uint8_t k=0;k<3;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;
 			if (li[k]!=l){
-				k_pg_c++;
+				if (k){
+					pg_c++;
+				}
 				li[k]=l;
 			}
 		}
 	}
+	pg_c=((pg_c+511)>>9)<<9;
 	ka->kp=(pe-pb+PAGE_SIZE-1)>>12;
 	uint64_t* k_pg_pa=AllocatePool(ka->kp*sizeof(uint64_t));
 	uint64_t i=0;
@@ -325,7 +335,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		k+=PAGE_SIZE;
 	}
 	uint64_t ke=kh->e;
-	Print(L"Kernel Data: %llx - +%llx (%llu Page Tables + %llu Pages); Entrypoint: %llx\r\n",pb,pe-pb,k_pg_c,ka->kp,kh->e);
+	Print(L"Kernel Data: %llx - +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
 	j=0;
 	k=-1;
 	for (uint64_t i=0;i<ka->kp;i++){
@@ -344,10 +354,15 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Error Freeing Kernel File Pages!\r\n");
 		goto _end;
 	}
-	uint64_t* pml4;
-	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,k_pg_c,(EFI_PHYSICAL_ADDRESS*)&pml4);
-	st->BootServices->SetMem(pml4,k_pg_c*PAGE_TABLE_MAX_ENTRIES*sizeof(uint64_t),0);
+	uint64_t* pml4=(uint64_t*)PML4_PHYSICAL_ADDRESS;
+	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,pg_c<<12,(EFI_PHYSICAL_ADDRESS*)&pml4);
+	st->BootServices->SetMem(pml4,pg_c<<12,0);
 	Print(L"PML4 Pointer: %llx\r\nSetting Up Tables...\r\n",pml4);
+	uint64_t* cr3;
+	__asm__ volatile("mov %%cr3,%0":"=r"(cr3));
+	for (uint16_t i=0;i<PAGE_TABLE_MAX_ENTRIES/2;i++){
+		*(pml4+i)=*(cr3+i);
+	}
 	li[0]=-1;
 	li[1]=-1;
 	li[2]=-1;
@@ -372,17 +387,32 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 				}
 			}
 		}
-		Print(L"Kernel Page: [%u : %u : %u : %u] ->  %llx\r\n",li[0],li[1],li[2],li[3],i);
+		Print(L"Kernel 4KB 	Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
 	}
-	if (pg_id!=k_pg_c){
-		Print(L"Not All Kernel Pages Used (%llu / %llu)!\r\n",pg_id,k_pg_c);
+	Print(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pb+MAX_KERNEL_SIZE,pg_c<<12,pg_c,((pb+MAX_KERNEL_SIZE)>>39)&0x1ff,((pb+MAX_KERNEL_SIZE)>>30)&0x1ff,((pb+MAX_KERNEL_SIZE)>>21)&0x1ff,((pb+MAX_KERNEL_SIZE)>>12)&0x1ff);
+	if (((pb+MAX_KERNEL_SIZE)>>12)&0x1ff){
+		Print(L"Page Tables not Properly Aligned!\r\n");
 		goto _end;
 	}
-	uint64_t* cr3;
-	__asm__ volatile("mov %%cr3,%0":"=r"(cr3));
-	for (uint16_t i=0;i<PAGE_TABLE_MAX_ENTRIES/2;i++){
-		*(pml4+i)=*(cr3+i);
+	if ((pg_c>>9)>PAGE_TABLE_MAX_ENTRIES){
+		Print(L"Too Many Page Tables! (%llu / %llu)\r\n",pg_c,PAGE_TABLE_MAX_ENTRIES<<9);
+		goto _end;
 	}
+	for (uint8_t k=0;k<3;k++){
+		uint16_t l=((pb+MAX_KERNEL_SIZE)>>(39-9*k))&0x1ff;
+		if (li[k]!=l){
+			li[k]=l;
+			Print(L"New Page Table: #%lu [%u] -> %llx\r\n",pg_id,k+1,pml4+pg_id*PAGE_TABLE_MAX_ENTRIES);
+			pt[k+1]=(uint64_t*)((uint8_t*)pml4+(pg_id<<12));
+			*(pt[k]+l)=((uint64_t)pt[k+1])|0x003;
+			pg_id++;
+		}
+	}
+	// for (uint16_t i=0;i<pg_c>>9;i++){
+	// 	*(pt[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<21))|0x083;
+	// 	Print(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],pb+MAX_KERNEL_SIZE+(i<<21));
+	// }
+	// goto _end;/****************************************************************************************************/
 	mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	mm_k=0;
 	mm_ds=0;

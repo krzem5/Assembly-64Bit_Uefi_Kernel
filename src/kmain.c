@@ -17,7 +17,11 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
 	for (uint64_t i=0;i<ka->mmap_l;i++){
-		console_log("  %llx - +%llx (%u)\n",ka->mmap[i].b&0x7fffffffffffffff,ka->mmap[i].l,ka->mmap[i].b>>63);
+		console_log("  %llx - +%llx",ka->mmap[i].b&0x7fffffffffffffff,ka->mmap[i].l);
+		if (ka->mmap[i].b>>63){
+			console_log(" (ACPI Tables)");
+		}
+		console_log("\n");
 	}
 	console_log("Setting Up GDT...\n");
 	asm_setup_gdt();

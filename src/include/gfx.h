@@ -17,7 +17,7 @@ void gfx_init(KernelArgs* ka);
 
 
 
-void gfx_print_char(char c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint8_t sc);
+void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint8_t sc);
 
 
 

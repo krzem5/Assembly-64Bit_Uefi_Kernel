@@ -69,7 +69,18 @@ void* malloc(size_t sz){
 
 
 
-void* calloc(size_t c,size_t sz);
+void* calloc(size_t c,size_t sz){
+	c*=sz;
+	void* o=malloc(c);
+	if (o==NULL){
+		return o;
+	}
+	while (c){
+		*((uint8_t*)o+c)=0;
+		c--;
+	}
+	return o;
+}
 
 
 
