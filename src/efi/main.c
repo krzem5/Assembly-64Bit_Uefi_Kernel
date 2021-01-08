@@ -79,8 +79,13 @@ static uint16_t* kernel_fp=L"KERNEL.ELF";
 
 void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	InitializeLib(ih,st);
+	EFI_STATUS s=st->BootServices->SetWatchdogTimer(0,0,0,NULL);
+	if (EFI_ERROR(s)){
+		Print(L"Unable to Disable the Reset Timer!\r\n");
+		goto _end;
+	}
 	EFI_GRAPHICS_OUTPUT_PROTOCOL* gop;
-	EFI_STATUS s=st->BootServices->LocateProtocol(&efi_gop_guid,NULL,(void**)&gop);
+	s=st->BootServices->LocateProtocol(&efi_gop_guid,NULL,(void**)&gop);
 	if (EFI_ERROR(s)){
 		Print(L"Unable to load GOP!\r\n");
 		goto _end;
@@ -162,7 +167,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t le=-1;
 	uint8_t* nbf=bf;
 	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
-		if (((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory){
+		if (((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory){
 			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory);
 			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart){
 				sz++;
@@ -191,7 +196,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->mmap[0].b=0;
 	ka->mmap[0].l=0;
 	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
-		if (((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory){
+		if (((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory){
 			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory);
 			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
 				Print(L"  %llx - +%llx (%d)\r\n",(ka->mmap[j].b)&0x7fffffffffffffff,ka->mmap[j].l,ka->mmap[j].b>>63);
@@ -357,7 +362,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->pml4=(uint64_t*)PML4_PHYSICAL_ADDRESS;
 	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,ka->t_pg<<12,(EFI_PHYSICAL_ADDRESS*)&ka->pml4);
 	uint64_t* cr3=asm_clear_pages_get_cr3((uint64_t)ka->pml4,ka->t_pg);
-	Print(L"PML4 Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
+	Print(L"PML4 VA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
 	for (uint16_t i=0;i<PAGE_TABLE_MAX_ENTRIES/2;i++){
 		*(ka->pml4+i)=*(cr3+i);
 	}
@@ -447,6 +452,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		((EFI_MEMORY_DESCRIPTOR*)bf)->VirtualStart=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart;
 	}
 	asm_enable_paging((uint64_t)ka->pml4);
+	ka->pml4=(uint64_t*)(pb+MAX_KERNEL_SIZE+IDT_SIZE);
 	s=st->RuntimeServices->SetVirtualAddressMap(mm_sz,mm_ds,mm_v,(EFI_MEMORY_DESCRIPTOR*)bf);
 	if (EFI_ERROR(s)){
 		Print(L"Failed to Virtualize EFI!\r\n");

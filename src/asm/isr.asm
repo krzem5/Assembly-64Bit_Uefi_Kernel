@@ -50,8 +50,8 @@ _isr_h_call:
 	push rdx
 	push rcx
 	push rbx
-	push rax
 	mov rcx, rsp
+	push rax
 	call _handle_isr
 	pop rax
 	pop rbx
@@ -68,14 +68,14 @@ _isr_h_call:
 	pop r13
 	pop r14
 	pop r15
-	pop rax
+	sti
 	ret
 
 
 
 _asm_isr0:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x00
 	call _isr_h_call
 	add rsp, 16
@@ -85,7 +85,7 @@ _asm_isr0:
 
 _asm_isr1:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x01
 	call _isr_h_call
 	add rsp, 16
@@ -95,7 +95,7 @@ _asm_isr1:
 
 _asm_isr2:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x02
 	call _isr_h_call
 	add rsp, 16
@@ -105,7 +105,7 @@ _asm_isr2:
 
 _asm_isr3:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x03
 	call _isr_h_call
 	add rsp, 16
@@ -115,7 +115,7 @@ _asm_isr3:
 
 _asm_isr4:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x04
 	call _isr_h_call
 	add rsp, 16
@@ -125,7 +125,7 @@ _asm_isr4:
 
 _asm_isr5:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x05
 	call _isr_h_call
 	add rsp, 16
@@ -135,7 +135,7 @@ _asm_isr5:
 
 _asm_isr6:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x06
 	call _isr_h_call
 	add rsp, 16
@@ -145,7 +145,7 @@ _asm_isr6:
 
 _asm_isr7:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x07
 	call _isr_h_call
 	add rsp, 16
@@ -163,7 +163,7 @@ _asm_isr8:
 
 _asm_isr9:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x0
 	call _isr_h_call
 	add rsp, 16
@@ -213,7 +213,7 @@ _asm_isr14:
 
 _asm_isr15:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x0f
 	call _isr_h_call
 	add rsp, 16
@@ -223,7 +223,7 @@ _asm_isr15:
 
 _asm_isr16:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x10
 	call _isr_h_call
 	add rsp, 16
@@ -233,7 +233,7 @@ _asm_isr16:
 
 _asm_isr17:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x11
 	call _isr_h_call
 	add rsp, 16
@@ -243,7 +243,7 @@ _asm_isr17:
 
 _asm_isr18:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x12
 	call _isr_h_call
 	add rsp, 16
@@ -253,7 +253,7 @@ _asm_isr18:
 
 _asm_isr19:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x13
 	call _isr_h_call
 	add rsp, 16
@@ -263,7 +263,7 @@ _asm_isr19:
 
 _asm_isr20:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x14
 	call _isr_h_call
 	add rsp, 16
@@ -273,7 +273,7 @@ _asm_isr20:
 
 _asm_isr21:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x15
 	call _isr_h_call
 	add rsp, 16
@@ -283,7 +283,7 @@ _asm_isr21:
 
 _asm_isr22:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x16
 	call _isr_h_call
 	add rsp, 16
@@ -293,7 +293,7 @@ _asm_isr22:
 
 _asm_isr23:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x17
 	call _isr_h_call
 	add rsp, 16
@@ -303,7 +303,7 @@ _asm_isr23:
 
 _asm_isr24:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x18
 	call _isr_h_call
 	add rsp, 16
@@ -313,7 +313,7 @@ _asm_isr24:
 
 _asm_isr25:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x19
 	call _isr_h_call
 	add rsp, 16
@@ -323,7 +323,7 @@ _asm_isr25:
 
 _asm_isr26:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x1a
 	call _isr_h_call
 	add rsp, 16
@@ -333,7 +333,7 @@ _asm_isr26:
 
 _asm_isr27:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x1b
 	call _isr_h_call
 	add rsp, 16
@@ -343,7 +343,7 @@ _asm_isr27:
 
 _asm_isr28:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x1c
 	call _isr_h_call
 	add rsp, 16
@@ -353,7 +353,7 @@ _asm_isr28:
 
 _asm_isr29:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x1d
 	call _isr_h_call
 	add rsp, 16
@@ -363,7 +363,7 @@ _asm_isr29:
 
 _asm_isr30:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x1e
 	call _isr_h_call
 	add rsp, 16
@@ -373,7 +373,7 @@ _asm_isr30:
 
 _asm_isr31:
 	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x1f
 	call _isr_h_call
 	add rsp, 16

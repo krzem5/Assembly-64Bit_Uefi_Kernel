@@ -36,5 +36,6 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	// setup_timer();
 	console_log("Enabling IDT...\n");
 	enable_idt();
+	// *((char*)0x7fffffffffffffff)=0;
 	console_ok("Reached the End!\n");
 }

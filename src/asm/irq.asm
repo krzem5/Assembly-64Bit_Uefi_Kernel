@@ -20,7 +20,6 @@ extern _handle_irq
 
 
 _irq_h_call:
-	pushf
 	push r15
 	push r14
 	push r13
@@ -53,134 +52,117 @@ _irq_h_call:
 	pop r13
 	pop r14
 	pop r15
-	popf
 	add rsp, 16
 	iretq
 
 
 
 _asm_irq0:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x20
 	jmp _irq_h_call
 
 
 
 _asm_irq1:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x21
 	jmp _irq_h_call
 
 
 
 _asm_irq2:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x22
 	jmp _irq_h_call
 
 
 
 _asm_irq3:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x23
 	jmp _irq_h_call
 
 
 
 _asm_irq4:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x24
 	jmp _irq_h_call
 
 
 
 _asm_irq5:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x25
 	jmp _irq_h_call
 
 
 
 _asm_irq6:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x26
 	jmp _irq_h_call
 
 
 
 _asm_irq7:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x27
 	jmp _irq_h_call
 
 
 
 _asm_irq8:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x28
 	jmp _irq_h_call
 
 
 
 _asm_irq9:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x29
 	jmp _irq_h_call
 
 
 
 _asm_irq10:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x2a
 	jmp _irq_h_call
 
 
 
 _asm_irq11:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x2b
 	jmp _irq_h_call
 
 
 
 _asm_irq12:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x2c
 	jmp _irq_h_call
 
 
 
 _asm_irq13:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x2d
 	jmp _irq_h_call
 
 
 
 _asm_irq14:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x2e
 	jmp _irq_h_call
 
 
 
 _asm_irq15:
-	cli
-	push byte 0
+	push byte 0x00
 	push byte 0x2f
 	jmp _irq_h_call

@@ -11,7 +11,7 @@
 
 
 #define DEFAULT_FONT FONT_8X16_FONT
-#define SCALE 2
+#define SCALE 1
 
 
 

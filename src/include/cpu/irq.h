@@ -9,6 +9,10 @@ typedef void (*irq_handler_t)(registers_t* r);
 
 
 
+void __attribute__((ms_abi)) _handle_irq(registers_t* r);
+
+
+
 void setup_irq(void);
 
 

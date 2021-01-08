@@ -5,6 +5,16 @@ global asm_setup_gdt
 
 asm_setup_gdt:
 	lgdt [gdt64_pointer]
+	mov ax, gdt64_data
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+	push byte gdt64_code
+	push ._new_cs
+	retfq
+._new_cs:
 	ret
 
 

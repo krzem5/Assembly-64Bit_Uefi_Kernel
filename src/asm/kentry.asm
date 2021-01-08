@@ -8,7 +8,6 @@ section .entry
 		; mov rbp, (stack+STACKSIZE)
 		; mov rsp, rbp
 		call kmain
-		cli
 		._s_loop:
 			hlt
 			jmp ._s_loop

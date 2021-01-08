@@ -5,7 +5,11 @@
 
 
 
-typedef void (*isr_handler_t)(exception_registers_t* r);
+typedef void (*isr_handler_t)(registers_t* r);
+
+
+
+void __attribute__((ms_abi)) _handle_isr(registers_t* r);
 
 
 
