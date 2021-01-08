@@ -1,7 +1,7 @@
 #include <kmain.h>
 #include <libc/stdint.h>
 #include <gfx.h>
-#include <heap.h>
+#include <paging.h>
 #include <driver/console.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
@@ -13,7 +13,7 @@
 void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	gfx_init(ka);
 	console_init(ka);
-	init_heap(ka);
+	paging_init(ka);
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
 	for (uint64_t i=0;i<ka->mmap_l;i++){
@@ -26,7 +26,7 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	console_log("Setting Up GDT...\n");
 	asm_setup_gdt();
 	console_log("Setting Up IDT...\n");
-	setup_idt();
+	setup_idt(ka);
 	console_log("Setting Up Default ISRs...\n");
 	setup_isr();
 	console_log("Setting Up Default IRQs...\n");

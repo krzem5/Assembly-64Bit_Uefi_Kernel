@@ -16,6 +16,8 @@ typedef struct __KERNEL_ARGS{
 	uint64_t vmem_w;
 	uint64_t vmem_h;
 	void* acpi;
+	void* idt;
+	uint64_t* pml4;
 	uint64_t t_pg;
 	uint64_t u_pg;
 	uint64_t k_pg;
@@ -25,10 +27,12 @@ typedef struct __KERNEL_ARGS{
 
 
 
-#ifndef KERNEL_ARGS_STRUCT_ONLY
+#ifdef KERNEL_ARGS_STRUCT_ONLY
+typedef void __attribute__((ms_abi)) (*kmain)(KernelArgs* ka);
+#else
 void __attribute__((ms_abi)) kmain(KernelArgs* ka);
-
-
-
 #endif
+
+
+
 #endif

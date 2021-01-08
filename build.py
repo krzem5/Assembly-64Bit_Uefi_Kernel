@@ -57,4 +57,4 @@ if (subprocess.run(["bash.exe","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -
 			if (subprocess.run(["qemu-img","create","-f","qcow2","build\\hdd.qcow2","10G"]).returncode==0):
 				print("Starting QEMU...")
 				os.system("cls")
-				subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","qemu64","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G","-net","none"])
+				subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","qemu64","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])

@@ -1,6 +1,18 @@
 bits 64
+global asm_clear_pages_get_cr3
 global asm_enable_paging
 global asm_halt
+
+
+
+asm_clear_pages_get_cr3:
+	mov rdi, rcx
+	xor rax, rax
+	mov rcx, rdx
+	shl rcx, 9
+	rep stosq
+	mov rax, cr3
+	ret
 
 
 
