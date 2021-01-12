@@ -21,6 +21,10 @@
 #define ELF_HEADER_OS_ABI 0
 #define ELF_HEADER_TAREGT_MACHINE 0x3e
 #define ELF_PT_LOAD 0x01
+#define ACPI_20_REVISION 2
+#define ACPI_XSDT_APIC_TYPE 0x43495041
+#define ACPI_XSDT_FACP_TYPE 0x50434146
+#define ACPI_XSDT_HPET_TYPE 0x54455048
 
 
 
@@ -68,12 +72,48 @@ struct ELF_PROGRAM_HEADER{
 
 
 
+struct ACPI_TABLE_HEADER{
+	uint32_t t;
+	uint32_t l;
+	uint8_t rv;
+	uint8_t c;
+	char oem_id[6];
+	char oem_t[8];
+	uint32_t oem_rv;
+	uint32_t c_id;
+	uint32_t c_rv;
+} __attribute__ ((packed));
+
+
+
+struct ACPI_XSDT{
+	struct ACPI_TABLE_HEADER h;
+	struct ACPI_TABLE_HEADER* hl[];
+} __attribute__ ((packed));
+
+
+
+struct ACPI_RSDP{
+	char sig[8];
+	uint8_t c;
+	char oem_id[6];
+	uint8_t rv;
+	uint32_t rsdt;
+	uint32_t l;
+	struct ACPI_XSDT* xsdt;
+	uint8_t c2;
+	uint8_t _[3];
+} __attribute__ ((packed));
+
+
+
 static EFI_GUID efi_gop_guid=EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 static EFI_GUID efi_acpi2_guid=ACPI_20_TABLE_GUID;
 static EFI_GUID efi_lip_guid=EFI_LOADED_IMAGE_PROTOCOL_GUID;
 static EFI_GUID efi_sfs_guid=EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 static EFI_GUID efi_fi_guid=EFI_FILE_INFO_ID;
 static uint16_t* kernel_fp=L"KERNEL.ELF";
+static const char* acpi_rsdp_sig="RSD PTR ";
 
 
 
@@ -130,10 +170,11 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"%x -> +%d, %d x %d\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution);
 	}
 	Print(L"Starting Loader...\r\n");
-	void* acpi=NULL;
+	struct ACPI_RSDP* acpi=NULL;
+	(void)efi_acpi2_guid;
 	for (uint64_t i=0;i<st->NumberOfTableEntries;i++){
-		if (CompareGuid(&(st->ConfigurationTable+i)->VendorGuid,&efi_acpi2_guid)){
-			acpi=(st->ConfigurationTable+i)->VendorTable;
+		if (CompareGuid(&(st->ConfigurationTable+i)->VendorGuid,&efi_acpi2_guid)==0){
+			acpi=(struct ACPI_RSDP*)(st->ConfigurationTable+i)->VendorTable;
 			break;
 		}
 	}
@@ -142,6 +183,38 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	Print(L"Found ACPI Table: %llx\r\n",acpi);
+	for (uint8_t i=0;i<8;i++){
+		if (*(acpi->sig+i)!=*(acpi_rsdp_sig+i)){
+			Print(L"ACPI RSDP Signature not Matching!\r\n");
+			goto _end;
+		}
+	}
+	if (acpi->rv!=ACPI_20_REVISION){
+		Print(L"Invalid ACPI Revision (%u)!\r\n",acpi->rv);
+		goto _end;
+	}
+	if (acpi->xsdt==NULL){
+		Print(L"ACPI XSDT is Null!\r\n");
+		goto _end;
+	}
+	void* apic=NULL;
+	void* fadt=NULL;
+	void* hpet=NULL;
+	for (uint64_t i=0;i<(acpi->xsdt->h.l-sizeof(struct ACPI_XSDT))/sizeof(struct ACPI_TABLE_HEADER*);i++){
+		if (acpi->xsdt->hl[i]->t==ACPI_XSDT_APIC_TYPE){
+			apic=acpi->xsdt->hl[i];
+		}
+		else if (acpi->xsdt->hl[i]->t==ACPI_XSDT_FACP_TYPE){
+			fadt=acpi->xsdt->hl[i];
+		}
+		else if (acpi->xsdt->hl[i]->t==ACPI_XSDT_HPET_TYPE){
+			hpet=acpi->xsdt->hl[i];
+		}
+		else{
+			Print(L"Unknown XSDT Entry Type: %llx (%c%c%c%c)\r\n",acpi->xsdt->hl[i]->t,acpi->xsdt->hl[i]->t&0xff,(acpi->xsdt->hl[i]->t>>8)&0xff,(acpi->xsdt->hl[i]->t>>16)&0xff,(acpi->xsdt->hl[i]->t>>24)&0xff);
+		}
+	}
+	Print(L"APIC = %llx, FADT = %llx, HPET = %llx\r\n",apic,fadt,hpet);
 	uint64_t mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	uint64_t mm_k=0;
 	uint64_t mm_ds=0;
@@ -187,7 +260,9 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->vmem_l=gop->Mode->FrameBufferSize/sizeof(uint32_t);
 	ka->vmem_w=gop->Mode->Info->HorizontalResolution;
 	ka->vmem_h=gop->Mode->Info->VerticalResolution;
-	ka->acpi=acpi;
+	ka->apic=apic;
+	ka->fadt=fadt;
+	ka->hpet=hpet;
 	ka->mmap_l=sz;
 	uint64_t tm=0;
 	uint64_t j=0;

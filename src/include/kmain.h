@@ -15,7 +15,9 @@ typedef struct __KERNEL_ARGS{
 	uint64_t vmem_l;
 	uint64_t vmem_w;
 	uint64_t vmem_h;
-	void* acpi;
+	void* apic;
+	void* fadt;
+	void* hpet;
 	void* idt;
 	uint64_t* pml4;
 	uint64_t t_pg;

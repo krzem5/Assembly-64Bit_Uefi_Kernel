@@ -2,6 +2,7 @@
 #include <libc/stdint.h>
 #include <gfx.h>
 #include <paging.h>
+#include <driver/acpi.h>
 #include <driver/console.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
@@ -31,11 +32,9 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	setup_isr();
 	console_log("Setting Up Default IRQs...\n");
 	setup_irq();
-	// console_log("Setting Up IRQ Handlers...\n");
-	// setup_keyboard();
-	// setup_timer();
 	console_log("Enabling IDT...\n");
 	enable_idt();
-	// *((char*)0x7fffffffffffffff)=0;
+	console_log("Setting Up ACPI...\n");
+	acpi_init(ka);
 	console_ok("Reached the End!\n");
 }
