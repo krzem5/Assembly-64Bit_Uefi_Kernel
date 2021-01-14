@@ -7,6 +7,7 @@ extern idtr
 
 _asm_setup_idt:
 	push rax
+	
 	push rcx
 	push rdi
 	xor rax, rax
