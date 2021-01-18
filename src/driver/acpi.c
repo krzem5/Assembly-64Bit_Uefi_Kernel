@@ -7,10 +7,6 @@
 
 
 
-// static const uint16_t lapic_spurious=0x00f0;
-
-
-
 struct _ACPI_APIC{
 	uint32_t t;
 	uint32_t l;
@@ -21,7 +17,7 @@ struct _ACPI_APIC{
 	uint32_t oem_rv;
 	uint32_t c_id;
 	uint32_t c_rv;
-	uint32_t* lic_a;
+	uint32_t lic_a;
 	uint32_t f;
 	uint8_t dt[];
 } __attribute__ ((packed));
@@ -35,17 +31,16 @@ struct _ACPI_APIC* _acip_apic;
 void acpi_init(KernelArgs* ka){
 	console_log("APIC = %p, FADT = %p, HPET = %p\n",ka->apic,ka->fadt,ka->hpet);
 	_acip_apic=(struct _ACPI_APIC*)ka->apic;
-	// *(_acip_apic->lic_a+lapic_spurious/sizeof(uint32_t))=spurious;
 	uint32_t i=0;
-	// uint32_t io_c=0;
-	// while (i<_acip_apic->l){
-	// 	if (*(_acip_apic->dt+i)==1){
-	// 		io_c++;
-	// 	}
-	// 	i+=*(_acip_apic->dt+i+1);
-	// }
-	// console_warn("%llx, %llx\n",io_c,_acip_apic->lic_a);
-	// i=0;
+	uint32_t io_c=0;
+	while (i<_acip_apic->l){
+		if (*(_acip_apic->dt+i)==1){
+			io_c++;
+		}
+		i+=*(_acip_apic->dt+i+1);
+	}
+	console_ok("%llx, %llx\n",io_c,_acip_apic->lic_a);
+	i=0;
 	while (i<_acip_apic->l){
 		uint8_t t=*(_acip_apic->dt+i);
 		if (t>=0x10){

@@ -1,6 +1,11 @@
 #include <gfx.h>
 #include <libc/stdint.h>
 #include <kmain.h>
+#include <font.h>
+
+
+
+#define SPACE_CHAR_ID 32
 
 
 
@@ -23,8 +28,8 @@ void gfx_init(KernelArgs* ka){
 
 
 
-void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint8_t sc){
-	uint64_t g=f[(uint16_t)c*2];
+void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font f,uint8_t sc){
+	uint64_t g=(c<=f.mx?f.dt[(uint16_t)c*2]:f.dt[(uint16_t)SPACE_CHAR_ID*2]);
 	uint64_t i=x+y*_gfx_vmem_w;
 	uint8_t j=0;
 	while (j<64){
@@ -48,7 +53,7 @@ void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,uint64_t f[],uint
 			i+=_gfx_vmem_w*sc-8*sc;
 		}
 	}
-	g=f[(uint16_t)c*2+1];
+	g=(c<=f.mx?f.dt[(uint16_t)c*2+1]:f.dt[(uint16_t)SPACE_CHAR_ID*2+1]);
 	i=x+(y+8*sc)*_gfx_vmem_w;
 	j=0;
 	while (j<64){

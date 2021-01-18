@@ -1,5 +1,6 @@
 #include <driver/console.h>
 #include <libc/stdint.h>
+#include <font.h>
 #include <kmain.h>
 #include <gfx.h>
 #include <libc/stdio.h>
@@ -22,7 +23,7 @@ uint64_t _console_h;
 
 
 
-void _console_print_char(char c,color_t cl,uint64_t f[]){
+void _console_print_char(char c,color_t cl,Font f){
 	if (c=='\n'){
 		_console_x=0;
 		_console_y++;
