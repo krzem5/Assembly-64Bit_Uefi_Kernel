@@ -14,7 +14,7 @@
 void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	gfx_init(ka);
 	console_init(ka);
-	paging_init(ka);
+	paging_temp_init(ka);
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
 	for (uint64_t i=0;i<ka->mmap_l;i++){
@@ -24,6 +24,8 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 		}
 		console_log("\n");
 	}
+	console_log("Setting Up Paging...\n");
+	paging_init(ka);
 	console_log("Setting Up GDT...\n");
 	asm_setup_gdt();
 	console_log("Setting Up IDT...\n");
@@ -34,7 +36,7 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Enabling IDT...\n");
 	enable_idt();
-	console_log("Setting Up ACPI...\n");
-	acpi_init(ka);
+	// console_log("Setting Up ACPI...\n");
+	// acpi_init(ka);
 	console_ok("Reached the End!\n");
 }
