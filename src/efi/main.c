@@ -84,14 +84,14 @@ struct ACPI_TABLE_HEADER{
 	uint32_t oem_rv;
 	uint32_t c_id;
 	uint32_t c_rv;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 
 
 struct ACPI_XSDT{
 	struct ACPI_TABLE_HEADER h;
 	struct ACPI_TABLE_HEADER* hl[];
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 
 
@@ -105,7 +105,7 @@ struct ACPI_RSDP{
 	struct ACPI_XSDT* xsdt;
 	uint8_t c2;
 	uint8_t _[3];
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 
 
