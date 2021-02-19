@@ -1,3 +1,4 @@
+#include <shared.h>
 #include <kmain.h>
 #include <libc/stdint.h>
 #include <gfx.h>
@@ -8,23 +9,15 @@
 #include <cpu/idt.h>
 #include <cpu/isr.h>
 #include <cpu/irq.h>
-#include <shared.h>
 #include <libc/stdlib.h>
 
 
 
-extern void KERNEL_CALL asm_move_stack(uint64_t sp,KernelArgs* ka);
 extern void KERNEL_CALL asm_end_loop(void);
 
 
 
 void KERNEL_CALL kmain(KernelArgs* ka){
-	asm_move_stack(ka->k_sp,ka);
-}
-
-
-
-void KERNEL_CALL kmain_new_stack(KernelArgs* ka){
 	paging_init(ka);
 	gfx_init(ka);
 	console_init(ka);

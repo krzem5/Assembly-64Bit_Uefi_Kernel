@@ -4,4 +4,6 @@ section .entry
 	extern kmain
 	_start:
 		cli
+		mov rbp, qword [rcx + __KERNEL_ARGS_STRUCT_STACK_POINTER_OFFSET__]
+		mov rsp, rbp
 		jmp kmain
