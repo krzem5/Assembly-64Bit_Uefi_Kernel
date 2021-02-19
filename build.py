@@ -1,6 +1,15 @@
 import ntpath
 import os
 import subprocess
+import re
+
+
+
+KERNEL_ARGS_STRUCT_HEADER="src/include/kmain.h"
+KERNEL_ARGS_STRUCT_REGEX=re.compile(br"struct\s+__KERNEL_ARGS\s*{")
+KERNEL_ARGS_STRUCT_STACK_POINTER_NAME=b"k_sp"
+SIZEOF_64BIT_POINTER=8
+SIZEOF_UINT64_T=8
 
 
 
@@ -24,18 +33,59 @@ for r,_,fl in os.walk("src"):
 				e_fl+=[f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/',chr(92)+'$')}.o"]
 			elif (f[-4:]==".asm"):
 				print(f"Compiling EFI-ASM File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o")
-				if (subprocess.run(["nasm.exe",ntpath.join(r,f),"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["nasm.exe",ntpath.join(r,f).replace(chr(92),"/"),"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 					quit()
 				e_fl+=[f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-2:]==".c"):
 			print(f"Compiling C File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
-			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),"/"),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 				quit()
 			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-4:]==".asm"):
 			print(f"Compiling ASM File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
-			if (subprocess.run(["nasm.exe",ntpath.join(r,f).replace(chr(92),'/'),"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
-				quit()
+			if (f=="kentry.asm"):
+				with open(f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}","wb") as wf,open(ntpath.join(r,f).replace(chr(92),"/"),"rb") as rf,open(KERNEL_ARGS_STRUCT_HEADER,"rb") as hf:
+					dt=hf.read()
+					m=KERNEL_ARGS_STRUCT_REGEX.search(dt)
+					if (m is None):
+						print(f"No __KERNEL_ARGS struct found in file '{KERNEL_ARGS_STRUCT_HEADER}'!")
+						quit()
+					i=m.end()
+					off=0
+					lc=-1
+					while (True):
+						if (dt[i:i+1] in b" \t\r\n\v\f"):
+							i+=1
+							continue
+						e=b""
+						while (dt[i:i+1]!=b";"):
+							e+=dt[i:i+1]
+							i+=1
+						i+=1
+						nm=e.split(b" ")[-1].replace(b"[]",b"")
+						if (nm==KERNEL_ARGS_STRUCT_STACK_POINTER_NAME):
+							break
+						e=e[:-len(e.split(b" ")[-1])].strip()
+						c=0
+						if (e[-1:]==b"*"):
+							c=SIZEOF_64BIT_POINTER
+						elif (e==b"uint64_t"):
+							c=SIZEOF_UINT64_T
+						else:
+							print(f"Unknown sizeof of Type '{str(e,'utf-8')}'!")
+							quit()
+						if (lc!=-1 and lc<c):
+							print(f"Unknown Amount of Padding between {lc}-byte Type and {c}-byte Type!")
+							quit()
+						off+=c
+						lc=c
+					wf.write(bytes(f"%define __KERNEL_ARGS_STRUCT_STACK_POINTER_OFFSET__ {off}\n","utf-8"))
+					wf.write(rf.read())
+				if (subprocess.run(["nasm.exe",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}","-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+					quit()
+			else:
+				if (subprocess.run(["nasm.exe",ntpath.join(r,f).replace(chr(92),"/"),"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+					quit()
 			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]
 print(f"Linking EFI OS Loader: {', '.join([e.replace(chr(92)+'$','$') for e in e_fl])}")
 if (subprocess.run(["bash.exe","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib /usr/lib/crt0-efi-x86_64.o {' '.join(e_fl)} -o build/efi/main.efi -lefi -lgnuefi"]).returncode==0 and subprocess.run(["objcopy","-j",".text","-j",".sdata","-j",".data","-j",".dynamic","-j",".dynsym","-j",".rel","-j",".rela","-j",".reloc","--target=efi-app-x86_64","build/efi/main.efi","build/efi/main.efi"]).returncode==0 and subprocess.run(["strip","-s","build/efi/main.efi"]).returncode==0):
