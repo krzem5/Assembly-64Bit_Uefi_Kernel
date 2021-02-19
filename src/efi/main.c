@@ -7,12 +7,15 @@
 
 
 
+#define MIN_MEM_ADDRESS 0x100000
 #define PAGE_SIZE 0x1000
 #define PAGE_TABLE_MAX_ENTRIES 0x200
 #define IDT_SIZE 4096
+#define OTHER_PAGE_COUNT (IDT_SIZE>>12)
 #define MAX_KERNEL_SIZE (0x200000-IDT_SIZE)
 #define MAX_KERNEL_FILE_SIZE 0x1000000
 #define PML4_PHYSICAL_ADDRESS 0x200000
+#define PAGE_2MB 0x200000
 #define EXTRA_KERNEL_PAGE_TABLES 512
 #define ELF_HEADER_MAGIC 0x464c457f
 #define ELF_HEADER_WORD_SIZE 2
@@ -240,7 +243,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t le=-1;
 	uint8_t* nbf=bf;
 	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
-		if (((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory){
+		if (((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart>=MIN_MEM_ADDRESS&&(((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory)){
 			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)nbf)->Type==EfiACPIReclaimMemory);
 			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart){
 				sz++;
@@ -271,9 +274,13 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->mmap[0].b=0;
 	ka->mmap[0].l=0;
 	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
-		if (((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory){
+		if (((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart>=MIN_MEM_ADDRESS&&(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory)){
 			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory);
-			if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
+			if (j==0&&!ka->mmap[0].b&&!ka->mmap[0].l){
+				ka->mmap[0].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
+				lt=t;
+			}
+			else if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
 				Print(L"  %llx - +%llx (%d)\r\n",(ka->mmap[j].b)&0x7fffffffffffffff,ka->mmap[j].l,ka->mmap[j].b>>63);
 				j++;
 				ka->mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
@@ -380,7 +387,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			pe=(k_ph+i)->va+(k_ph+i)->m_sz;
 		}
 	}
-	ka->t_pg=2+PAGE_TABLE_MAX_ENTRIES+EXTRA_KERNEL_PAGE_TABLES;
+	ka->t_pg=2+PAGE_TABLE_MAX_ENTRIES;
 	ka->u_pg=1;
 	uint16_t li[4]={-1,-1,-1,0};
 	for (uint64_t i=pb;i<pe;i+=PAGE_SIZE){
@@ -396,7 +403,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	}
 	ka->t_pg=((ka->t_pg+511)>>9)<<9;
 	ka->k_pg=(pe-pb+PAGE_SIZE-1)>>12;
-	uint64_t* k_pg_pa=AllocatePool((ka->k_pg+1)*sizeof(uint64_t));
+	uint64_t* k_pg_pa=AllocatePool((ka->k_pg+OTHER_PAGE_COUNT)*sizeof(uint64_t));
 	uint64_t i=0;
 	j=0;
 	uint64_t k=ka->mmap[0].b&0x7fffffffffffffff;
@@ -414,8 +421,18 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		i++;
 		k+=PAGE_SIZE;
 	}
+	if (k>=(ka->mmap[j].b&0x7fffffffffffffff)+ka->mmap[j].l){
+		j++;
+		if (j>=ka->mmap_l){
+			Print(L"Not enought Memory to Create the next Physical Address\r\n");
+			goto _end;
+		}
+		k=ka->mmap[j].b&0x7fffffffffffffff;
+	}
+	ka->n_pa=k;
+	ka->n_pa_idx=j;
 	uint64_t ke=kh->e;
-	Print(L"Kernel Data: %llx - +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
+	Print(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
 	j=0;
 	k=-1;
 	for (uint64_t i=0;i<ka->k_pg;i++){
@@ -437,7 +454,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->pml4=(uint64_t*)PML4_PHYSICAL_ADDRESS;
 	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,ka->t_pg<<12,(EFI_PHYSICAL_ADDRESS*)&ka->pml4);
 	uint64_t* cr3=asm_clear_pages_get_cr3((uint64_t)ka->pml4,ka->t_pg);
-	Print(L"PML4 VA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
+	Print(L"PML4 PA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
 	for (uint16_t i=0;i<PAGE_TABLE_MAX_ENTRIES/2;i++){
 		*(ka->pml4+i)=*(cr3+i);
 	}
@@ -472,11 +489,11 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			Print(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
 		}
 	}
-	Print(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pb+MAX_KERNEL_SIZE+IDT_SIZE,ka->t_pg<<12,ka->t_pg,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>39)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>30)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>21)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>12)&0x1ff);
-	if (((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>12)&0x1ff){
-		Print(L"Page Tables not Properly Aligned!\r\n");
-		goto _end;
-	}
+	uint64_t pml4_va=pb+((ka->k_pg+OTHER_PAGE_COUNT)<<12);
+	pml4_va+=PAGE_2MB-(pml4_va&(PAGE_2MB-1));
+	Print(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<12,ka->t_pg,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>39)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>30)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>21)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>12)&0x1ff);
+	ka->n_va=pml4_va+(ka->t_pg<<12);
+	ka->va_to_pa=pml4_va-(uint64_t)(void*)ka->pml4;
 	if ((ka->t_pg>>9)>PAGE_TABLE_MAX_ENTRIES){
 		Print(L"Too Many Page Tables! (%llu / %llu)\r\n",ka->t_pg,PAGE_TABLE_MAX_ENTRIES<<9);
 		goto _end;
@@ -527,7 +544,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		((EFI_MEMORY_DESCRIPTOR*)bf)->VirtualStart=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart;
 	}
 	asm_enable_paging((uint64_t)ka->pml4);
-	ka->pml4=(uint64_t*)(pb+MAX_KERNEL_SIZE+IDT_SIZE);
+	ka->pml4=(uint64_t*)(void*)pml4_va;
 	s=st->RuntimeServices->SetVirtualAddressMap(mm_sz,mm_ds,mm_v,(EFI_MEMORY_DESCRIPTOR*)bf);
 	if (EFI_ERROR(s)){
 		Print(L"Failed to Virtualize EFI!\r\n");

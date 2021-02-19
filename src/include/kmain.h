@@ -23,6 +23,10 @@ typedef struct __KERNEL_ARGS{
 	uint64_t t_pg;
 	uint64_t u_pg;
 	uint64_t k_pg;
+	uint64_t n_va;
+	uint64_t n_pa;
+	uint64_t n_pa_idx;
+	uint64_t va_to_pa;
 	uint64_t mmap_l;
 	KernelArgsMemEntry mmap[];
 } KernelArgs;

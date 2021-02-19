@@ -11,6 +11,11 @@
 
 
 
+extern void asm_move_stack(void);
+extern void asm_end_loop(void);
+
+
+
 void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	gfx_init(ka);
 	console_init(ka);
@@ -24,8 +29,8 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 		}
 		console_log("\n");
 	}
-	console_log("Setting Up Paging...\n");
-	paging_init(ka);
+	console_log("Reallocating Stack...\n");
+	asm_move_stack();
 	console_log("Setting Up GDT...\n");
 	asm_setup_gdt();
 	console_log("Setting Up IDT...\n");
@@ -36,7 +41,10 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Enabling IDT...\n");
 	enable_idt();
+	console_log("Setting Up Paging...\n");
+	paging_init(ka);
 	// console_log("Setting Up ACPI...\n");
 	// acpi_init(ka);
 	console_ok("Reached the End!\n");
+	asm_end_loop();
 }
