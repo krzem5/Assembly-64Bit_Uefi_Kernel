@@ -1,5 +1,6 @@
 #ifndef __KERNEL_FATAL_ERROR_H__
 #define __KERNEL_FATAL_ERROR_H__ 1
+#include <shared.h>
 
 
 
@@ -8,15 +9,15 @@
 
 
 
-void fatal_error(char* s);
+void KERNEL_CALL fatal_error(char* s);
 
 
 
-void fatal_error_line(char* s,const char* f,int l,const char* fn,char* p);
+void KERNEL_CALL fatal_error_line(char* s,const char* f,int l,const char* fn,char* p);
 
 
 
-extern void asm_halt_cpu(void);
+extern void KERNEL_CALL asm_halt_cpu(void);
 
 
 

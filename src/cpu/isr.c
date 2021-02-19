@@ -1,44 +1,46 @@
+#include <shared.h>
 #include <cpu/isr.h>
 #include <libc/stdint.h>
 #include <libc/stddef.h>
 #include <cpu/idt.h>
 #include <driver/console.h>
 #include <fatal_error.h>
+#include <shared.h>
 
 
 
-extern void _asm_isr0(void);
-extern void _asm_isr1(void);
-extern void _asm_isr2(void);
-extern void _asm_isr3(void);
-extern void _asm_isr4(void);
-extern void _asm_isr5(void);
-extern void _asm_isr6(void);
-extern void _asm_isr7(void);
-extern void _asm_isr8(void);
-extern void _asm_isr9(void);
-extern void _asm_isr10(void);
-extern void _asm_isr11(void);
-extern void _asm_isr12(void);
-extern void _asm_isr13(void);
-extern void _asm_isr14(void);
-extern void _asm_isr15(void);
-extern void _asm_isr16(void);
-extern void _asm_isr17(void);
-extern void _asm_isr18(void);
-extern void _asm_isr19(void);
-extern void _asm_isr20(void);
-extern void _asm_isr21(void);
-extern void _asm_isr22(void);
-extern void _asm_isr23(void);
-extern void _asm_isr24(void);
-extern void _asm_isr25(void);
-extern void _asm_isr26(void);
-extern void _asm_isr27(void);
-extern void _asm_isr28(void);
-extern void _asm_isr29(void);
-extern void _asm_isr30(void);
-extern void _asm_isr31(void);
+extern void KERNEL_CALL _asm_isr0(void);
+extern void KERNEL_CALL _asm_isr1(void);
+extern void KERNEL_CALL _asm_isr2(void);
+extern void KERNEL_CALL _asm_isr3(void);
+extern void KERNEL_CALL _asm_isr4(void);
+extern void KERNEL_CALL _asm_isr5(void);
+extern void KERNEL_CALL _asm_isr6(void);
+extern void KERNEL_CALL _asm_isr7(void);
+extern void KERNEL_CALL _asm_isr8(void);
+extern void KERNEL_CALL _asm_isr9(void);
+extern void KERNEL_CALL _asm_isr10(void);
+extern void KERNEL_CALL _asm_isr11(void);
+extern void KERNEL_CALL _asm_isr12(void);
+extern void KERNEL_CALL _asm_isr13(void);
+extern void KERNEL_CALL _asm_isr14(void);
+extern void KERNEL_CALL _asm_isr15(void);
+extern void KERNEL_CALL _asm_isr16(void);
+extern void KERNEL_CALL _asm_isr17(void);
+extern void KERNEL_CALL _asm_isr18(void);
+extern void KERNEL_CALL _asm_isr19(void);
+extern void KERNEL_CALL _asm_isr20(void);
+extern void KERNEL_CALL _asm_isr21(void);
+extern void KERNEL_CALL _asm_isr22(void);
+extern void KERNEL_CALL _asm_isr23(void);
+extern void KERNEL_CALL _asm_isr24(void);
+extern void KERNEL_CALL _asm_isr25(void);
+extern void KERNEL_CALL _asm_isr26(void);
+extern void KERNEL_CALL _asm_isr27(void);
+extern void KERNEL_CALL _asm_isr28(void);
+extern void KERNEL_CALL _asm_isr29(void);
+extern void KERNEL_CALL _asm_isr30(void);
+extern void KERNEL_CALL _asm_isr31(void);
 
 
 
@@ -80,11 +82,12 @@ char* _f_msg[32]={
 
 
 
-void __attribute__((ms_abi)) _handle_isr(registers_t* r){
+void KERNEL_CALL _handle_isr(registers_t* r){
 	if (isr_hl[r->t]){
 		isr_hl[r->t](r);
 	}
 	else{
+		console_error("FatalError\n");
 		console_error("Error:\n  rax    = %#.18llx\n  rbx    = %#.18llx\n  rcx    = %#.18llx\n  rdx    = %#.18llx\n  rsi    = %#.18llx\n  rdi    = %#.18llx\n  rbp    = %#.18llx\n  r8     = %#.18llx\n  r9     = %#.18llx\n  r10    = %#.18llx\n  r11    = %#.18llx\n  r12    = %#.18llx\n  r13    = %#.18llx\n  r14    = %#.18llx\n  r15    = %#.18llx\n  t      = %#.4llx (%s)\n  ec     = %#.4llx\n  rip    = %#.18llx\n  cs     = %#.6llx\n  rflags = %#.8llx\n  rsp    = %#.18llx\n  ss     = %#.6llx\n",r->rax,r->rbx,r->rcx,r->rdx,r->rsi,r->rdi,r->rbp,r->r8,r->r9,r->r10,r->r11,r->r12,r->r13,r->r14,r->r15,r->t,_f_msg[r->t],r->ec,r->rip,r->cs,r->rflags,r->rsp,r->ss);
 		asm_halt_cpu();
 	}
@@ -92,7 +95,7 @@ void __attribute__((ms_abi)) _handle_isr(registers_t* r){
 
 
 
-void setup_isr(void){
+void KERNEL_CALL setup_isr(void){
 	set_idt_entry(0,_asm_isr0,0x08,0x8e);
 	set_idt_entry(1,_asm_isr1,0x08,0x8e);
 	set_idt_entry(2,_asm_isr2,0x08,0x8e);
@@ -132,12 +135,12 @@ void setup_isr(void){
 
 
 
-void regiser_isr_handler(uint8_t i,isr_handler_t h){
+void KERNEL_CALL regiser_isr_handler(uint8_t i,isr_handler_t h){
 	isr_hl[i]=h;
 }
 
 
 
-void unregiser_isr_handler(uint8_t i){
+void KERNEL_CALL unregiser_isr_handler(uint8_t i){
 	isr_hl[i]=NULL;
 }

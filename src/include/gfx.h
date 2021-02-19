@@ -1,5 +1,6 @@
 #ifndef __KERNEL_GFX_H__
 #define __KERNEL_GFX_H__ 1
+#include <shared.h>
 #include <libc/stdint.h>
 #include <kmain.h>
 #include <font.h>
@@ -14,11 +15,15 @@ typedef uint32_t color_t;
 
 
 
-void gfx_init(KernelArgs* ka);
+void KERNEL_CALL gfx_init(KernelArgs* ka);
 
 
 
-void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font f,uint8_t sc);
+void KERNEL_CALL gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font f,uint8_t sc);
+
+
+
+void KERNEL_CALL gfx_update_screen(void);
 
 
 

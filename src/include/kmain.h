@@ -1,5 +1,6 @@
 #ifndef __KERNEL_KMAIN_H__
 #define __KERNEL_KMAIN_H__ 1
+#include <shared.h>
 #ifndef KERNEL_ARGS_STRUCT_ONLY
 #include <libc/stdint.h>
 #endif
@@ -22,11 +23,11 @@ typedef struct __KERNEL_ARGS{
 	uint64_t* pml4;
 	uint64_t t_pg;
 	uint64_t u_pg;
-	uint64_t k_pg;
 	uint64_t n_va;
 	uint64_t n_pa;
 	uint64_t n_pa_idx;
 	uint64_t va_to_pa;
+	uint64_t k_sp;
 	uint64_t mmap_l;
 	KernelArgsMemEntry mmap[];
 } KernelArgs;
@@ -34,9 +35,9 @@ typedef struct __KERNEL_ARGS{
 
 
 #ifdef KERNEL_ARGS_STRUCT_ONLY
-typedef void __attribute__((ms_abi)) (*kmain)(KernelArgs* ka);
+typedef void (KERNEL_CALL *kmain)(KernelArgs* ka);
 #else
-void __attribute__((ms_abi)) kmain(KernelArgs* ka);
+void KERNEL_CALL kmain(KernelArgs* ka);
 #endif
 
 

@@ -1,3 +1,4 @@
+#include <shared.h>
 #include <driver/acpi.h>
 #include <libc/stdint.h>
 #include <libc/stdlib.h>
@@ -28,7 +29,7 @@ struct _ACPI_APIC* _acip_apic;
 
 
 
-void acpi_init(KernelArgs* ka){
+void KERNEL_CALL acpi_init(KernelArgs* ka){
 	console_log("APIC = %p, FADT = %p, HPET = %p\n",ka->apic,ka->fadt,ka->hpet);
 	_acip_apic=(struct _ACPI_APIC*)ka->apic;
 	uint32_t i=0;

@@ -1,5 +1,7 @@
+#include <shared.h>
 #include <gfx.h>
 #include <libc/stdint.h>
+#include <libc/stdlib.h>
 #include <kmain.h>
 #include <font.h>
 
@@ -10,14 +12,16 @@
 
 
 uint32_t* _gfx_vmem;
+uint32_t* _gfx_vmem_bf;
 uint64_t _gfx_vmem_l;
 uint64_t _gfx_vmem_w;
 uint64_t _gfx_vmem_h;
 
 
 
-void gfx_init(KernelArgs* ka){
+void KERNEL_CALL gfx_init(KernelArgs* ka){
 	_gfx_vmem=ka->vmem;
+	// _gfx_vmem_bf=malloc(ka->vmem_l*sizeof(uint32_t));
 	_gfx_vmem_l=ka->vmem_l;
 	_gfx_vmem_w=ka->vmem_w;
 	_gfx_vmem_h=ka->vmem_h;
@@ -28,7 +32,7 @@ void gfx_init(KernelArgs* ka){
 
 
 
-void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font f,uint8_t sc){
+void KERNEL_CALL gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font f,uint8_t sc){
 	uint64_t g=(c<=f.mx?f.dt[(uint16_t)c*2]:f.dt[(uint16_t)SPACE_CHAR_ID*2]);
 	uint64_t i=x+y*_gfx_vmem_w;
 	uint8_t j=0;
@@ -77,4 +81,10 @@ void gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font f,uint8_t sc
 			i+=_gfx_vmem_w*sc-8*sc;
 		}
 	}
+}
+
+
+
+void KERNEL_CALL gfx_update_screen(void){
+	//
 }

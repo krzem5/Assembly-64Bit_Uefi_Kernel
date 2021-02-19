@@ -29,7 +29,7 @@ for r,_,fl in os.walk("src"):
 				e_fl+=[f"build/efi/{ntpath.join(r,f)[8:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-2:]==".c"):
 			print(f"Compiling C File: {ntpath.join(r,f).replace(chr(92),'/')} -> build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o")
-			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-mno-mmx","-mno-sse","-mno-sse2","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
+			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",ntpath.join(r,f).replace(chr(92),'/'),"-o",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o","-Isrc\\include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build\\kernel\\{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]).returncode!=0):
 				quit()
 			k_fl+=[f"build/kernel/{ntpath.join(r,f)[4:].replace(chr(92),'/').replace('/','$')}.o"]
 		elif (f[-4:]==".asm"):
@@ -54,7 +54,7 @@ if (subprocess.run(["bash.exe","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -
 			for k in dl:
 				os.rmdir(f"build\\{k}")
 			print("Creating Virtual HDD...")
-			if (subprocess.run(["qemu-img","create","-f","qcow2","build\\hdd.qcow2","10G"]).returncode==0):
+			if (subprocess.run(["qemu-img","create","-f","qcow2","build\\hdd.qcow2","16G"]).returncode==0):
 				print("Starting QEMU...")
 				os.system("cls")
 				subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=2,cores=4,threads=1","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])

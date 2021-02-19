@@ -1,5 +1,6 @@
 #ifndef __KERNEL_CPU_IDT_H__
 #define __KERNEL_CPU_IDT_H__ 1
+#include <shared.h>
 #include <libc/stdint.h>
 #include <kmain.h>
 
@@ -45,15 +46,15 @@ typedef struct __IDT_ENTRY{
 
 
 
-void setup_idt(KernelArgs* ka);
+void KERNEL_CALL setup_idt(KernelArgs* ka);
 
 
 
-void set_idt_entry(uint8_t i,void* a,uint16_t s,uint8_t f);
+void KERNEL_CALL set_idt_entry(uint8_t i,void* a,uint16_t s,uint8_t f);
 
 
 
-extern void enable_idt(void);
+extern void KERNEL_CALL enable_idt(void);
 
 
 

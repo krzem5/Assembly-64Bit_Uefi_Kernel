@@ -1,3 +1,4 @@
+#include <shared.h>
 #include <paging.h>
 #include <libc/stdint.h>
 #include <libc/stddef.h>
@@ -56,36 +57,14 @@ struct _PAGE_ARRAY_DATA{
 uint64_t* _pg_pml4;
 uint64_t _pg_t_pg;
 uint64_t _pg_u_pg;
-uint64_t _pg_k_pg;
 uint64_t _pg_t_mem;
 uint64_t _pg_va_to_pa;
+uint64_t _n_va;
 PageArrayData* _pg_dt;
 
 
 
-void* _temp_pg_get_kernel_page(uint64_t c){
-	ASSERT(0);
-	return NULL;
-}
-
-
-
-void paging_temp_init(KernelArgs* ka){
-	_pg_pml4=ka->pml4;
-	_pg_t_pg=ka->t_pg;
-	_pg_u_pg=ka->u_pg;
-	_pg_k_pg=ka->k_pg;
-	_pg_va_to_pa=ka->va_to_pa;
-	_pg_t_mem=0;
-	for (uint64_t i=0;i<ka->mmap_l;i++){
-		_pg_t_mem+=(ka->mmap+i)->l;
-	}
-	__set_pg_func(_temp_pg_get_kernel_page,NULL);
-}
-
-
-
-void set_page(uint64_t va,uint64_t pa){
+void KERNEL_CALL _set_pg(uint64_t va,uint64_t pa){
 	ASSERT(!(pa&0xfff));
 	if (!(_pg_pml4[GET_PML4_INDEX(va)]&PAGE_DIR_PRESENT)){
 		_pg_pml4[GET_PML4_INDEX(va)]=PAGE_TABLE_VIRTUAL_TO_PHYSICAL((uint64_t)(void*)_pg_pml4+_pg_u_pg*PAGE_TABLE_SIZE)|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
@@ -111,16 +90,53 @@ void set_page(uint64_t va,uint64_t pa){
 
 
 
-void paging_init(KernelArgs* ka){
+void* LIBC_CALL _pg_get_kernel_page(uint64_t c){
+	if (c>_pg_dt->a){
+		fatal_error("Not Enough Pages");
+	}
+	void* o=(void*)_n_va;
+	while (c){
+		console_log("AllocPage: %llx -> %llx\n",(_pg_dt->ai*(sizeof(PageData)*BITS_IN_BYTE)+_pg_dt->abi)<<PAGE_4KB_POWER_OF_2,_n_va);
+		_set_pg(_n_va,(_pg_dt->ai*(sizeof(PageData)*BITS_IN_BYTE)+_pg_dt->abi)<<PAGE_4KB_POWER_OF_2);
+		_pg_dt->e[_pg_dt->ai]&=~(1<<(_pg_dt->abi));
+		_n_va+=PAGE_4KB;
+		_pg_dt->a--;
+		if (_pg_dt->a){
+			while (!_pg_dt->e[_pg_dt->ai]){
+				_pg_dt->ai++;
+			}
+			_pg_dt->abi=0;
+			uint64_t t=_pg_dt->e[_pg_dt->ai];
+			while (!(t&1)){
+				t>>=1;
+				_pg_dt->abi++;
+			}
+		}
+		c--;
+	}
+	return o;
+}
+
+
+
+void KERNEL_CALL paging_init(KernelArgs* ka){
+	_pg_pml4=ka->pml4;
+	_pg_t_pg=ka->t_pg;
+	_pg_u_pg=ka->u_pg;
+	_pg_va_to_pa=ka->va_to_pa;
+	_n_va=ka->n_va;
+	_pg_t_mem=0;
+	for (uint64_t i=0;i<ka->mmap_l;i++){
+		_pg_t_mem+=(ka->mmap+i)->l;
+	}
+	__set_pg_func(_pg_get_kernel_page,NULL);
 	uint64_t mx_mem=ka->mmap[ka->mmap_l-1].b+ka->mmap[ka->mmap_l-1].l-1;
 	uint64_t sz=((((mx_mem+PAGE_4KB-1)>>PAGE_4KB_POWER_OF_2)+sizeof(PageData)*BITS_IN_BYTE-1)/(sizeof(PageData)*BITS_IN_BYTE)*sizeof(PageData)+sizeof(PageArrayData)+PAGE_4KB-1)>>PAGE_4KB_POWER_OF_2;
-	console_log("Total Mem 4Kb Pages: %llu (%llu * 4Kb)\n",(mx_mem+PAGE_4KB-1)>>PAGE_4KB_POWER_OF_2,sz);
-	_pg_dt=(PageArrayData*)(void*)ka->n_va;
+	_pg_dt=(PageArrayData*)(void*)_n_va;
 	while (sz){
-		set_page(ka->n_va,ka->n_pa);
-		console_log("%llx -> %llx\n",ka->n_pa,ka->n_va);
+		_set_pg(_n_va,ka->n_pa);
 		ka->n_pa+=PAGE_4KB;
-		ka->n_va+=PAGE_4KB;
+		_n_va+=PAGE_4KB;
 		sz--;
 		if (ka->n_pa>=(ka->mmap[ka->n_pa_idx].b&0x7fffffffffffffff)+ka->mmap[ka->n_pa_idx].l){
 			ka->n_pa_idx++;

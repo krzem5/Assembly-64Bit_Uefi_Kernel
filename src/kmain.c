@@ -8,18 +8,26 @@
 #include <cpu/idt.h>
 #include <cpu/isr.h>
 #include <cpu/irq.h>
+#include <shared.h>
+#include <libc/stdlib.h>
 
 
 
-extern void asm_move_stack(void);
-extern void asm_end_loop(void);
+extern void KERNEL_CALL asm_move_stack(uint64_t sp,KernelArgs* ka);
+extern void KERNEL_CALL asm_end_loop(void);
 
 
 
-void __attribute__((ms_abi)) kmain(KernelArgs* ka){
+void KERNEL_CALL kmain(KernelArgs* ka){
+	asm_move_stack(ka->k_sp,ka);
+}
+
+
+
+void KERNEL_CALL kmain_new_stack(KernelArgs* ka){
+	paging_init(ka);
 	gfx_init(ka);
 	console_init(ka);
-	paging_temp_init(ka);
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
 	for (uint64_t i=0;i<ka->mmap_l;i++){
@@ -29,8 +37,6 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 		}
 		console_log("\n");
 	}
-	console_log("Reallocating Stack...\n");
-	asm_move_stack();
 	console_log("Setting Up GDT...\n");
 	asm_setup_gdt();
 	console_log("Setting Up IDT...\n");
@@ -41,8 +47,9 @@ void __attribute__((ms_abi)) kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Enabling IDT...\n");
 	enable_idt();
-	console_log("Setting Up Paging...\n");
-	paging_init(ka);
+	void* ptr=malloc(100);
+	console_log("abc %p\n",ptr);
+	free(ptr);
 	// console_log("Setting Up ACPI...\n");
 	// acpi_init(ka);
 	console_ok("Reached the End!\n");

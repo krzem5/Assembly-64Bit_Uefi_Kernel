@@ -35,7 +35,7 @@ struct __VPRINTF_BUFFER_CTX{
 
 
 
-int __vprintf_handle_sign(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t cb,uint16_t f,bool n){
+int LIBC_CALL __vprintf_handle_sign(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t cb,uint16_t f,bool n){
 	if ((f&FLAGS_SIGN)||(f&FLAGS_SPACE_SIGN)||n){
 		if (rs){
 			rs(1,ctx);
@@ -50,7 +50,7 @@ int __vprintf_handle_sign(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_
 
 
 
-int __vprintf_write_uint(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t cb,uint16_t f,uint8_t b,uint64_t v,unsigned int w){
+int LIBC_CALL __vprintf_write_uint(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t cb,uint16_t f,uint8_t b,uint64_t v,unsigned int w){
 	if (!(f&FLAGS_PERCISION)){
 		w=1;
 	}
@@ -263,28 +263,28 @@ int __vprintf_write_uint(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_f
 
 
 
-void __vprintf_buffer_reserve_func(uint64_t sz,void* ctx){
+void LIBC_CALL __vprintf_buffer_reserve_func(uint64_t sz,void* ctx){
 	((struct __VPRINTF_BUFFER_CTX*)ctx)->sz+=sz;
 	*((struct __VPRINTF_BUFFER_CTX*)ctx)->bf=realloc(*((struct __VPRINTF_BUFFER_CTX*)ctx)->bf,((struct __VPRINTF_BUFFER_CTX*)ctx)->sz);
 }
 
 
 
-void __vprintf_buffer_write_func(char c,void* ctx){
+void LIBC_CALL __vprintf_buffer_write_func(char c,void* ctx){
 	*(*((struct __VPRINTF_BUFFER_CTX*)ctx)->bf+((struct __VPRINTF_BUFFER_CTX*)ctx)->i)=c;
 	((struct __VPRINTF_BUFFER_CTX*)ctx)->i++;
 }
 
 
 
-void __printf_set_console_func(__vprintf_reserve_func_t rs,__vprintf_write_func_t cb){
+void LIBC_CALL __printf_set_console_func(__vprintf_reserve_func_t rs,__vprintf_write_func_t cb){
 	__printf_rs=rs;
 	__printf_cb=cb;
 }
 
 
 
-int __vprintf_buffer(char** bf,const char* t,va_list v){
+int LIBC_CALL __vprintf_buffer(char** bf,const char* t,va_list v){
 	*bf=NULL;
 	struct __VPRINTF_BUFFER_CTX ctx={
 		bf,
@@ -296,7 +296,7 @@ int __vprintf_buffer(char** bf,const char* t,va_list v){
 
 
 
-int __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t cb,const char* t,va_list v){
+int LIBC_CALL __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t cb,const char* t,va_list v){
 	if (!rs&&!cb){
 		return 0;
 	}
@@ -575,7 +575,7 @@ int __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_write_func_t c
 
 
 
-int printf(const char* t,...){
+int LIBC_CALL printf(const char* t,...){
 	va_list v;
 	va_start(v,t);
 	int o=__vprintf_raw(NULL,__printf_rs,__printf_cb,t,v);

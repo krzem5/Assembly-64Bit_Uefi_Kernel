@@ -2,22 +2,23 @@
 #define __LIBC_STDLIB_H__
 #include <libc/stdint.h>
 #include <libc/stddef.h>
+#include <libc/_libc_internal.h>
 
 
 
-void* malloc(size_t sz);
+void* LIBC_CALL malloc(size_t sz);
 
 
 
-void* calloc(size_t c,size_t sz);
+void* LIBC_CALL calloc(size_t c,size_t sz);
 
 
 
-void* realloc(void* p,size_t sz);
+void* LIBC_CALL realloc(void* p,size_t sz);
 
 
 
-void free(void* p);
+void LIBC_CALL free(void* p);
 
 
 

@@ -11,12 +11,11 @@
 #define PAGE_SIZE 0x1000
 #define PAGE_TABLE_MAX_ENTRIES 0x200
 #define IDT_SIZE 4096
-#define OTHER_PAGE_COUNT (IDT_SIZE>>12)
-#define MAX_KERNEL_SIZE (0x200000-IDT_SIZE)
+#define STACK_SIZE 65536
+#define OTHER_PAGE_COUNT ((IDT_SIZE+STACK_SIZE+4095)>>12)
 #define MAX_KERNEL_FILE_SIZE 0x1000000
 #define PML4_PHYSICAL_ADDRESS 0x200000
 #define PAGE_2MB 0x200000
-#define EXTRA_KERNEL_PAGE_TABLES 512
 #define ELF_HEADER_MAGIC 0x464c457f
 #define ELF_HEADER_WORD_SIZE 2
 #define ELF_HEADER_ENDIANESS 1
@@ -402,12 +401,12 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 	}
 	ka->t_pg=((ka->t_pg+511)>>9)<<9;
-	ka->k_pg=(pe-pb+PAGE_SIZE-1)>>12;
-	uint64_t* k_pg_pa=AllocatePool((ka->k_pg+OTHER_PAGE_COUNT)*sizeof(uint64_t));
+	uint64_t k_pg=(pe-pb+PAGE_SIZE-1)>>12;
+	uint64_t* k_pg_pa=AllocatePool((k_pg+OTHER_PAGE_COUNT)*sizeof(uint64_t));
 	uint64_t i=0;
 	j=0;
 	uint64_t k=ka->mmap[0].b&0x7fffffffffffffff;
-	while (i<ka->k_pg+1){
+	while (i<k_pg+1){
 		if (k>=(ka->mmap[j].b&0x7fffffffffffffff)+ka->mmap[j].l){
 			j++;
 			if (j>=ka->mmap_l){
@@ -435,7 +434,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	Print(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
 	j=0;
 	k=-1;
-	for (uint64_t i=0;i<ka->k_pg;i++){
+	for (uint64_t i=0;i<k_pg;i++){
 		while ((k_ph+j)->t!=ELF_PT_LOAD){
 			j++;
 		}
@@ -464,7 +463,8 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	li[3]=-1;
 	uint64_t* pt[4]={ka->pml4,NULL,NULL,NULL};
 	j=0;
-	for (uint64_t i=pb;i<pe+IDT_SIZE;i+=PAGE_SIZE){
+	ka->k_sp=0;
+	for (uint64_t i=pb;i<pe+IDT_SIZE+STACK_SIZE;i+=PAGE_SIZE){
 		for (uint8_t k=0;k<4;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;
 			if (li[k]!=l){
@@ -481,17 +481,23 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 				}
 			}
 		}
-		if (i>=pe){
+		if (i<pe){
+			Print(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
+		}
+		else if (i<pe+IDT_SIZE){
 			Print(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
 			ka->idt=(void*)i;
 		}
 		else{
-			Print(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
+			Print(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
+			if (!ka->k_sp){
+				ka->k_sp=i;
+			}
 		}
 	}
-	uint64_t pml4_va=pb+((ka->k_pg+OTHER_PAGE_COUNT)<<12);
+	uint64_t pml4_va=pb+((k_pg+OTHER_PAGE_COUNT)<<12);
 	pml4_va+=PAGE_2MB-(pml4_va&(PAGE_2MB-1));
-	Print(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<12,ka->t_pg,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>39)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>30)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>21)&0x1ff,((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>12)&0x1ff);
+	Print(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<12,ka->t_pg,(pml4_va>>39)&0x1ff,(pml4_va>>30)&0x1ff,(pml4_va>>21)&0x1ff,(pml4_va>>12)&0x1ff);
 	ka->n_va=pml4_va+(ka->t_pg<<12);
 	ka->va_to_pa=pml4_va-(uint64_t)(void*)ka->pml4;
 	if ((ka->t_pg>>9)>PAGE_TABLE_MAX_ENTRIES){
@@ -499,7 +505,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	for (uint8_t k=0;k<3;k++){
-		uint16_t l=((pb+MAX_KERNEL_SIZE+IDT_SIZE)>>(39-9*k))&0x1ff;
+		uint16_t l=(pml4_va>>(39-9*k))&0x1ff;
 		if (li[k]!=l){
 			li[k]=l;
 			if (k<2){
@@ -511,7 +517,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 	}
 	for (uint16_t i=0;i<ka->t_pg>>9;i++){
-		Print(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pb+MAX_KERNEL_SIZE+IDT_SIZE+(i<<21));
+		Print(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<21));
 		*(pt[2]+li[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<21))|0x083;
 	}
 	Print(L"Extra Page Tables: %llu (%llu Used)\r\n",ka->t_pg-ka->u_pg,ka->u_pg);

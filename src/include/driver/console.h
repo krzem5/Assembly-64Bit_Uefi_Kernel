@@ -1,5 +1,6 @@
 #ifndef __KERNEL_DRIVER_CONSOLE_H__
 #define __KERNEL_DRIVER_CONSOLE_H__ 1
+#include <shared.h>
 #include <libc/stdint.h>
 #include <kmain.h>
 #include <gfx.h>
@@ -26,15 +27,15 @@
 
 
 
-void console_init(KernelArgs* ka);
+void KERNEL_CALL console_init(KernelArgs* ka);
 
 
 
-void _console_print(const char* s,color_t cl);
+void KERNEL_CALL _console_print(const char* s,color_t cl);
 
 
 
-void _console_vprint(const char* s,color_t cl,...);
+void KERNEL_CALL _console_vprint(const char* s,color_t cl,...);
 
 
 
