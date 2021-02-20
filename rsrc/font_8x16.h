@@ -1,7 +1,7 @@
 #ifndef __RSRC_FONT_8X16_FONT_H__
 #define __RSRC_FONT_8X16_FONT_H__ 1
 #include <font.h>
-#include <libc/stdint.h>
+#include <stdint.h>
 
 
 

@@ -1,10 +1,12 @@
-#include <libc/stdlib.h>
-#include <libc/_libc_internal.h>
-#include <libc/stdint.h>
-#include <libc/stddef.h>
-#include <libc/stdbool.h>
+#include <stdlib.h>
+#include <_libc_internal.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#ifdef __KERNEL__
+#include <paging.h>
 #include <fatal_error.h>
-#include <driver/console.h>
+#endif
 
 
 
@@ -29,8 +31,6 @@ extern void LIBC_CALL __asm_fill_zero(uint64_t l,uint64_t p);
 
 
 
-__set_pg_acquire_func_t __libc_alloc_af=NULL;
-__set_pg_release_func_t __libc_alloc_rf=NULL;
 typedef struct _MEM_BLOCK{
 	uint64_t a;
 	uint64_t b;
@@ -43,7 +43,7 @@ MemBlock __libc_alloc_head={
 
 
 void* LIBC_CALL malloc(size_t sz){
-	if (!sz||sz>MAX_ALLOC_SIZE||!__libc_alloc_af){
+	if (!sz||sz>MAX_ALLOC_SIZE){
 		return NULL;
 	}
 	struct _MEM_BLOCK* b=&__libc_alloc_head;
@@ -53,11 +53,17 @@ void* LIBC_CALL malloc(size_t sz){
 			if (pg_c<ALLOC_PAGES_COUNT){
 				pg_c=ALLOC_PAGES_COUNT;
 			}
-			void* pg=__libc_alloc_af(pg_c);
+#ifdef __KERNEL__
+			void* pg=paging_alloc_pages(pg_c);
+#else
+			void* pg=NULL;
+#endif
 			b->b|=MEM_BLOCK_SET_NEXT;
+#ifdef __KERNEL__
 			if (MEM_BLOCK_GET_PREVIOUS(b)){
 				ASSERT(pg==MEM_BLOCK_GET_NEXT(b));
 			}
+#endif
 			if (pg==NULL){
 				return NULL;
 			}
@@ -94,7 +100,9 @@ void* LIBC_CALL malloc(size_t sz){
 void* LIBC_CALL calloc(size_t c,size_t sz){
 	uint64_t t=sz*c;
 	if (t/sz!=c){
+#ifdef __KERNEL__
 		fatal_error("Multiplication Overflow!\n");
+#endif
 		return NULL;
 	}
 	if (t%ALLOC_ALIGNMENT){
@@ -102,7 +110,9 @@ void* LIBC_CALL calloc(size_t c,size_t sz){
 	}
 	void* o=malloc(t);
 	if (!o){
-		fatal_error("Not Enought Memory!\n");
+#ifdef __KERNEL__
+		fatal_error("Not enough Memory!\n");
+#endif
 		return o;
 	}
 	__asm_fill_zero(t,(uint64_t)o);
@@ -121,11 +131,4 @@ void LIBC_CALL free(void* p){
 	if (!p){
 		return;
 	}
-}
-
-
-
-void LIBC_CALL __set_pg_func(__set_pg_acquire_func_t af,__set_pg_release_func_t rf){
-	__libc_alloc_af=af;
-	__libc_alloc_rf=rf;
 }

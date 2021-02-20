@@ -1,10 +1,10 @@
-#include <libc/stdio.h>
-#include <libc/_libc_internal.h>
-#include <libc/stdint.h>
-#include <libc/stddef.h>
-#include <libc/stdarg.h>
-#include <libc/stdlib.h>
-#include <libc/stdbool.h>
+#include <stdio.h>
+#include <_libc_internal.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 
 
