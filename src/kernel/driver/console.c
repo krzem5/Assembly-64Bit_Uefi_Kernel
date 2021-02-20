@@ -1,14 +1,15 @@
 #include <shared.h>
-#include <driver/console.h>
-#include <stdint.h>
-#include <font.h>
-#include <kmain.h>
-#include <gfx.h>
-#include <stdio.h>
-#include <stdarg.h>
 #include <_libc_internal.h>
-#include <stdlib.h>
+#include <driver/console.h>
+#include <exec_lock.h>
+#include <font.h>
 #include <font_8x16.h>
+#include <gfx.h>
+#include <kmain.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 
@@ -74,19 +75,23 @@ void KERNEL_CALL console_init(KernelArgs* ka){
 
 
 void KERNEL_CALL _console_print(const char* s,color_t cl){
+	exec_lock();
 	while (*s){
 		_console_print_char(*s,cl,DEFAULT_FONT);
 		s++;
 	}
 	gfx_update_screen();
+	exec_unlock();
 }
 
 
 
 void KERNEL_CALL _console_vprint(const char* s,color_t cl,...){
+	exec_lock();
 	va_list v;
 	va_start(v,cl);
 	__vprintf_raw(&cl,NULL,_console_vprintf_write_func,s,v);
 	va_end(v);
 	gfx_update_screen();
+	exec_unlock();
 }

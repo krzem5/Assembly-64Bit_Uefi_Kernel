@@ -1,8 +1,8 @@
 #ifndef __KERNEL_CPU_IDT_H__
 #define __KERNEL_CPU_IDT_H__ 1
 #include <shared.h>
-#include <stdint.h>
 #include <kmain.h>
+#include <stdint.h>
 
 
 

@@ -1,9 +1,9 @@
 #ifndef __KERNEL_DRIVER_CONSOLE_H__
 #define __KERNEL_DRIVER_CONSOLE_H__ 1
 #include <shared.h>
-#include <stdint.h>
-#include <kmain.h>
 #include <gfx.h>
+#include <kmain.h>
+#include <stdint.h>
 
 
 

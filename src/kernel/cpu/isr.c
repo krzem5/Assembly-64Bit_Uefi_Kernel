@@ -1,11 +1,11 @@
 #include <shared.h>
-#include <cpu/isr.h>
-#include <stdint.h>
-#include <stddef.h>
 #include <cpu/idt.h>
+#include <cpu/isr.h>
 #include <driver/console.h>
 #include <fatal_error.h>
 #include <shared.h>
+#include <stddef.h>
+#include <stdint.h>
 
 
 

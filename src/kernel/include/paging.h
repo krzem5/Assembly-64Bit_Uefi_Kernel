@@ -1,8 +1,8 @@
 #ifndef __KERNEL_PAGING_H__
 #define __KERNEL_PAGING_H__ 1
 #include <shared.h>
-#include <stdint.h>
 #include <kmain.h>
+#include <stdint.h>
 
 
 

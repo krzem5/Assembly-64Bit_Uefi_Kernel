@@ -1,11 +1,11 @@
-#include <stdlib.h>
 #include <_libc_internal.h>
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
 #ifdef __KERNEL__
-#include <paging.h>
 #include <fatal_error.h>
+#include <paging.h>
 #endif
 
 
@@ -35,10 +35,7 @@ typedef struct _MEM_BLOCK{
 	uint64_t a;
 	uint64_t b;
 } MemBlock;
-MemBlock __libc_alloc_head={
-	MEM_BLOCK_SET_PREVIOUS(NULL),
-	MEM_BLOCK_SET_SIZE(0)|MEM_BLOCK_SET_FREE
-};
+MemBlock* __libc_alloc_head=NULL;
 
 
 
@@ -46,7 +43,20 @@ void* LIBC_CALL malloc(size_t sz){
 	if (!sz||sz>MAX_ALLOC_SIZE){
 		return NULL;
 	}
-	struct _MEM_BLOCK* b=&__libc_alloc_head;
+	if (!__libc_alloc_head){
+#ifdef __KERNEL__
+		void* pg=paging_alloc_pages(ALLOC_PAGES_COUNT);
+#else
+		void* pg=NULL;
+#endif
+		if (pg==NULL){
+			return NULL;
+		}
+		__libc_alloc_head=(MemBlock*)pg;
+		__libc_alloc_head->a=MEM_BLOCK_SET_PREVIOUS(NULL);
+		__libc_alloc_head->b=MEM_BLOCK_SET_SIZE(ALLOC_PAGES_COUNT-sizeof(MemBlock))|MEM_BLOCK_SET_FREE;
+	}
+	struct _MEM_BLOCK* b=__libc_alloc_head;
 	while (!MEM_BLOCK_GET_FREE(b)||MEM_BLOCK_GET_SIZE(b)<sz){
 		if (!MEM_BLOCK_HAS_NEXT(b)){
 			size_t pg_c=(sz-(MEM_BLOCK_GET_FREE(b)?MEM_BLOCK_GET_SIZE(b):0)+sizeof(MemBlock)+PAGE_SIZE-1)>>12;

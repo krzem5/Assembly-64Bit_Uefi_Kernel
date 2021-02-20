@@ -1,14 +1,14 @@
 #include <shared.h>
-#include <kmain.h>
-#include <stdint.h>
-#include <gfx.h>
-#include <paging.h>
-#include <driver/acpi.h>
-#include <driver/console.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
-#include <cpu/isr.h>
 #include <cpu/irq.h>
+#include <cpu/isr.h>
+#include <driver/acpi.h>
+#include <driver/console.h>
+#include <gfx.h>
+#include <kmain.h>
+#include <paging.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 

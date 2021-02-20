@@ -1,9 +1,9 @@
 #ifndef __KERNEL_GFX_H__
 #define __KERNEL_GFX_H__ 1
 #include <shared.h>
-#include <stdint.h>
-#include <kmain.h>
 #include <font.h>
+#include <kmain.h>
+#include <stdint.h>
 
 
 

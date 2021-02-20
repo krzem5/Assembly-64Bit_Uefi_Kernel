@@ -1,10 +1,10 @@
 #include <shared.h>
 #include <driver/acpi.h>
+#include <driver/console.h>
+#include <fatal_error.h>
+#include <kmain.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <kmain.h>
-#include <fatal_error.h>
-#include <driver/console.h>
 
 
 

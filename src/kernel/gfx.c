@@ -1,9 +1,9 @@
 #include <shared.h>
+#include <font.h>
 #include <gfx.h>
+#include <kmain.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <kmain.h>
-#include <font.h>
 
 
 

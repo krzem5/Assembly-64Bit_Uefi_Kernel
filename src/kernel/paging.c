@@ -1,11 +1,11 @@
 #include <shared.h>
-#include <paging.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <kmain.h>
 #include <_libc_internal.h>
-#include <fatal_error.h>
 #include <driver/console.h>
+#include <fatal_error.h>
+#include <kmain.h>
+#include <paging.h>
+#include <stddef.h>
+#include <stdint.h>
 
 
 

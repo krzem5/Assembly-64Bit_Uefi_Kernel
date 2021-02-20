@@ -1,7 +1,7 @@
 #include <shared.h>
 #include <cpu/ports.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 
 

@@ -1,8 +1,8 @@
 #ifndef __LIBC_STDLIB_H__
 #define __LIBC_STDLIB_H__
-#include <stdint.h>
-#include <stddef.h>
 #include <_libc_internal.h>
+#include <stddef.h>
+#include <stdint.h>
 
 
 

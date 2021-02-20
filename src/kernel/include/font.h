@@ -1,5 +1,5 @@
 #ifndef __KERNEL_FONT_H__
-#define __KERNEL_FONT_H__
+#define __KERNEL_FONT_H__ 1
 #include <stdint.h>
 
 

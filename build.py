@@ -5,11 +5,22 @@ import re
 
 
 
+INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
+INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
 KERNEL_ARGS_STRUCT_HEADER="src/kernel/include/kmain.h"
 KERNEL_ARGS_STRUCT_REGEX=re.compile(br"struct\s+__KERNEL_ARGS\s*{")
 KERNEL_ARGS_STRUCT_STACK_POINTER_NAME=b"k_sp"
 SIZEOF_64BIT_POINTER=8
 SIZEOF_UINT64_T=8
+
+
+
+def _sort_inc(m):
+	l=[INCLUDE_FILE_REGEX.search(e.strip()).group(1) for e in m.group(1).strip().split(b"\n")]
+	o=(b"#include <shared.h>"+(b"\n" if len(l)>1 else b"") if b"shared.h" in l else b"")
+	if (len(o)):
+		l.remove(b"shared.h")
+	return o+b"\n".join([b"#include <"+e+b">" for e in sorted(l)])
 
 
 
@@ -37,6 +48,15 @@ l_fl=[]
 for r,_,fl in os.walk("src"):
 	r=r.replace("\\","/")+"/"
 	for f in fl:
+		if (f[-2:]==".c" or f[-2:]==".h"):
+			print(f"Prettyfying C {('Source' if f[-1]=='c' else 'Header')} File: {r+f}")
+			with open(r+f,"rb") as rf:
+				dt=INCLUDE_LIST_REGEX.sub(_sort_inc,rf.read())
+			with open(r+f,"wb") as wf:
+				wf.write(dt)
+for r,_,fl in os.walk("src"):
+	r=r.replace("\\","/")+"/"
+	for f in fl:
 		if (r[:7]=="src/efi"):
 			if (f[-2:]==".c"):
 				print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
@@ -56,8 +76,9 @@ for r,_,fl in os.walk("src"):
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
 				print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
+				ef=[]
 				if (f=="kentry.asm"):
-					with open(f"build/kernel/{(r+f)[4:].replace('/','$')}","wb") as wf,open(r+f,"rb") as rf,open(KERNEL_ARGS_STRUCT_HEADER,"rb") as hf:
+					with open(KERNEL_ARGS_STRUCT_HEADER,"rb") as hf:
 						dt=hf.read()
 						m=KERNEL_ARGS_STRUCT_REGEX.search(dt)
 						if (m is None):
@@ -92,18 +113,14 @@ for r,_,fl in os.walk("src"):
 								quit()
 							off+=c
 							lc=c
-						wf.write(bytes(f"%define __KERNEL_ARGS_STRUCT_STACK_POINTER_OFFSET__ {off}\n","utf-8"))
-						wf.write(rf.read())
-					if (subprocess.run(["nasm",f"build/kernel/{(r+f)[4:].replace('/','$')}","-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-						quit()
-				else:
-					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-						quit()
+						ef=[f"-D__KERNEL_ARGS_STRUCT_STACK_POINTER_OFFSET__={off}"]
+				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+ef).returncode!=0):
+					quit()
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 		else:
 			if (f[-2:]==".c"):
 				print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc","-D__KERNEL__"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc","-D__KERNEL__=1"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 					quit()
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
@@ -112,7 +129,7 @@ for r,_,fl in os.walk("src"):
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
 				print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-D__KERNEL__","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-D__KERNEL__=1","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						quit()
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")

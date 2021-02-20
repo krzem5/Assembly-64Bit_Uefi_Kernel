@@ -1,10 +1,10 @@
 #include <shared.h>
-#include <cpu/irq.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <cpu/ports.h>
 #include <cpu/idt.h>
+#include <cpu/irq.h>
+#include <cpu/ports.h>
 #include <driver/console.h>
+#include <stddef.h>
+#include <stdint.h>
 
 
 

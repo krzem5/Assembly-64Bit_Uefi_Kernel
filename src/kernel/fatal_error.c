@@ -1,6 +1,6 @@
 #include <shared.h>
-#include <fatal_error.h>
 #include <driver/console.h>
+#include <fatal_error.h>
 
 
 

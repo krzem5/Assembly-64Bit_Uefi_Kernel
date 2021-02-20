@@ -1,10 +1,10 @@
 #include <shared.h>
 #include <cpu/idt.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <kmain.h>
 #include <fatal_error.h>
+#include <kmain.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 
 
