@@ -37,17 +37,17 @@ for r,_,fl in os.walk("src"):
 		if (r[:7]=="src/efi"):
 			if (f[-2:]==".c"):
 				print(f"Compiling EFI-C File: {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
-				if (subprocess.run(["bash.exe","-c",f"gcc -Isrc/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {r+f} -o build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0):
+				if (subprocess.run(["bash","-c",f"gcc -Isrc/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {r+f} -o build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0):
 					quit()
 				e_fl+=[f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]
 			elif (f[-4:]==".asm"):
 				print(f"Compiling EFI-ASM File: {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
-				if (subprocess.run(["nasm.exe",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{(r+f)[8:].replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{(r+f)[8:].replace('/','$')}.o"]).returncode!=0):
 					quit()
 				e_fl+=[f"build/efi/{(r+f)[8:].replace('/','$')}.o"]
 		elif (f[-2:]==".c"):
 			print(f"Compiling C File: {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-			if (subprocess.run(["gcc.exe","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip.exe","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+			if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 				quit()
 			k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 		elif (f[-4:]==".asm"):
@@ -90,10 +90,10 @@ for r,_,fl in os.walk("src"):
 						lc=c
 					wf.write(bytes(f"%define __KERNEL_ARGS_STRUCT_STACK_POINTER_OFFSET__ {off}\n","utf-8"))
 					wf.write(rf.read())
-				if (subprocess.run(["nasm.exe",f"build/kernel/{(r+f)[4:].replace('/','$')}","-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["nasm",f"build/kernel/{(r+f)[4:].replace('/','$')}","-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 					quit()
 			else:
-				if (subprocess.run(["nasm.exe",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 					quit()
 			k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 print(f"Linking EFI OS Loader: {', '.join([e.replace(chr(92)+'$','$') for e in e_fl])}")

@@ -11,16 +11,21 @@
 #define MAX_ALLOC_SIZE 0x10000000000
 #define PAGE_SIZE 0x1000
 #define MIN_BLOCK_SIZE_KEEP 2
-#define ALLOC_PAGES_COUNT 16
-#define MEM_BLOCK_GET_PREVIOUS(b) ((MemBlock*)(void*)((b)->a&0x7fffffffffffffff))
-#define MEM_BLOCK_GET_FREE(b) ((uint8_t)((b)->a>>63))
-#define MEM_BLOCK_GET_SIZE(b) ((b)->b&0x7fffffffffffffff)
-#define MEM_BLOCK_HAS_NEXT(b) ((uint8_t)((b)->b>>63))
-#define MEM_BLOCK_GET_NEXT(b) ((MemBlock*)(void*)((uint64_t)(void*)(b)+((b)->b&0x7fffffffffffffff)))
+#define ALLOC_ALIGNMENT 16
+#define ALLOC_PAGES_COUNT 8
+#define MEM_BLOCK_GET_PREVIOUS(b) ((MemBlock*)(void*)((b)->a))
+#define MEM_BLOCK_GET_FREE(b) ((uint8_t)((b)->b&1))
+#define MEM_BLOCK_GET_SIZE(b) ((b)->b&0xfffffffffffffffc)
+#define MEM_BLOCK_HAS_NEXT(b) ((uint8_t)((b)->b&2))
+#define MEM_BLOCK_GET_NEXT(b) ((MemBlock*)(void*)((uint64_t)(void*)(b)+((b)->b&0xfffffffffffffffc)))
 #define MEM_BLOCK_SET_PREVIOUS(p) ((uint64_t)(void*)(p))
-#define MEM_BLOCK_SET_FREE 0x8000000000000000
-#define MEM_BLOCK_SET_SIZE(sz) ((uint64_t)(sz))
-#define MEM_BLOCK_SET_NEXT 0x8000000000000000
+#define MEM_BLOCK_SET_FREE 1
+#define MEM_BLOCK_SET_SIZE(sz) ((uint64_t)(sz)&0xfffffffffffffffc)
+#define MEM_BLOCK_SET_NEXT 2
+
+
+
+extern void LIBC_CALL __asm_fill_zero(uint64_t l,uint64_t p);
 
 
 
@@ -31,8 +36,8 @@ typedef struct _MEM_BLOCK{
 	uint64_t b;
 } MemBlock;
 MemBlock __libc_alloc_head={
-	MEM_BLOCK_SET_PREVIOUS(NULL)|MEM_BLOCK_SET_FREE,
-	MEM_BLOCK_SET_SIZE(0)
+	MEM_BLOCK_SET_PREVIOUS(NULL),
+	MEM_BLOCK_SET_SIZE(0)|MEM_BLOCK_SET_FREE
 };
 
 
@@ -56,44 +61,51 @@ void* LIBC_CALL malloc(size_t sz){
 			if (pg==NULL){
 				return NULL;
 			}
-			// n->n=pg;
-			// n->n->p=n;
-			// n=n->n;
-			// n->sz=pg_c<<12;
+			if (MEM_BLOCK_GET_FREE(b)){
+				b->b=MEM_BLOCK_SET_SIZE((pg_c<<12)+MEM_BLOCK_GET_SIZE(b));
+			}
+			else{
+				b->b|=MEM_BLOCK_SET_NEXT;
+				MemBlock* nb=MEM_BLOCK_GET_NEXT(b);
+				nb->a=MEM_BLOCK_SET_PREVIOUS(b);
+				nb->b=MEM_BLOCK_SET_SIZE(pg_c<<12)|MEM_BLOCK_SET_FREE;
+				b=nb;
+			}
 			break;
 		}
 		b=MEM_BLOCK_GET_NEXT(b);
 	}
+	if (sz%ALLOC_ALIGNMENT){
+		sz+=ALLOC_ALIGNMENT-(sz%ALLOC_ALIGNMENT);
+	}
+	uint64_t b_sz=MEM_BLOCK_GET_SIZE(b);
 	b->b=MEM_BLOCK_SET_SIZE(sz);
-	// if (n->sz-sz-2*sizeof(struct _MEM_BLOCK)>=MIN_BLOCK_SIZE_KEEP){
-	// 	n->n=n+sizeof(struct _MEM_BLOCK)+sz;
-	// 	n->n->p=n;
-	// 	n->n->n=NULL;
-	// 	n->n->t_sz=n->t_sz-sz-sizeof(struct _MEM_BLOCK);
-	// 	n->n->sz=n->n->t_sz-sizeof(struct _MEM_BLOCK);
-	// 	n->n->f=true;
-	// 	n->t_sz=sz+sizeof(struct _MEM_BLOCK);
-	// }
-	// else{
-	// 	n->n=NULL;
-	// }
-	void* o=(void*)((uint64_t)(void*)b+sizeof(MemBlock));
-	console_log("%p\n",(void*)((uint64_t)(void*)b+sizeof(MemBlock)));
-	return o;
+	if (b_sz>sz){
+		b->b|=MEM_BLOCK_SET_NEXT;
+		MemBlock* nb=MEM_BLOCK_GET_NEXT(b);
+		nb->a=MEM_BLOCK_SET_PREVIOUS(b);
+		nb->b=MEM_BLOCK_SET_SIZE(b_sz-sz);
+	}
+	return (void*)((uint64_t)(void*)b+sizeof(MemBlock));
 }
 
 
 
 void* LIBC_CALL calloc(size_t c,size_t sz){
-	c*=sz;
-	void* o=malloc(c);
-	if (o==NULL){
+	uint64_t t=sz*c;
+	if (t/sz!=c){
+		fatal_error("Multiplication Overflow!\n");
+		return NULL;
+	}
+	if (t%ALLOC_ALIGNMENT){
+		t+=ALLOC_ALIGNMENT-(t%ALLOC_ALIGNMENT);
+	}
+	void* o=malloc(t);
+	if (!o){
+		fatal_error("Not Enought Memory!\n");
 		return o;
 	}
-	while (c){
-		*((uint8_t*)o+c)=0;
-		c--;
-	}
+	__asm_fill_zero(t,(uint64_t)o);
 	return o;
 }
 
@@ -106,9 +118,9 @@ void* LIBC_CALL realloc(void* p,size_t sz){
 
 
 void LIBC_CALL free(void* p){
-	// if (p==NULL){
-	// 	return;
-	// }
+	if (!p){
+		return;
+	}
 }
 
 

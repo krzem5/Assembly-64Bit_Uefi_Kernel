@@ -68,8 +68,7 @@ void KERNEL_CALL console_init(KernelArgs* ka){
 	_console_y=0;
 	_console_w=ka->vmem_w/(8*SCALE);
 	_console_h=ka->vmem_h/(16*SCALE);
-	_console_bf=malloc(_console_w*_console_h*sizeof(char));
-	console_log("Console Ptr: %p\n",_console_bf);
+	// _console_bf=malloc(_console_w*_console_h*sizeof(char));
 }
 
 
