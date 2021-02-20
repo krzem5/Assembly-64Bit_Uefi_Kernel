@@ -2,7 +2,7 @@
 #include <cpu/idt.h>
 #include <cpu/irq.h>
 #include <cpu/ports.h>
-#include <driver/console.h>
+#include <gfx/console.h>
 #include <stddef.h>
 #include <stdint.h>
 

@@ -1,10 +1,10 @@
 #include <shared.h>
 #include <_libc_internal.h>
-#include <driver/console.h>
 #include <exec_lock.h>
 #include <font.h>
 #include <font_8x16.h>
-#include <gfx.h>
+#include <gfx/console.h>
+#include <gfx/gfx.h>
 #include <kmain.h>
 #include <stdarg.h>
 #include <stdint.h>

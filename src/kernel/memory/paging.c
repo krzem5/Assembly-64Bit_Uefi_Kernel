@@ -1,7 +1,7 @@
 #include <shared.h>
 #include <_libc_internal.h>
-#include <driver/console.h>
-#include <fatal_error.h>
+#include <cpu/fatal_error.h>
+#include <gfx/console.h>
 #include <kmain.h>
 #include <memory/paging.h>
 #include <stddef.h>

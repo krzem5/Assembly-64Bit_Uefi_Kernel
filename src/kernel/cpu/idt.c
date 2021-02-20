@@ -1,6 +1,6 @@
 #include <shared.h>
+#include <cpu/fatal_error.h>
 #include <cpu/idt.h>
-#include <fatal_error.h>
 #include <kmain.h>
 #include <stddef.h>
 #include <stdint.h>

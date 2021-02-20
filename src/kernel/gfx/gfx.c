@@ -1,6 +1,6 @@
 #include <shared.h>
 #include <font.h>
-#include <gfx.h>
+#include <gfx/gfx.h>
 #include <kmain.h>
 #include <stdint.h>
 #include <stdlib.h>

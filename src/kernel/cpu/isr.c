@@ -1,8 +1,8 @@
 #include <shared.h>
+#include <cpu/fatal_error.h>
 #include <cpu/idt.h>
 #include <cpu/isr.h>
-#include <driver/console.h>
-#include <fatal_error.h>
+#include <gfx/console.h>
 #include <shared.h>
 #include <stddef.h>
 #include <stdint.h>

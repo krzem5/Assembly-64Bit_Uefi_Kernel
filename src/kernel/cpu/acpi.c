@@ -1,7 +1,7 @@
 #include <shared.h>
-#include <driver/acpi.h>
-#include <driver/console.h>
-#include <fatal_error.h>
+#include <cpu/acpi.h>
+#include <cpu/fatal_error.h>
+#include <gfx/console.h>
 #include <kmain.h>
 #include <stdint.h>
 #include <stdlib.h>

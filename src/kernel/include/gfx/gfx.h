@@ -1,5 +1,5 @@
-#ifndef __KERNEL_GFX_H__
-#define __KERNEL_GFX_H__ 1
+#ifndef __KERNEL_GFX_GFX_H__
+#define __KERNEL_GFX_GFX_H__ 1
 #include <shared.h>
 #include <font.h>
 #include <kmain.h>

@@ -1,7 +1,7 @@
-#ifndef __KERNEL_DRIVER_CONSOLE_H__
-#define __KERNEL_DRIVER_CONSOLE_H__ 1
+#ifndef __KERNEL_GFX_CONSOLE_H__
+#define __KERNEL_GFX_CONSOLE_H__ 1
 #include <shared.h>
-#include <gfx.h>
+#include <gfx/gfx.h>
 #include <kmain.h>
 #include <stdint.h>
 
