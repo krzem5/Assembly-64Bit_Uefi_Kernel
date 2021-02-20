@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #ifdef __KERNEL__
 #include <fatal_error.h>
-#include <paging.h>
+#include <memory/paging.h>
 #endif
 
 

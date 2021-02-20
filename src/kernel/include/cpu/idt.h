@@ -46,6 +46,10 @@ typedef struct __IDT_ENTRY{
 
 
 
+extern void _asm_setup_idt(void);
+
+
+
 void KERNEL_CALL setup_idt(KernelArgs* ka);
 
 

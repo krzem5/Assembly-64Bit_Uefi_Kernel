@@ -7,13 +7,9 @@
 #include <driver/console.h>
 #include <gfx.h>
 #include <kmain.h>
-#include <paging.h>
+#include <memory/paging.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-
-
-extern void KERNEL_CALL asm_end_loop(void);
 
 
 
@@ -24,7 +20,7 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
 	for (uint64_t i=0;i<ka->mmap_l;i++){
-		console_log("  %llx - +%llx",ka->mmap[i].b&0x7fffffffffffffff,ka->mmap[i].l);
+		console_log("  %llx - +%llx",ka->mmap[i].b&0xfffffffffffffffe,ka->mmap[i].l);
 		if (ka->mmap[i].b>>63){
 			console_log(" (ACPI Tables)");
 		}

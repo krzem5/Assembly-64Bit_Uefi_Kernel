@@ -8,10 +8,6 @@
 
 
 
-extern void _asm_setup_idt(void);
-
-
-
 IDTEntry* idt_l=NULL;
 IDTR idtr={
 	4095,

@@ -49,7 +49,7 @@ for r,_,fl in os.walk("src"):
 	r=r.replace("\\","/")+"/"
 	for f in fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
-			print(f"Prettyfying C {('Source' if f[-1]=='c' else 'Header')} File: {r+f}")
+			print(f"Prettifying C {('Source' if f[-1]=='c' else 'Header')} File: {r+f}")
 			with open(r+f,"rb") as rf:
 				dt=INCLUDE_LIST_REGEX.sub(_sort_inc,rf.read())
 			with open(r+f,"wb") as wf:

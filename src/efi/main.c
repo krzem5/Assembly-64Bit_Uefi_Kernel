@@ -276,13 +276,13 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if (((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart>=MIN_MEM_ADDRESS&&(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiConventionalMemory||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiBootServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiLoaderData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesCode||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiRuntimeServicesData||((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory)){
 			uint8_t t=(((EFI_MEMORY_DESCRIPTOR*)bf)->Type==EfiACPIReclaimMemory);
 			if (j==0&&!ka->mmap[0].b&&!ka->mmap[0].l){
-				ka->mmap[0].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
+				ka->mmap[0].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|t;
 				lt=t;
 			}
 			else if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
-				Print(L"  %llx - +%llx (%d)\r\n",(ka->mmap[j].b)&0x7fffffffffffffff,ka->mmap[j].l,ka->mmap[j].b>>63);
+				Print(L"  %llx - +%llx (%d)\r\n",(ka->mmap[j].b)&0xfffffffffffffffe,ka->mmap[j].l,ka->mmap[j].b&1);
 				j++;
-				ka->mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|((uint64_t)t<<63);
+				ka->mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|t;
 				ka->mmap[j].l=0;
 				lt=t;
 			}
@@ -293,7 +293,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		bf+=mm_ds;
 	}
 	FreePool(bf);
-	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(ka->mmap[j].b)&0x7fffffffffffffff,ka->mmap[j].l,ka->mmap[j].b>>63,tm,sz);
+	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(ka->mmap[j].b)&0xfffffffffffffffe,ka->mmap[j].l,ka->mmap[j].b&1,tm,sz);
 	EFI_LOADED_IMAGE_PROTOCOL* lip;
 	s=st->BootServices->HandleProtocol(ih,&efi_lip_guid,(void**)&lip);
 	if (EFI_ERROR(s)){
@@ -405,28 +405,28 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t* k_pg_pa=AllocatePool((k_pg+OTHER_PAGE_COUNT)*sizeof(uint64_t));
 	uint64_t i=0;
 	j=0;
-	uint64_t k=ka->mmap[0].b&0x7fffffffffffffff;
+	uint64_t k=ka->mmap[0].b&0xfffffffffffffffe;
 	while (i<k_pg+1){
-		if (k>=(ka->mmap[j].b&0x7fffffffffffffff)+ka->mmap[j].l){
+		if (k>=(ka->mmap[j].b&0xfffffffffffffffe)+ka->mmap[j].l){
 			j++;
 			if (j>=ka->mmap_l){
 				Print(L"Not enought Memory to Map the Kernel\r\n");
 				goto _end;
 			}
-			k=ka->mmap[j].b&0x7fffffffffffffff;
+			k=ka->mmap[j].b&0xfffffffffffffffe;
 		}
 		*(k_pg_pa+i)=k;
 		Print(L"Page[%llu] = %llx\r\n",i,k);
 		i++;
 		k+=PAGE_SIZE;
 	}
-	if (k>=(ka->mmap[j].b&0x7fffffffffffffff)+ka->mmap[j].l){
+	if (k>=(ka->mmap[j].b&0xfffffffffffffffe)+ka->mmap[j].l){
 		j++;
 		if (j>=ka->mmap_l){
 			Print(L"Not enought Memory to Create the next Physical Address\r\n");
 			goto _end;
 		}
-		k=ka->mmap[j].b&0x7fffffffffffffff;
+		k=ka->mmap[j].b&0xfffffffffffffffe;
 	}
 	ka->n_pa=k;
 	ka->n_pa_idx=j;

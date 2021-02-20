@@ -38,8 +38,12 @@ typedef struct __KERNEL_ARGS{
 typedef void (KERNEL_CALL *kmain)(KernelArgs* ka);
 #else
 void KERNEL_CALL kmain(KernelArgs* ka);
+
+
+
+extern void KERNEL_CALL asm_end_loop(void);
+
+
+
 #endif
-
-
-
 #endif

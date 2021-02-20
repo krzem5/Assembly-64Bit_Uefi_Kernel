@@ -8,25 +8,6 @@
 
 
 
-extern void KERNEL_CALL _asm_irq0(void);
-extern void KERNEL_CALL _asm_irq1(void);
-extern void KERNEL_CALL _asm_irq2(void);
-extern void KERNEL_CALL _asm_irq3(void);
-extern void KERNEL_CALL _asm_irq4(void);
-extern void KERNEL_CALL _asm_irq5(void);
-extern void KERNEL_CALL _asm_irq6(void);
-extern void KERNEL_CALL _asm_irq7(void);
-extern void KERNEL_CALL _asm_irq8(void);
-extern void KERNEL_CALL _asm_irq9(void);
-extern void KERNEL_CALL _asm_irq10(void);
-extern void KERNEL_CALL _asm_irq11(void);
-extern void KERNEL_CALL _asm_irq12(void);
-extern void KERNEL_CALL _asm_irq13(void);
-extern void KERNEL_CALL _asm_irq14(void);
-extern void KERNEL_CALL _asm_irq15(void);
-
-
-
 irq_handler_t irq_hl[16];
 
 
