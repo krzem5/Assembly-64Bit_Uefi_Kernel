@@ -41,7 +41,7 @@
 
 
 
-typedef void (KERNEL_CALL *isr_handler_t)(registers_t* r);
+typedef uint8_t (KERNEL_CALL *isr_handler_t)(registers_t* r);
 
 
 

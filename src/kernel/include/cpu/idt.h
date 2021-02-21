@@ -46,7 +46,7 @@ typedef struct __IDT_ENTRY{
 
 
 
-extern void _asm_setup_idt(void);
+extern void asm_setup_idt(void);
 
 
 

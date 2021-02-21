@@ -53,11 +53,13 @@ _irq_h_call:
 	pop r14
 	pop r15
 	add rsp, 16
+	sti
 	iretq
 
 
 
 _asm_irq0:
+	cli
 	push byte 0x00
 	push byte 0x20
 	jmp _irq_h_call
@@ -65,6 +67,7 @@ _asm_irq0:
 
 
 _asm_irq1:
+	cli
 	push byte 0x00
 	push byte 0x21
 	jmp _irq_h_call
@@ -72,6 +75,7 @@ _asm_irq1:
 
 
 _asm_irq2:
+	cli
 	push byte 0x00
 	push byte 0x22
 	jmp _irq_h_call
@@ -79,6 +83,7 @@ _asm_irq2:
 
 
 _asm_irq3:
+	cli
 	push byte 0x00
 	push byte 0x23
 	jmp _irq_h_call
@@ -86,6 +91,7 @@ _asm_irq3:
 
 
 _asm_irq4:
+	cli
 	push byte 0x00
 	push byte 0x24
 	jmp _irq_h_call
@@ -93,6 +99,7 @@ _asm_irq4:
 
 
 _asm_irq5:
+	cli
 	push byte 0x00
 	push byte 0x25
 	jmp _irq_h_call
@@ -100,6 +107,7 @@ _asm_irq5:
 
 
 _asm_irq6:
+	cli
 	push byte 0x00
 	push byte 0x26
 	jmp _irq_h_call
@@ -107,6 +115,7 @@ _asm_irq6:
 
 
 _asm_irq7:
+	cli
 	push byte 0x00
 	push byte 0x27
 	jmp _irq_h_call
@@ -114,6 +123,7 @@ _asm_irq7:
 
 
 _asm_irq8:
+	cli
 	push byte 0x00
 	push byte 0x28
 	jmp _irq_h_call
@@ -121,6 +131,7 @@ _asm_irq8:
 
 
 _asm_irq9:
+	cli
 	push byte 0x00
 	push byte 0x29
 	jmp _irq_h_call
@@ -128,6 +139,7 @@ _asm_irq9:
 
 
 _asm_irq10:
+	cli
 	push byte 0x00
 	push byte 0x2a
 	jmp _irq_h_call
@@ -135,6 +147,7 @@ _asm_irq10:
 
 
 _asm_irq11:
+	cli
 	push byte 0x00
 	push byte 0x2b
 	jmp _irq_h_call
@@ -142,6 +155,7 @@ _asm_irq11:
 
 
 _asm_irq12:
+	cli
 	push byte 0x00
 	push byte 0x2c
 	jmp _irq_h_call
@@ -149,6 +163,7 @@ _asm_irq12:
 
 
 _asm_irq13:
+	cli
 	push byte 0x00
 	push byte 0x2d
 	jmp _irq_h_call
@@ -156,6 +171,7 @@ _asm_irq13:
 
 
 _asm_irq14:
+	cli
 	push byte 0x00
 	push byte 0x2e
 	jmp _irq_h_call
@@ -163,6 +179,7 @@ _asm_irq14:
 
 
 _asm_irq15:
+	cli
 	push byte 0x00
 	push byte 0x2f
 	jmp _irq_h_call

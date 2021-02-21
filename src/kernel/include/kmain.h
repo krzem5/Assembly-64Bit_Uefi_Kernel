@@ -37,6 +37,14 @@ typedef struct __KERNEL_ARGS{
 #ifdef KERNEL_ARGS_STRUCT_ONLY
 typedef void (KERNEL_CALL *kmain)(KernelArgs* ka);
 #else
+#define __KERNEL_BASE_VA__ ((uint64_t)___KERNEL_BASE_VA__)
+
+
+
+extern uint64_t ___KERNEL_BASE_VA__[];
+
+
+
 void KERNEL_CALL kmain(KernelArgs* ka);
 
 

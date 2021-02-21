@@ -9,8 +9,8 @@
 
 
 
-isr_handler_t isr_hl[32];
-char* _f_msg[32]={
+isr_handler_t isr_hl[32]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+const char* _f_msg[32]={
 	"Divide-by-zero Error",
 	"Debug",
 	"Non-maskable Interrupt",
@@ -48,14 +48,11 @@ char* _f_msg[32]={
 
 
 void KERNEL_CALL _handle_isr(registers_t* r){
-	if (isr_hl[r->t]){
-		isr_hl[r->t](r);
+	if (isr_hl[r->t]&&isr_hl[r->t](r)){
+		return;
 	}
-	else{
-		console_error("FatalError\n");
-		console_error("Error:\n  rax    = %#.18llx\n  rbx    = %#.18llx\n  rcx    = %#.18llx\n  rdx    = %#.18llx\n  rsi    = %#.18llx\n  rdi    = %#.18llx\n  rbp    = %#.18llx\n  r8     = %#.18llx\n  r9     = %#.18llx\n  r10    = %#.18llx\n  r11    = %#.18llx\n  r12    = %#.18llx\n  r13    = %#.18llx\n  r14    = %#.18llx\n  r15    = %#.18llx\n  t      = %#.4llx (%s)\n  ec     = %#.4llx\n  rip    = %#.18llx\n  cs     = %#.6llx\n  rflags = %#.8llx\n  rsp    = %#.18llx\n  ss     = %#.6llx\n",r->rax,r->rbx,r->rcx,r->rdx,r->rsi,r->rdi,r->rbp,r->r8,r->r9,r->r10,r->r11,r->r12,r->r13,r->r14,r->r15,r->t,_f_msg[r->t],r->ec,r->rip,r->cs,r->rflags,r->rsp,r->ss);
-		asm_halt_cpu();
-	}
+	console_error("Error:\n  rax    = %#.18llx\n  rbx    = %#.18llx\n  rcx    = %#.18llx\n  rdx    = %#.18llx\n  rsi    = %#.18llx\n  rdi    = %#.18llx\n  rbp    = %#.18llx\n  r8     = %#.18llx\n  r9     = %#.18llx\n  r10    = %#.18llx\n  r11    = %#.18llx\n  r12    = %#.18llx\n  r13    = %#.18llx\n  r14    = %#.18llx\n  r15    = %#.18llx\n  t      = %#.4llx (%s)\n  ec     = %#.4llx\n  rip    = %#.18llx\n  cs     = %#.6llx\n  rflags = %#.8llx\n  rsp    = %#.18llx\n  ss     = %#.6llx\n",r->rax,r->rbx,r->rcx,r->rdx,r->rsi,r->rdi,r->rbp,r->r8,r->r9,r->r10,r->r11,r->r12,r->r13,r->r14,r->r15,r->t,_f_msg[r->t],r->ec,r->rip,r->cs,r->rflags,r->rsp,r->ss);
+	asm_halt_cpu();
 }
 
 
@@ -93,9 +90,6 @@ void KERNEL_CALL setup_isr(void){
 	set_idt_entry(29,_asm_isr29,0x08,0x8e);
 	set_idt_entry(30,_asm_isr30,0x08,0x8e);
 	set_idt_entry(31,_asm_isr31,0x08,0x8e);
-	for (uint8_t i=0;i<32;i++){
-		isr_hl[i]=NULL;
-	}
 }
 
 

@@ -1,6 +1,7 @@
 ENTRY(_start)
 SECTIONS{
     . = 0xffffffffc0000000;
+    ___KERNEL_BASE_VA__ = .;
     .text : AT(ADDR(.text) - 0xffffffffc0000000) {
         *(.entry)
         *(.text .text*)

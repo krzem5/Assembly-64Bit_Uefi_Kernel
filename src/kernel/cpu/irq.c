@@ -8,7 +8,7 @@
 
 
 
-irq_handler_t irq_hl[16];
+irq_handler_t irq_hl[16]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 
 
@@ -52,9 +52,6 @@ void KERNEL_CALL setup_irq(void){
 	set_idt_entry(45,_asm_irq13,0x08,0x8e);
 	set_idt_entry(46,_asm_irq14,0x08,0x8e);
 	set_idt_entry(47,_asm_irq15,0x08,0x8e);
-	for (uint8_t i=0;i<16;i++){
-		irq_hl[i]=NULL;
-	}
 }
 
 

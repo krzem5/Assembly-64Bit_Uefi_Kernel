@@ -19,7 +19,7 @@ IDTR idtr={
 void KERNEL_CALL setup_idt(KernelArgs* ka){
 	idt_l=(IDTEntry*)ka->idt;
 	idtr.b=(uint64_t)idt_l;
-	_asm_setup_idt();
+	asm_setup_idt();
 }
 
 

@@ -21,11 +21,26 @@ asm_setup_gdt:
 
 section .data
 	gdt64_start:
-		dq 0x000100000000ffff
+		dw 0
+		dw 0
+		db 0
+		db 0
+		db 0
+		db 0
 	gdt64_code: equ $-gdt64_start
-		dq 0x00af9a0000000000
+		dw 0
+		dw 0
+		db 0
+		db 10011010b
+		db 10100000b
+		db 0
 	gdt64_data: equ $-gdt64_start
-		dq 0x0000920000000000
+		dw 0
+		dw 0
+		db 0
+		db 10010010b
+		db 10000000b
+		db 0
 	gdt64_pointer:
 		dw $-gdt64_start-1
 		dq gdt64_start

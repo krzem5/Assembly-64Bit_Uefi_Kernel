@@ -10,7 +10,7 @@ void KERNEL_CALL paging_init(KernelArgs* ka);
 
 
 
-void* KERNEL_CALL paging_alloc_pages(uint64_t c);
+void KERNEL_CALL paging_set_page(uint64_t va,uint64_t pa);
 
 
 
