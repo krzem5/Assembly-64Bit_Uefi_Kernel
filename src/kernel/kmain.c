@@ -41,17 +41,8 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Enabling IDT...\n");
 	enable_idt();
-	void* ptr=malloc(100);
-	console_log("Ptr#1 %p\n",ptr);
-	void* ptr2=malloc(32);
-	console_log("Ptr#2 %p\n",ptr2);
-	free(ptr);
-	void* ptr3=malloc(10);
-	console_log("Ptr#3 %p\n",ptr3);
-	free(ptr2);
-	free(ptr3);
-	// console_log("Setting Up ACPI...\n");
-	// acpi_init(ka);
+	console_log("Setting Up ACPI...\n");
+	acpi_init(ka);
 	console_ok("Reached the End!\n");
 	asm_end_loop();
 }
