@@ -49,9 +49,5 @@ void KERNEL_CALL kmain(KernelArgs* ka);
 
 
 
-extern void KERNEL_CALL asm_end_loop(void);
-
-
-
 #endif
 #endif

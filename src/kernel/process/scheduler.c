@@ -5,7 +5,7 @@
 
 
 
-#define PROCESS_TIME_US 500
+#define PROCESS_TIME_MS 1
 
 
 
@@ -31,6 +31,6 @@ void KERNEL_CALL scheduler_tick(uint64_t tm){
 	if (tm<=_tm_n_sw){
 		return;
 	}
-	_tm_n_sw=tm+PROCESS_TIME_US;
+	_tm_n_sw=tm+PROCESS_TIME_MS;
 	console_log("Reschedule!\n");
 }

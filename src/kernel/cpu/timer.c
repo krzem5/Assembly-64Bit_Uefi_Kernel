@@ -8,14 +8,14 @@
 
 
 
-#define TIMER_FREQUENCY 100
+#define TIMER_FREQUENCY 10000
 
 
 
 uint64_t* _tm_ptr;
 uint64_t _tm_freq=1;
 uint64_t _tm_upd;
-uint64_t _tm;
+uint64_t _tm=0;
 
 
 
@@ -23,7 +23,7 @@ void _timer_irq_cb(registers_t* r){
 	*(_tm_ptr+4)|=1;
 	*(_tm_ptr+33)=*(_tm_ptr+30)+_tm_upd;
 	_tm=*(_tm_ptr+30);
-	scheduler_tick(_tm);
+	scheduler_tick(_tm/(_tm_freq/1000));
 }
 
 
@@ -33,7 +33,7 @@ void KERNEL_CALL timer_init(uint64_t b){
 	console_log("HPET Base Ptr: %p\n",b);
 	_tm_ptr=(uint64_t*)(void*)b;
 	*(_tm_ptr+2)&=~1;
-	uint64_t of=10000000000000ull/((*_tm_ptr)>>32);
+	uint64_t of=1000000000000000ull/((*_tm_ptr)>>32);
 	_tm_freq=(of>TIMER_FREQUENCY?TIMER_FREQUENCY:of);
 	_tm_upd=of/_tm_freq;
 	console_log("HPET Data: period = %llu, frequency = %lluHz\n",(*_tm_ptr)>>32,of);
@@ -49,7 +49,7 @@ void KERNEL_CALL timer_init(uint64_t b){
 
 
 uint64_t KERNEL_CALL timer_get_us(void){
-	return _tm;
+	return _tm/(_tm_freq/1000000);
 }
 
 
