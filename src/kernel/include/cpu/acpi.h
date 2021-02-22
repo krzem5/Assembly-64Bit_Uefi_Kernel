@@ -6,12 +6,6 @@
 
 
 
-typedef struct __HPET{
-	uint64_t b;
-} HPET;
-
-
-
 void KERNEL_CALL acpi_init(KernelArgs* ka);
 
 

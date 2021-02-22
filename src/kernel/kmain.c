@@ -10,8 +10,22 @@
 #include <memory/paging.h>
 #include <memory/pm.h>
 #include <memory/vm.h>
+#include <process/scheduler.h>
+#include <process/thread.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
+
+
+
+void KERNEL_CALL thread1(void* ta){
+	console_log("Thread1!\n");
+}
+
+
+
+void KERNEL_CALL thread2(void* ta){
+	console_log("Thread2!\n");
+}
 
 
 
@@ -43,6 +57,11 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	enable_idt();
 	console_log("Setting Up ACPI...\n");
 	acpi_init(ka);
-	console_ok("Reached the End!\n");
-	asm_end_loop();
+	console_log("Setting Up Scheduler...\n");
+	scheduler_init();
+	console_log("Registering Kernel Threads...\n");
+	create_thread(thread1,THREAD_PRIORITY_NORMAL,NULL);
+	create_thread(thread2,THREAD_PRIORITY_NORMAL,NULL);
+	console_ok("Starting Scheduler...\n");
+	scheduler_start();
 }

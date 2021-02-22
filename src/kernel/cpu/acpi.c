@@ -126,9 +126,5 @@ void KERNEL_CALL acpi_init(KernelArgs* ka){
 			i+=*(apic->dt+i+1);
 		}
 	}
-	struct _ACPI_HPET* hpet=(struct _ACPI_HPET*)ka->hpet;
-	HPET t_hpet={
-		hpet->b_addr.a
-	};
-	timer_init(t_hpet);
+	timer_init(((struct _ACPI_HPET*)ka->hpet)->b_addr.a);
 }

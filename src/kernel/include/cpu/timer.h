@@ -5,7 +5,15 @@
 
 
 
-void KERNEL_CALL timer_init(HPET hpet);
+void KERNEL_CALL timer_init(uint64_t b);
+
+
+
+uint64_t KERNEL_CALL timer_get_us(void);
+
+
+
+uint64_t KERNEL_CALL timer_get_s(void);
 
 
 
