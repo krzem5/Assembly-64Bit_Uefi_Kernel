@@ -58,8 +58,4 @@ void KERNEL_CALL set_idt_entry(uint8_t i,void* a,uint16_t s,uint8_t f);
 
 
 
-extern void KERNEL_CALL enable_idt(void);
-
-
-
 #endif

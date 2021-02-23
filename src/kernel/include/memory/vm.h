@@ -31,6 +31,10 @@ void* KERNEL_CALL vm_reserve(uint64_t c);
 
 
 
+void* KERNEL_CALL vm_commit(uint64_t c);
+
+
+
 uint64_t KERNEL_CALL vm_current_top(void);
 
 

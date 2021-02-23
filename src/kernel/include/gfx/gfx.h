@@ -23,7 +23,7 @@ void KERNEL_CALL gfx_print_char(uint8_t c,uint64_t x,uint64_t y,color_t cl,Font 
 
 
 
-void KERNEL_CALL gfx_update_screen(void);
+void KERNEL_CALL gfx_fill_rect(uint64_t x,uint64_t y,uint64_t w,uint64_t h,color_t cl);
 
 
 

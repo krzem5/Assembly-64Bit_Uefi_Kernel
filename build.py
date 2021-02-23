@@ -45,7 +45,8 @@ if (not os.path.exists("build/libc")):
 e_fl=[]
 k_fl=[]
 l_fl=[]
-for r,_,fl in os.walk("src"):
+src_fl=list(os.walk("rsrc"))+list(os.walk("src"))
+for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
@@ -54,7 +55,7 @@ for r,_,fl in os.walk("src"):
 				dt=INCLUDE_LIST_REGEX.sub(_sort_inc,rf.read())
 			with open(r+f,"wb") as wf:
 				wf.write(dt)
-for r,_,fl in os.walk("src"):
+for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
 		if (r[:7]=="src/efi"):
@@ -71,7 +72,7 @@ for r,_,fl in os.walk("src"):
 		elif (r[:10]=="src/kernel"):
 			if (f[-2:]==".c"):
 				print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Irsrc/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 					quit()
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
@@ -117,6 +118,12 @@ for r,_,fl in os.walk("src"):
 				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+ef).returncode!=0):
 					quit()
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
+		elif (r[:4]=="rsrc"):
+			if (f[-2:]==".c"):
+				print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o")
+				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f).replace('/','$')}.o","-Irsrc/include","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f).replace('/','$')}.o"]).returncode!=0):
+					quit()
+				k_fl+=[f"build/kernel/{(r+f).replace('/','$')}.o"]
 		else:
 			if (f[-2:]==".c"):
 				print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")

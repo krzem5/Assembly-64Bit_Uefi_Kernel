@@ -4,7 +4,7 @@ import requests
 
 
 
-OUT_NAME="rsrc/font_8x16.h"
+OUT_NAME="font_spleen"
 MAX_CHAR=0x7e
 
 
@@ -31,5 +31,7 @@ while (i<len(dt)):
 				j+=1
 			i+=1
 	i+=1
-with open(OUT_NAME,"w") as f:
-	f.write(f"#ifndef __{OUT_NAME.replace(chr(92),'/').replace('/','_').split('.')[0].upper()}_FONT_H__\n#define __{OUT_NAME.replace(chr(92),'/').replace('/','_').split('.')[0].upper()}_FONT_H__ 1\n#include <font.h>\n#include <stdint.h>\n\n\n\nconst static uint64_t {OUT_NAME.replace(chr(92),'/').split('/')[-1].split('.')[0].upper()}_FONT_DATA[{(MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {OUT_NAME.replace(chr(92),'/').split('/')[-1].split('.')[0].upper()}_FONT={{\n\t{MAX_CHAR},\n\t{OUT_NAME.replace(chr(92),'/').split('/')[-1].split('.')[0].upper()}_FONT_DATA\n}};\n\n\n\n#endif\n")
+with open(f"rsrc/include/{OUT_NAME}.h","w") as f:
+	f.write(f"#ifndef __{OUT_NAME.upper()}_H__\n#define __{OUT_NAME.upper()}_H__ 1\n#include <font.h>\n#include <stdint.h>\n\n\n\nextern const uint64_t {OUT_NAME.upper()}_DATA[];\n\n\n\nextern Font {OUT_NAME.upper()};\n\n\n\n#endif\n")
+with open(f"rsrc/{OUT_NAME}.c","w") as f:
+	f.write(f"#include <font.h>\n#include <stdint.h>\n#include <{OUT_NAME}.h>\n\n\n\nconst uint64_t {OUT_NAME.upper()}_DATA[{(MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {OUT_NAME.upper()}={{\n\t{MAX_CHAR},\n\t{OUT_NAME.upper()}_DATA\n}};\n")

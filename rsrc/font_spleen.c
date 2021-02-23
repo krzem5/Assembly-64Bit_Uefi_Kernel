@@ -1,11 +1,10 @@
-#ifndef __RSRC_FONT_8X16_FONT_H__
-#define __RSRC_FONT_8X16_FONT_H__ 1
 #include <font.h>
+#include <font_spleen.h>
 #include <stdint.h>
 
 
 
-const static uint64_t FONT_8X16_FONT_DATA[254]={
+const uint64_t FONT_SPLEEN_DATA[254]={
 	0x0000000000000000,
 	0x0000000000000000,
 	0x0000000000000000,
@@ -264,11 +263,7 @@ const static uint64_t FONT_8X16_FONT_DATA[254]={
 
 
 
-Font FONT_8X16_FONT={
+Font FONT_SPLEEN={
 	126,
-	FONT_8X16_FONT_DATA
+	FONT_SPLEEN_DATA
 };
-
-
-
-#endif

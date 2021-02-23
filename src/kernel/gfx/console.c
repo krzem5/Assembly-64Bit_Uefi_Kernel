@@ -1,19 +1,21 @@
 #include <shared.h>
 #include <_libc_internal.h>
-#include <exec_lock.h>
 #include <font.h>
-#include <font_8x16.h>
+#include <font_spleen.h>
 #include <gfx/console.h>
 #include <gfx/gfx.h>
 #include <kmain.h>
+#include <memory/vm.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 
 
-#define DEFAULT_FONT FONT_8X16_FONT
+#define CHAR_AND_COLOR(c,cl) (((c)<<24)|(cl))
+#define GET_CHAR(v) ((v)>>24)
+#define GET_COLOR(v) ((v)&0xffffff)
+#define DEFAULT_FONT FONT_SPLEEN
 #define SCALE 1
 
 
@@ -22,7 +24,7 @@ uint64_t _console_x;
 uint64_t _console_y;
 uint64_t _console_w;
 uint64_t _console_h;
-char* _console_bf;
+uint32_t* _console_bf;
 
 
 
@@ -33,7 +35,9 @@ void KERNEL_CALL _console_print_char(char c,color_t cl,Font f){
 		goto _check_y;
 	}
 	if (c!=' '){
-		// *(_console_bf+_console_y*_console_w+_console_x)=c;
+		if (_console_bf){
+			*(_console_bf+_console_y*_console_w+_console_x)=CHAR_AND_COLOR(c,cl);
+		}
 		gfx_print_char(c,_console_x*SCALE*8,_console_y*SCALE*16,cl,f,SCALE);
 	}
 	_console_x++;
@@ -45,12 +49,25 @@ void KERNEL_CALL _console_print_char(char c,color_t cl,Font f){
 	return;
 _check_y:
 	if (_console_y==_console_h){
-		// uint64_t i=_console_w;
-		// while (i<_console_w*_console_h){
-		// 	*(_console_bf+i-_console_w)=*(_console_bf+i);
-		// 	i++;
-		// }
+		if (_console_bf){
+			uint64_t i=0;
+			while (i<_console_w*(_console_h-1)){
+				*(_console_bf+i)=*(_console_bf+i+_console_w);
+				if (GET_CHAR(*(_console_bf+i))!=' '){
+					gfx_print_char(GET_CHAR(*(_console_bf+i)),(i%_console_w)*SCALE*8,(i/_console_w)*SCALE*16,GET_COLOR(*(_console_bf+i)),f,SCALE);
+				}
+				else{
+					gfx_fill_rect((i%_console_w)*SCALE*8,(i/_console_w)*SCALE*16,SCALE*8,SCALE*16,COLOR(0,0,0));
+				}
+				i++;
+			}
+			while (i<_console_w*_console_h){
+				*(_console_bf+i)=CHAR_AND_COLOR(' ',COLOR(0,0,0));
+				i++;
+			}
+		}
 		_console_y--;
+		gfx_fill_rect(0,_console_y*SCALE*16,_console_w*SCALE*8,SCALE*16,COLOR(0,0,0));
 	}
 }
 
@@ -69,29 +86,35 @@ void KERNEL_CALL console_init(KernelArgs* ka){
 	_console_y=0;
 	_console_w=ka->vmem_w/(8*SCALE);
 	_console_h=ka->vmem_h/(16*SCALE);
-	// _console_bf=malloc(_console_w*_console_h*sizeof(char));
+	_console_bf=NULL;
+}
+
+
+
+void KERNEL_CALL console_buffer_init(void){
+	_console_x=0;
+	_console_y=0;
+	gfx_fill_rect(0,0,_console_w*SCALE*8,_console_h*SCALE*16,COLOR(255,0,0));
+	_console_bf=vm_commit((_console_w*_console_h*sizeof(uint32_t)+4095)>>12);
+	for (uint64_t i=0;i<_console_w*_console_h;i++){
+		*(_console_bf+i)=CHAR_AND_COLOR(' ',COLOR(0,0,0));
+	}
 }
 
 
 
 void KERNEL_CALL _console_print(const char* s,color_t cl){
-	exec_lock();
 	while (*s){
 		_console_print_char(*s,cl,DEFAULT_FONT);
 		s++;
 	}
-	gfx_update_screen();
-	exec_unlock();
 }
 
 
 
 void KERNEL_CALL _console_vprint(const char* s,color_t cl,...){
-	exec_lock();
 	va_list v;
 	va_start(v,cl);
 	__vprintf_raw(&cl,NULL,_console_vprintf_write_func,s,v);
 	va_end(v);
-	gfx_update_screen();
-	exec_unlock();
 }

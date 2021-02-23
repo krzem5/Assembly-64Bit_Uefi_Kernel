@@ -53,10 +53,10 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	setup_isr();
 	console_log("Setting Up Default IRQs...\n");
 	setup_irq();
-	console_log("Enabling IDT...\n");
-	enable_idt();
 	console_log("Setting Up ACPI...\n");
 	acpi_init(ka);
+	console_log("Setting Up Console Buffer...\n");
+	console_buffer_init();
 	console_log("Setting Up Scheduler...\n");
 	scheduler_init();
 	console_log("Registering Kernel Threads...\n");

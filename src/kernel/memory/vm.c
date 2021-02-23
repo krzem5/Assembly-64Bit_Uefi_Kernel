@@ -88,6 +88,25 @@ void* KERNEL_CALL vm_reserve(uint64_t c){
 
 
 
+void* KERNEL_CALL vm_commit(uint64_t c){
+	void* o=(void*)vm_current_top();
+	while (c){
+		uint64_t pa=pm_get_free();
+		if (!pa){
+			fatal_error("Not enought Memory!\n");
+			return NULL;
+		}
+		console_log("Reserving & Commiting Page: %llx -> %llx\n",pa,vm_current_top());
+		uint64_t va=vm_current_top()-_vm_dt->b;
+		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1llu<<(PAGE_GET_BIT_INDEX(va));
+		paging_set_page(vm_get_top(),pa);
+		c--;
+	}
+	return o;
+}
+
+
+
 uint64_t KERNEL_CALL vm_current_top(void){
 	return _n_va;
 }

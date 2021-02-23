@@ -5,7 +5,7 @@
 
 
 
-#define PROCESS_TIME_MS 1
+#define PROCESS_TIME_US 1000000
 
 
 
@@ -20,6 +20,7 @@ void KERNEL_CALL scheduler_init(void){
 
 
 void KERNEL_CALL scheduler_start(void){
+	__asm__("sti");
 	for (;;){
 		__asm__("hlt");
 	}
@@ -31,6 +32,6 @@ void KERNEL_CALL scheduler_tick(uint64_t tm){
 	if (tm<=_tm_n_sw){
 		return;
 	}
-	_tm_n_sw=tm+PROCESS_TIME_MS;
-	console_log("Reschedule!\n");
+	_tm_n_sw=tm+PROCESS_TIME_US;
+	console_log("Reschedule! (%llu)\n",tm);
 }

@@ -1,6 +1,5 @@
 bits 64
 global asm_setup_idt
-global enable_idt
 extern idtr
 
 
@@ -13,10 +12,4 @@ asm_setup_idt:
 	rep stosb
 	lidt [idtr]
 	pop rdi
-	ret
-
-
-
-enable_idt:
-	sti
 	ret
