@@ -49,7 +49,7 @@ void* LIBC_CALL malloc(size_t sz){
 	}
 	if (!__libc_alloc_head){
 #ifdef __KERNEL__
-		void* pg=vm_reserve(ALLOC_PAGES_COUNT);
+		void* pg=(void*)vm_reserve(ALLOC_PAGES_COUNT);
 #else
 		void* pg=NULL;
 #endif
@@ -68,7 +68,7 @@ void* LIBC_CALL malloc(size_t sz){
 				pg_c=ALLOC_PAGES_COUNT;
 			}
 #ifdef __KERNEL__
-			void* pg=vm_reserve(pg_c);
+			void* pg=(void*)vm_reserve(pg_c);
 #else
 			void* pg=NULL;
 #endif

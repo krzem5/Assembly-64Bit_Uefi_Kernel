@@ -65,11 +65,11 @@ void KERNEL_CALL pm_init(KernelArgs* ka){
 
 
 
-uint64_t KERNEL_CALL pm_get_free(void){
+paddr_t KERNEL_CALL pm_get_free(void){
 	if (!_pg_dt->a){
 		return 0;
 	}
-	uint64_t o=COMBINE_PAGE_INDEX(_pg_dt->ai,_pg_dt->abi);
+	paddr_t o=COMBINE_PAGE_INDEX(_pg_dt->ai,_pg_dt->abi);
 	_pg_dt->e[_pg_dt->ai]&=~(1ull<<_pg_dt->abi);
 	_pg_dt->a--;
 	if (_pg_dt->a){

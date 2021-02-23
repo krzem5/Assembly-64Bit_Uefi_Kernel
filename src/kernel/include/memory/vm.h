@@ -6,7 +6,7 @@
 
 
 
-typedef void* vaddr_t;
+typedef uint64_t vaddr_t;
 typedef uint64_t VmMemMapData;
 typedef struct __VM_MEM_MAP{
 	uint64_t n_va;
@@ -28,19 +28,19 @@ void KERNEL_CALL vm_after_pm_init(KernelArgs* ka);
 
 
 
-void* KERNEL_CALL vm_reserve(uint64_t c);
+vaddr_t KERNEL_CALL vm_reserve(uint64_t c);
 
 
 
-void* KERNEL_CALL vm_commit(uint64_t c);
+vaddr_t KERNEL_CALL vm_commit(uint64_t c);
 
 
 
-uint64_t KERNEL_CALL vm_current_top(void);
+vaddr_t KERNEL_CALL vm_current_top(void);
 
 
 
-uint64_t KERNEL_CALL vm_get_top(void);
+vaddr_t KERNEL_CALL vm_get_top(void);
 
 
 

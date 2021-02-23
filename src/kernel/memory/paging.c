@@ -54,7 +54,7 @@ void KERNEL_CALL paging_init(KernelArgs* ka){
 
 
 
-void KERNEL_CALL paging_set_page(uint64_t va,uint64_t pa){
+void KERNEL_CALL paging_set_page(vaddr_t va,paddr_t pa){
 	ASSERT(!(pa&0xfff));
 	if (!(_pg_pml4[GET_PML4_INDEX(va)]&PAGE_DIR_PRESENT)){
 		_pg_pml4[GET_PML4_INDEX(va)]=PAGE_TABLE_VIRTUAL_TO_PHYSICAL((uint64_t)(void*)_pg_pml4+_pg_u_pg*PAGE_TABLE_SIZE)|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;

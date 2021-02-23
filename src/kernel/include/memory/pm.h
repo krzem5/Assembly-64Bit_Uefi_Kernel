@@ -6,6 +6,7 @@
 
 
 
+typedef uint64_t paddr_t;
 typedef uint64_t PageData;
 typedef struct __PAGE_ARRAY_DATA{
 	uint64_t l;
@@ -21,7 +22,7 @@ void KERNEL_CALL pm_init(KernelArgs* ka);
 
 
 
-uint64_t KERNEL_CALL pm_get_free(void);
+paddr_t KERNEL_CALL pm_get_free(void);
 
 
 
