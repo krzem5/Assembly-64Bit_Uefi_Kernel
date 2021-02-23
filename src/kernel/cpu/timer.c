@@ -8,7 +8,7 @@
 
 
 #define SECONDS_TO_FEMTOSECONDS(n) ((n)*1000000000000000ull)
-#define TIMER_FREQUENCY 1000000llu
+#define TIMER_FREQUENCY 1000000ull
 
 
 
@@ -23,7 +23,7 @@ void _timer_irq_cb(registers_t* r){
 	*(_tm_ptr+4)|=1;
 	*(_tm_ptr+33)=*(_tm_ptr+30)+_tm_upd;
 	_tm=*(_tm_ptr+30);
-	scheduler_tick(_tm/(_tm_freq/1000000llu));
+	scheduler_tick(_tm/(_tm_freq/1000000ull));
 }
 
 
@@ -47,7 +47,7 @@ void KERNEL_CALL timer_init(uint64_t b){
 
 
 uint64_t KERNEL_CALL timer_get_us(void){
-	return _tm/(_tm_freq/1000000llu);
+	return _tm/(_tm_freq/1000000ull);
 }
 
 

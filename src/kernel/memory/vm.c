@@ -29,7 +29,7 @@ VmMemMap* _vm_dt;
 
 uint8_t KERNEL_CALL _vm_pg_f_handler(registers_t* r){
 	uint64_t cr2=asm_get_cr2()&0xfffffffffffff000;
-	if (cr2>=_vm_dt->b&&PAGE_GET_ARRAY_INDEX(cr2-_vm_dt->b)<(MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)&&_vm_dt->e[PAGE_GET_ARRAY_INDEX(cr2-_vm_dt->b)]&(1llu<<PAGE_GET_BIT_INDEX(cr2-_vm_dt->b))){
+	if (cr2>=_vm_dt->b&&PAGE_GET_ARRAY_INDEX(cr2-_vm_dt->b)<(MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)&&_vm_dt->e[PAGE_GET_ARRAY_INDEX(cr2-_vm_dt->b)]&(1ull<<PAGE_GET_BIT_INDEX(cr2-_vm_dt->b))){
 		uint64_t pa=pm_get_free();
 		if (!pa){
 			fatal_error("Not enought Memory!\n");
@@ -46,7 +46,7 @@ uint8_t KERNEL_CALL _vm_pg_f_handler(registers_t* r){
 
 void KERNEL_CALL vm_init(KernelArgs* ka){
 	_n_va=ka->n_va;
-	uint64_t mx=(ka->mmap[ka->mmap_l-1].b&0xfffffffffffffffe)+ka->mmap[ka->mmap_l-1].l-MIN_RAM_RESERVE_FOR_SYSTEM;
+	uint64_t mx=KERNEL_MEM_MAP_GET_BASE(ka->mmap[ka->mmap_l-1].b)+ka->mmap[ka->mmap_l-1].l-MIN_RAM_RESERVE_FOR_SYSTEM;
 	if (mx<MAX_PROCESS_RAM){
 		MAX_PROCESS_RAM=mx;
 	}
@@ -80,7 +80,7 @@ void* KERNEL_CALL vm_reserve(uint64_t c){
 	while (c){
 		console_log("Reserve Page: %llx\n",vm_current_top());
 		uint64_t va=vm_get_top()-_vm_dt->b;
-		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1llu<<(PAGE_GET_BIT_INDEX(va));
+		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1ull<<(PAGE_GET_BIT_INDEX(va));
 		c--;
 	}
 	return o;
@@ -98,7 +98,7 @@ void* KERNEL_CALL vm_commit(uint64_t c){
 		}
 		console_log("Reserving & Commiting Page: %llx -> %llx\n",pa,vm_current_top());
 		uint64_t va=vm_current_top()-_vm_dt->b;
-		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1llu<<(PAGE_GET_BIT_INDEX(va));
+		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1ull<<(PAGE_GET_BIT_INDEX(va));
 		paging_set_page(vm_get_top(),pa);
 		c--;
 	}

@@ -7,6 +7,11 @@
 
 
 
+#define KERNEL_MEM_MAP_GET_BASE(b) ((b)&0xfffffffffffffffe)
+#define KERNEL_MEM_MAP_GET_ACPI(b) ((b)&1)
+
+
+
 typedef struct __KERNEL_ARGS_MEM_ENTRY{
 	uint64_t b;
 	uint64_t l;

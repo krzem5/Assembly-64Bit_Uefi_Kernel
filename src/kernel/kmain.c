@@ -39,8 +39,8 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
 	for (uint64_t i=0;i<ka->mmap_l;i++){
-		console_log("  %llx - +%llx",ka->mmap[i].b&0xfffffffffffffffe,ka->mmap[i].l);
-		if (ka->mmap[i].b&1){
+		console_log("  %llx - +%llx",KERNEL_MEM_MAP_GET_BASE(ka->mmap[i].b),ka->mmap[i].l);
+		if (KERNEL_MEM_MAP_GET_ACPI(ka->mmap[i].b)){
 			console_log(" (ACPI Tables)");
 		}
 		console_log("\n");

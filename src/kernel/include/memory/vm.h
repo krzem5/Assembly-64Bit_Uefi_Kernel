@@ -6,6 +6,7 @@
 
 
 
+typedef void* vaddr_t;
 typedef uint64_t VmMemMapData;
 typedef struct __VM_MEM_MAP{
 	uint64_t n_va;

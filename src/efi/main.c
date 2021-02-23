@@ -280,7 +280,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 				lt=t;
 			}
 			else if (lt!=t||le!=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart){
-				Print(L"  %llx - +%llx (%d)\r\n",(ka->mmap[j].b)&0xfffffffffffffffe,ka->mmap[j].l,ka->mmap[j].b&1);
+				Print(L"  %llx - +%llx (%d)\r\n",KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b),ka->mmap[j].l,KERNEL_MEM_MAP_GET_ACPI(ka->mmap[j].b));
 				j++;
 				ka->mmap[j].b=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart|t;
 				ka->mmap[j].l=0;
@@ -293,7 +293,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		bf+=mm_ds;
 	}
 	FreePool(bf);
-	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",(ka->mmap[j].b)&0xfffffffffffffffe,ka->mmap[j].l,ka->mmap[j].b&1,tm,sz);
+	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b),ka->mmap[j].l,KERNEL_MEM_MAP_GET_ACPI(ka->mmap[j].b),tm,sz);
 	EFI_LOADED_IMAGE_PROTOCOL* lip;
 	s=st->BootServices->HandleProtocol(ih,&efi_lip_guid,(void**)&lip);
 	if (EFI_ERROR(s)){
@@ -405,28 +405,28 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t* k_pg_pa=AllocatePool((k_pg+OTHER_PAGE_COUNT)*sizeof(uint64_t));
 	uint64_t i=0;
 	j=0;
-	uint64_t k=ka->mmap[0].b&0xfffffffffffffffe;
+	uint64_t k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[0].b);
 	while (i<k_pg+1){
-		if (k>=(ka->mmap[j].b&0xfffffffffffffffe)+ka->mmap[j].l){
+		if (k>=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b)+ka->mmap[j].l){
 			j++;
 			if (j>=ka->mmap_l){
 				Print(L"Not enought Memory to Map the Kernel\r\n");
 				goto _end;
 			}
-			k=ka->mmap[j].b&0xfffffffffffffffe;
+			k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b);
 		}
 		*(k_pg_pa+i)=k;
 		Print(L"Page[%llu] = %llx\r\n",i,k);
 		i++;
 		k+=PAGE_SIZE;
 	}
-	if (k>=(ka->mmap[j].b&0xfffffffffffffffe)+ka->mmap[j].l){
+	if (k>=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b)+ka->mmap[j].l){
 		j++;
 		if (j>=ka->mmap_l){
 			Print(L"Not enought Memory to Create the next Physical Address\r\n");
 			goto _end;
 		}
-		k=ka->mmap[j].b&0xfffffffffffffffe;
+		k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b);
 	}
 	ka->n_pa=k;
 	ka->n_pa_idx=j;
