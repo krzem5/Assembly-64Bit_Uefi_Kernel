@@ -92,10 +92,10 @@ void KERNEL_CALL console_init(KernelArgs* ka){
 
 
 void KERNEL_CALL console_buffer_init(void){
+	_console_bf=(uint32_t*)(void*)vm_commit((_console_w*_console_h*sizeof(uint32_t)+4095)>>12);
 	_console_x=0;
 	_console_y=0;
 	gfx_fill_rect(0,0,_console_w*SCALE*8,_console_h*SCALE*16,COLOR(0,0,0));
-	_console_bf=(uint32_t*)(void*)vm_commit((_console_w*_console_h*sizeof(uint32_t)+4095)>>12);
 	for (uint64_t i=0;i<_console_w*_console_h;i++){
 		*(_console_bf+i)=CHAR_AND_COLOR(' ',COLOR(0,0,0));
 	}
