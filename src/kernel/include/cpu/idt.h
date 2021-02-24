@@ -30,10 +30,10 @@ typedef struct __REGISTERS{
 	uint64_t rsp;
 	uint64_t ss;
 } __attribute__((packed)) registers_t;
-typedef struct __IDTR{
+typedef struct __IDT_TABLE{
 	uint16_t l;
 	uint64_t b;
-} __attribute__((packed)) IDTR;
+} __attribute__((packed)) idt_table_t;
 typedef struct __IDT_ENTRY{
 	uint16_t off16;
 	uint16_t s;
@@ -42,7 +42,7 @@ typedef struct __IDT_ENTRY{
 	uint16_t off32;
 	uint32_t off64;
 	uint32_t z32;
-} __attribute__((packed)) IDTEntry;
+} __attribute__((packed)) idt_entry_t;
 
 
 
