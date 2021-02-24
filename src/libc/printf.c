@@ -277,13 +277,6 @@ void LIBC_CALL __vprintf_buffer_write_func(char c,void* ctx){
 
 
 
-void LIBC_CALL __printf_set_console_func(__vprintf_reserve_func_t rs,__vprintf_write_func_t cb){
-	__printf_rs=rs;
-	__printf_cb=cb;
-}
-
-
-
 int LIBC_CALL __vprintf_buffer(char** bf,const char* t,va_list v){
 	*bf=NULL;
 	struct __VPRINTF_BUFFER_CTX ctx={

@@ -9,7 +9,7 @@
 
 
 idt_entry_t* idt_l=NULL;
-idt_table_t idtr={
+idt_table_t idt={
 	4095,
 	0
 };
@@ -18,7 +18,7 @@ idt_table_t idtr={
 
 void KERNEL_CALL setup_idt(KernelArgs* ka){
 	idt_l=(idt_entry_t*)ka->idt;
-	idtr.b=(uint64_t)idt_l;
+	idt.b=(uint64_t)idt_l;
 	asm_setup_idt();
 }
 

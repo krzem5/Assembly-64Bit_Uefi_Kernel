@@ -9,18 +9,8 @@
 
 
 
-typedef void* (LIBC_CALL *__set_pg_acquire_func_t)(uint64_t c);
-typedef void (LIBC_CALL *__set_pg_release_func_t)(void* p,uint64_t c);
 typedef void (LIBC_CALL *__vprintf_reserve_func_t)(uint64_t sz,void* ctx);
 typedef void (LIBC_CALL *__vprintf_write_func_t)(char c,void* ctx);
-
-
-
-void LIBC_CALL __set_pg_func(__set_pg_acquire_func_t af,__set_pg_release_func_t rf);
-
-
-
-void LIBC_CALL __printf_set_console_func(__vprintf_reserve_func_t rs,__vprintf_write_func_t cb);
 
 
 

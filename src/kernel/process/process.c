@@ -20,15 +20,13 @@
 
 
 process_t* pl;
-uint32_t pll;
-uint32_t _npi;
+uint32_t pll=0;
+uint32_t _npi=0;
 
 
 
 void KERNEL_CALL process_init(void){
 	pl=(process_t*)(void*)vm_commit(PROCESS_4KB_PAGES_COUNT);
-	pll=0;
-	_npi=0;
 	for (uint32_t i=0;i<MAX_PROCESS_ID+1;i++){
 		(pl+i)->f=0;
 		(pl+i)->id=i;
