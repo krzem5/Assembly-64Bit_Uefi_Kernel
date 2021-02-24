@@ -1,7 +1,7 @@
 #ifndef __KERNEL_GFX_GFX_H__
 #define __KERNEL_GFX_GFX_H__ 1
 #include <shared.h>
-#include <font.h>
+#include <gfx/font.h>
 #include <kmain.h>
 #include <stdint.h>
 

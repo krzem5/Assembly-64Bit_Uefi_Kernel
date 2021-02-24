@@ -10,6 +10,7 @@
 #include <memory/paging.h>
 #include <memory/pm.h>
 #include <memory/vm.h>
+#include <process/process.h>
 #include <process/scheduler.h>
 #include <process/thread.h>
 #include <stddef.h>
@@ -55,8 +56,8 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Setting Up ACPI...\n");
 	acpi_init(ka);
-	console_log("Setting Up Console Buffer...\n");
-	console_buffer_init();
+	console_log("Setting Up Process List...\n");
+	process_init();
 	console_log("Setting Up Scheduler...\n");
 	scheduler_init();
 	console_log("Registering Kernel Threads...\n");

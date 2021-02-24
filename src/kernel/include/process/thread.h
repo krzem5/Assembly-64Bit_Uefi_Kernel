@@ -9,12 +9,12 @@
 
 
 
-typedef uint32_t TID;
+typedef uint32_t tid_t;
 typedef void (KERNEL_CALL *thread_start_t)(void* arg);
 
 
 
-TID KERNEL_CALL create_thread(thread_start_t a,uint8_t p,void* arg);
+tid_t KERNEL_CALL create_thread(thread_start_t a,uint8_t p,void* arg);
 
 
 

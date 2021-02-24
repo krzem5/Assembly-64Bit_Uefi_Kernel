@@ -32,6 +32,6 @@ while (i<len(dt)):
 			i+=1
 	i+=1
 with open(f"rsrc/include/{OUT_NAME}.h","w") as f:
-	f.write(f"#ifndef __{OUT_NAME.upper()}_H__\n#define __{OUT_NAME.upper()}_H__ 1\n#include <font.h>\n#include <stdint.h>\n\n\n\nextern const uint64_t {OUT_NAME.upper()}_DATA[];\n\n\n\nextern Font {OUT_NAME.upper()};\n\n\n\n#endif\n")
+	f.write(f"#ifndef __{OUT_NAME.upper()}_H__\n#define __{OUT_NAME.upper()}_H__ 1\n#include <gfx/font.h>\n#include <stdint.h>\n\n\n\nextern const uint64_t {OUT_NAME.upper()}_DATA[];\n\n\n\nextern Font {OUT_NAME.upper()};\n\n\n\n#endif\n")
 with open(f"rsrc/{OUT_NAME}.c","w") as f:
-	f.write(f"#include <font.h>\n#include <stdint.h>\n#include <{OUT_NAME}.h>\n\n\n\nconst uint64_t {OUT_NAME.upper()}_DATA[{(MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {OUT_NAME.upper()}={{\n\t{MAX_CHAR},\n\t{OUT_NAME.upper()}_DATA\n}};\n")
+	f.write(f"#include <gfx/font.h>\n#include <stdint.h>\n#include <{OUT_NAME}.h>\n\n\n\nconst uint64_t {OUT_NAME.upper()}_DATA[{(MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {OUT_NAME.upper()}={{\n\t{MAX_CHAR},\n\t{OUT_NAME.upper()}_DATA\n}};\n")

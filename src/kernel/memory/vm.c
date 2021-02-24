@@ -22,7 +22,7 @@
 
 
 uint64_t MAX_PROCESS_RAM=0x10000000000;
-uint64_t _n_va=-1;
+vaddr_t _n_va=-1;
 VmMemMap* _vm_dt;
 
 
@@ -35,7 +35,6 @@ uint8_t KERNEL_CALL _vm_pg_f_handler(registers_t* r){
 			fatal_error("Not enought Memory!\n");
 			return 0;
 		}
-		console_log("Comming Page: %llx -> %llx\n",pa,cr2);
 		paging_set_page(cr2,pa);
 		return 1;
 	}
@@ -56,7 +55,7 @@ void KERNEL_CALL vm_init(KernelArgs* ka){
 
 void KERNEL_CALL vm_after_pm_init(KernelArgs* ka){
 	uint64_t pg_c=(((MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)*sizeof(VmMemMapData)+sizeof(sizeof(VmMemMap)))+PAGE_4KB-1)>>PAGE_4KB_POWER_OF_2;
-	_vm_dt=(VmMemMap*)(void*)vm_current_top();
+	_vm_dt=(VmMemMap*)(void*)_vm_dt->n_va;
 	while (pg_c){
 		uint64_t pa=pm_get_free();
 		if (!pa){
@@ -76,11 +75,10 @@ void KERNEL_CALL vm_after_pm_init(KernelArgs* ka){
 
 
 vaddr_t KERNEL_CALL vm_reserve(uint64_t c){
-	vaddr_t o=vm_current_top();
+	vaddr_t o=_vm_dt->n_va;
 	while (c){
-		console_log("Reserve Page: %llx\n",vm_current_top());
-		vaddr_t va=vm_get_top()-_vm_dt->b;
-		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1ull<<(PAGE_GET_BIT_INDEX(va));
+		_vm_dt->e[PAGE_GET_ARRAY_INDEX(_vm_dt->n_va-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(_vm_dt->n_va-_vm_dt->b));
+		_vm_dt->n_va+=PAGE_4KB;
 		c--;
 	}
 	return o;
@@ -89,17 +87,16 @@ vaddr_t KERNEL_CALL vm_reserve(uint64_t c){
 
 
 vaddr_t KERNEL_CALL vm_commit(uint64_t c){
-	vaddr_t o=(vaddr_t)vm_current_top();
+	vaddr_t o=_vm_dt->n_va;
 	while (c){
 		paddr_t pa=pm_get_free();
 		if (!pa){
 			fatal_error("Not enought Memory!\n");
 			return 0;
 		}
-		console_log("Reserving & Commiting Page: %llx -> %llx\n",pa,vm_current_top());
-		vaddr_t va=vm_current_top()-_vm_dt->b;
-		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va)]|=1ull<<(PAGE_GET_BIT_INDEX(va));
-		paging_set_page(vm_get_top(),pa);
+		_vm_dt->e[PAGE_GET_ARRAY_INDEX(_vm_dt->n_va-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(_vm_dt->n_va-_vm_dt->b));
+		paging_set_page(_vm_dt->n_va,pa);
+		_vm_dt->n_va+=PAGE_4KB;
 		c--;
 	}
 	return o;

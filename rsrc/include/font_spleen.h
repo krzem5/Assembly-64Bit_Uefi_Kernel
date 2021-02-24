@@ -1,6 +1,6 @@
 #ifndef __FONT_SPLEEN_H__
 #define __FONT_SPLEEN_H__ 1
-#include <font.h>
+#include <gfx/font.h>
 #include <stdint.h>
 
 

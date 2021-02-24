@@ -19,7 +19,7 @@ void KERNEL_CALL scheduler_init(void){
 
 
 
-void KERNEL_CALL scheduler_start(void){
+void KERNEL_CALL KERNEL_NO_RETURN scheduler_start(void){
 	__asm__("sti");
 	for (;;){
 		__asm__("hlt");

@@ -31,10 +31,6 @@ void KERNEL_CALL console_init(KernelArgs* ka);
 
 
 
-void KERNEL_CALL console_buffer_init(void);
-
-
-
 void KERNEL_CALL _console_print(const char* s,color_t cl);
 
 

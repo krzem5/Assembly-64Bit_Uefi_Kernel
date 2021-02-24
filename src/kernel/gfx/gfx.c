@@ -1,5 +1,5 @@
 #include <shared.h>
-#include <font.h>
+#include <gfx/font.h>
 #include <gfx/gfx.h>
 #include <kmain.h>
 #include <stdint.h>

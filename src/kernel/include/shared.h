@@ -5,6 +5,7 @@
 
 #define OS_VERSION 1
 #define KERNEL_CALL __attribute__((ms_abi))
+#define KERNEL_NO_RETURN __attribute__((__noreturn__))
 
 
 
