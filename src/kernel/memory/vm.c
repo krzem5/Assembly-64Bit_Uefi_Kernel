@@ -22,7 +22,7 @@
 
 
 uint64_t MAX_PROCESS_RAM=0x10000000000;
-vaddr_t _n_va=-1;
+vaddr_t _n_va;
 VmMemMap* _vm_dt;
 
 

@@ -14,7 +14,7 @@ uint64_t _tm_n_sw=0;
 
 
 void KERNEL_CALL scheduler_init(void){
-	_tm_n_sw=0;
+
 }
 
 

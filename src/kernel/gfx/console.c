@@ -19,8 +19,8 @@
 
 
 
-uint64_t _console_x;
-uint64_t _console_y;
+uint64_t _console_x=0;
+uint64_t _console_y=0;
 uint64_t _console_w;
 uint64_t _console_h;
 uint32_t* _console_bf;
@@ -81,8 +81,6 @@ void LIBC_CALL _console_vprintf_write_func(char c,void* ctx){
 
 
 void KERNEL_CALL console_init(KernelArgs* ka){
-	_console_x=0;
-	_console_y=0;
 	_console_w=ka->vmem_w/(8*SCALE);
 	_console_h=ka->vmem_h/(16*SCALE);
 	_console_bf=(uint32_t*)(void*)vm_commit((_console_w*_console_h*sizeof(uint32_t)+4095)>>12);
