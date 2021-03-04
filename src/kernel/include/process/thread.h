@@ -1,20 +1,49 @@
 #ifndef __KERNEL_PROCESS_THREAD_H__
 #define __KERNEL_PROCESS_THREAD_H__ 1
 #include <shared.h>
+#include <process/process.h>
 #include <stdint.h>
 
 
 
-#define THREAD_PRIORITY_NORMAL 0
-
-
-
 typedef uint32_t tid_t;
+typedef struct __THREAD_DATA{
+	uint64_t rax;
+	uint64_t rbx;
+	uint64_t rcx;
+	uint64_t rdx;
+	uint64_t rsi;
+	uint64_t rdi;
+	uint64_t rsp;
+	uint64_t rbp;
+	uint64_t rip;
+	uint64_t r8;
+	uint64_t r9;
+	uint64_t r10;
+	uint64_t r11;
+	uint64_t r12;
+	uint64_t r13;
+	uint64_t r14;
+	uint64_t r15;
+	uint64_t rflags;
+	uint64_t cs;
+	uint64_t ss;
+} thread_data_t;
+typedef struct __THREAD{
+	uint8_t f;
+	pid_t id;
+	thread_data_t dt;
+	process_t* p;
+} thread_t;
 typedef void (KERNEL_CALL *thread_start_t)(void* arg);
 
 
 
-tid_t KERNEL_CALL create_thread(thread_start_t a,uint8_t p,void* arg);
+void KERNEL_CALL thread_init(void);
+
+
+
+thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t a,void* arg);
 
 
 

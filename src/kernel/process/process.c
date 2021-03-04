@@ -31,7 +31,7 @@ void KERNEL_CALL process_init(void){
 		(pl+i)->f=0;
 		(pl+i)->id=i;
 	}
-	console_log("Max Process ID: %llu\n",MAX_PROCESS_ID);
+	console_log("Max Thread ID: %llu\n",MAX_PROCESS_ID);
 }
 
 

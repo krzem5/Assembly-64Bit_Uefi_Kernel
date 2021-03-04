@@ -58,11 +58,13 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	acpi_init(ka);
 	console_log("Setting Up Process List...\n");
 	process_init();
+	console_log("Setting Up Thread List...\n");
+	thread_init();
 	console_log("Setting Up Scheduler...\n");
 	scheduler_init();
 	console_log("Registering Kernel Threads...\n");
-	create_thread(thread1,THREAD_PRIORITY_NORMAL,NULL);
-	create_thread(thread2,THREAD_PRIORITY_NORMAL,NULL);
+	create_thread(NULL,thread1,NULL);
+	create_thread(NULL,thread2,NULL);
 	console_ok("Starting Scheduler...\n");
 	scheduler_start();
 }
