@@ -6,11 +6,11 @@
 
 
 
-#define PROCESS_TIME_US 1000000ull
+#define PROCESS_TIME_US 1000ull
 
 
 
-uint64_t _tm_n_sw=0;
+uint64_t _l_tm=0;
 
 
 
@@ -30,9 +30,6 @@ void KERNEL_CALL KERNEL_NO_RETURN scheduler_start(void){
 
 
 void KERNEL_CALL scheduler_tick(uint64_t tm){
-	if (tm<=_tm_n_sw){
-		return;
-	}
-	_tm_n_sw=tm+PROCESS_TIME_US;
-	console_log("Reschedule! (%llu)\n",tm);
+	console_log("Reschedule: %lluus\n",tm-_l_tm);
+	_l_tm=tm;
 }

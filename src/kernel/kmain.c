@@ -69,5 +69,6 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
 	console_ok("Starting Scheduler...\n");
-	scheduler_start();
+	// scheduler_start();
+	for (;;)__asm__("hlt");
 }

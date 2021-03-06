@@ -535,11 +535,20 @@ int LIBC_CALL __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_writ
 		else if (*t=='p'){
 			i+=sizeof(uintptr_t)*2;
 			if (rs){
+#ifdef __KERNEL__
+				rs(sizeof(uintptr_t)*2+1,ctx);
+#else
 				rs(sizeof(uintptr_t)*2,ctx);
+#endif
 			}
 			uintptr_t p=(uintptr_t)va_arg(v,void*);
 			if (cb){
 				for (int8_t j=sizeof(uintptr_t)*8-4;j>=0;j-=4){
+#ifdef __KERNEL__
+					if (j==28){
+						cb('_',ctx);
+					}
+#endif
 					uint8_t v=(p>>j)%16;
 					cb(48+(v>9?39:0)+v,ctx);
 				}
