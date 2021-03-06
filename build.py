@@ -7,10 +7,9 @@ import re
 
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
-KERNEL_ARGS_STRUCT_HEADER="src/kernel/include/kmain.h"
-KERNEL_ARGS_STRUCT_REGEX=re.compile(br"struct\s+__KERNEL_ARGS\s*{")
-KERNEL_ARGS_STRUCT_STACK_POINTER_NAME=b"k_sp"
+REQUIRED_STRUCT_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"]}
 SIZEOF_64BIT_POINTER=8
+SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
 
 
@@ -46,6 +45,7 @@ e_fl=[]
 k_fl=[]
 l_fl=[]
 src_fl=list(os.walk("rsrc"))+list(os.walk("src"))
+asm_d=[]
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
@@ -53,8 +53,57 @@ for r,_,fl in src_fl:
 			print(f"Prettifying C {('Source' if f[-1]=='c' else 'Header')} File: {r+f}")
 			with open(r+f,"rb") as rf:
 				dt=INCLUDE_LIST_REGEX.sub(_sort_inc,rf.read())
+			if (f[-1]=="h"):
+				for k in list(REQUIRED_STRUCT_OFFSETS.keys()):
+					m=re.search(br"struct\s+"+k+br"\s*\{",dt)
+					if (m is not None):
+						i=m.end()
+						off=0
+						lc=-1
+						while (True):
+							if (dt[i:i+1] in b" \t\r\n\v\f"):
+								i+=1
+								continue
+							e=b""
+							while (dt[i:i+1]!=b";"):
+								e+=dt[i:i+1]
+								i+=1
+							i+=1
+							nm=e.split(b" ")[-1].replace(b"[]",b"")
+							if (nm in REQUIRED_STRUCT_OFFSETS[k]):
+								asm_d+=[f"-D__{str(k,'utf-8').strip('_').upper()}_STRUCT_{str(nm,'utf-8').upper()}_OFFSET__={off}"]
+								REQUIRED_STRUCT_OFFSETS[k].remove(nm)
+								if (len(REQUIRED_STRUCT_OFFSETS[k])==0):
+									break
+							e=e[:-len(e.split(b" ")[-1])].strip()
+							c=0
+							if (e==b"}"):
+								break
+							elif (e[-1:]==b"*"):
+								c=SIZEOF_64BIT_POINTER
+							elif (e==b"uint32_t"):
+								c=SIZEOF_UINT32_T
+							elif (e==b"uint64_t"):
+								c=SIZEOF_UINT64_T
+							else:
+								print(f"Unknown sizeof of Type '{str(e,'utf-8')}'!")
+								quit()
+							if (lc!=-1 and lc<c):
+								print(f"Unknown Amount of Padding between {lc}-byte Type and {c}-byte Type!")
+								quit()
+							off+=c
+							lc=c
+						if (len(REQUIRED_STRUCT_OFFSETS[k])!=0):
+							for e in REQUIRED_STRUCT_OFFSETS[k]:
+								print(f"Unable to Find Element '{str(e,'utf-8')}' in Structure '{str(k,'utf-8')}'!")
+							quit()
+						del REQUIRED_STRUCT_OFFSETS[k]
 			with open(r+f,"wb") as wf:
 				wf.write(dt)
+for k in REQUIRED_STRUCT_OFFSETS.keys():
+	print(f"Unable to Find Struture '{str(k,'utf-8')}'!")
+if (REQUIRED_STRUCT_OFFSETS):
+	quit()
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
@@ -77,45 +126,7 @@ for r,_,fl in src_fl:
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
 				print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				ef=[]
-				if (f=="kentry.asm"):
-					with open(KERNEL_ARGS_STRUCT_HEADER,"rb") as hf:
-						dt=hf.read()
-						m=KERNEL_ARGS_STRUCT_REGEX.search(dt)
-						if (m is None):
-							print(f"No __KERNEL_ARGS struct found in file '{KERNEL_ARGS_STRUCT_HEADER}'!")
-							quit()
-						i=m.end()
-						off=0
-						lc=-1
-						while (True):
-							if (dt[i:i+1] in b" \t\r\n\v\f"):
-								i+=1
-								continue
-							e=b""
-							while (dt[i:i+1]!=b";"):
-								e+=dt[i:i+1]
-								i+=1
-							i+=1
-							nm=e.split(b" ")[-1].replace(b"[]",b"")
-							if (nm==KERNEL_ARGS_STRUCT_STACK_POINTER_NAME):
-								break
-							e=e[:-len(e.split(b" ")[-1])].strip()
-							c=0
-							if (e[-1:]==b"*"):
-								c=SIZEOF_64BIT_POINTER
-							elif (e==b"uint64_t"):
-								c=SIZEOF_UINT64_T
-							else:
-								print(f"Unknown sizeof of Type '{str(e,'utf-8')}'!")
-								quit()
-							if (lc!=-1 and lc<c):
-								print(f"Unknown Amount of Padding between {lc}-byte Type and {c}-byte Type!")
-								quit()
-							off+=c
-							lc=c
-						ef=[f"-D__KERNEL_ARGS_STRUCT_STACK_POINTER_OFFSET__={off}"]
-				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+ef).returncode!=0):
+				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+asm_d).returncode!=0):
 					quit()
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 		elif (r[:4]=="rsrc"):
@@ -171,6 +182,6 @@ if (subprocess.run(["qemu-img","create","-f","qcow2","build/hdd.qcow2","16G"]).r
 	quit()
 print("Starting QEMU...")
 try:
-	subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=2,cores=4,threads=1","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])
+	subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=1,cores=8,threads=1","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])
 except KeyboardInterrupt:
 	pass

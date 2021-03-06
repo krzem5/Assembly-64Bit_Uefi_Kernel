@@ -5,7 +5,7 @@
 
 
 
-#define PROCESS_TIME_US 1000000
+#define PROCESS_TIME_US 1000000ull
 
 
 

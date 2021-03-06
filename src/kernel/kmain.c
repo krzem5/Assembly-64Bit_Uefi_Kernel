@@ -1,5 +1,6 @@
 #include <shared.h>
 #include <cpu/acpi.h>
+#include <cpu/cpu_info.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
 #include <cpu/irq.h>
@@ -54,6 +55,8 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	setup_isr();
 	console_log("Setting Up Default IRQs...\n");
 	setup_irq();
+	console_log("Setting Up CPU...\n");
+	cpu_info_init();
 	console_log("Setting Up ACPI...\n");
 	acpi_init(ka);
 	console_log("Setting Up Process List...\n");
