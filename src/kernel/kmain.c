@@ -1,5 +1,6 @@
 #include <shared.h>
 #include <cpu/acpi.h>
+#include <cpu/cpu.h>
 #include <cpu/cpu_info.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
@@ -55,10 +56,12 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	setup_isr();
 	console_log("Setting Up Default IRQs...\n");
 	setup_irq();
-	console_log("Setting Up CPU...\n");
+	console_log("Reading CPU Info...\n");
 	cpu_info_init();
 	console_log("Setting Up ACPI...\n");
-	acpi_init(ka);
+	uint64_t apic_a=acpi_init(ka);
+	console_log("Setting Up CPUs...\n");
+	cpu_init(apic_a);
 	console_log("Setting Up Process List...\n");
 	process_init();
 	console_log("Setting Up Thread List...\n");
@@ -70,5 +73,7 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	create_thread(kernel_process,thread2,NULL);
 	console_ok("Starting Scheduler...\n");
 	// scheduler_start();
-	for (;;)__asm__("hlt");
+	for (;;){
+		__asm__("hlt");
+	}
 }

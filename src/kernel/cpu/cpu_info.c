@@ -1,6 +1,7 @@
 #include <shared.h>
 #include <cpu/cpu_info.h>
 #include <gfx/console.h>
+#include <stdint.h>
 
 
 

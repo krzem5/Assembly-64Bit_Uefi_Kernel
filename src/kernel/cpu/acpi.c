@@ -1,7 +1,7 @@
 #include <shared.h>
 #include <cpu/acpi.h>
 #include <cpu/fatal_error.h>
-#include <cpu/timer.h>
+#include <cpu/hpet_timer.h>
 #include <gfx/console.h>
 #include <kmain.h>
 #include <stdint.h>
@@ -55,7 +55,7 @@ struct _ACPI_HPET{
 
 
 
-void KERNEL_CALL acpi_init(KernelArgs* ka){
+uint64_t KERNEL_CALL acpi_init(KernelArgs* ka){
 	console_log("ACPI Pointers: APIC = %p, FADT = %p, HPET = %p\n",ka->apic,ka->fadt,ka->hpet);
 	struct _ACPI_APIC* apic=(struct _ACPI_APIC*)ka->apic;
 	uint32_t i=0;
@@ -126,5 +126,6 @@ void KERNEL_CALL acpi_init(KernelArgs* ka){
 			i+=*(apic->dt+i+1);
 		}
 	}
-	timer_init(((struct _ACPI_HPET*)ka->hpet)->b_addr.a);
+	hpet_timer_init(((struct _ACPI_HPET*)ka->hpet)->b_addr.a);
+	return (uint64_t)apic->lic_a;
 }

@@ -5,7 +5,7 @@
 
 
 
-void KERNEL_CALL acpi_init(KernelArgs* ka);
+uint64_t KERNEL_CALL acpi_init(KernelArgs* ka);
 
 
 

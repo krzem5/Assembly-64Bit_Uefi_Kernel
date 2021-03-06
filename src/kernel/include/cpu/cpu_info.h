@@ -1,5 +1,5 @@
-#ifndef __CPU_CPU_INFO_H__
-#define __CPU_CPU_INFO_H__ 1
+#ifndef __KERNEL_CPU_CPU_INFO_H__
+#define __KERNEL_CPU_CPU_INFO_H__ 1
 #include <shared.h>
 #include <stdint.h>
 

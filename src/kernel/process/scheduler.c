@@ -1,5 +1,5 @@
 #include <shared.h>
-#include <cpu/timer.h>
+#include <cpu/hpet_timer.h>
 #include <gfx/console.h>
 #include <process/scheduler.h>
 #include <stdint.h>
@@ -15,7 +15,7 @@ uint64_t _l_tm=0;
 
 
 void KERNEL_CALL scheduler_init(void){
-	timer_set_frequency(PROCESS_TIME_US);
+	hpet_timer_set_frequency(PROCESS_TIME_US);
 }
 
 

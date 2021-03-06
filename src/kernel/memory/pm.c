@@ -4,6 +4,7 @@
 #include <memory/paging.h>
 #include <memory/pm.h>
 #include <memory/vm.h>
+#include <stdint.h>
 
 
 

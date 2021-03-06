@@ -4,6 +4,7 @@
 #include <memory/vm.h>
 #include <process/process.h>
 #include <process/thread.h>
+#include <stdint.h>
 
 
 
