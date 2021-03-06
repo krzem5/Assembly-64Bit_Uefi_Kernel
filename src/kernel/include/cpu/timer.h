@@ -9,6 +9,10 @@ void KERNEL_CALL timer_init(uint64_t b);
 
 
 
+void KERNEL_CALL timer_set_frequency(uint64_t f);
+
+
+
 uint64_t KERNEL_CALL timer_get_us(void);
 
 

@@ -7,9 +7,9 @@ extern idt
 asm_setup_idt:
 	push rdi
 	xor rax, rax
-	mov rcx, 0x200
+	mov rcx, (0x200 / 8)
 	mov rdi, qword [idt+2]
-	rep stosb
+	rep stosq
 	lidt [idt]
 	pop rdi
 	ret

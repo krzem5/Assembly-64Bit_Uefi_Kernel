@@ -1,5 +1,5 @@
 bits 64
-extern asm_cpuid
+global asm_cpuid
 
 
 

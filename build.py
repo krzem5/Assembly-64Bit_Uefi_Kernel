@@ -12,7 +12,8 @@ FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
 REQUIRED_STRUCT_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"]}
-SIZEOF_64BIT_POINTER=8
+REQUIRED_STRUCT_SIZE=[b"__THREAD_DATA"]
+SIZEOF_POINTER=8
 SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
 
@@ -86,7 +87,7 @@ for r,_,fl in src_fl:
 			with open(r+f,"rb") as rf:
 				dt=INCLUDE_LIST_REGEX.sub(_sort_inc,rf.read())
 			if (f[-1]=="h"):
-				for k in list(REQUIRED_STRUCT_OFFSETS.keys()):
+				for k in set(REQUIRED_STRUCT_OFFSETS.keys())|set(REQUIRED_STRUCT_SIZE):
 					m=re.search(br"struct\s+"+k+br"\s*\{",dt)
 					if (m is not None):
 						i=m.end()
@@ -101,18 +102,19 @@ for r,_,fl in src_fl:
 								e+=dt[i:i+1]
 								i+=1
 							i+=1
-							nm=e.split(b" ")[-1].replace(b"[]",b"")
-							if (nm in REQUIRED_STRUCT_OFFSETS[k]):
-								asm_d+=[f"-D__{str(k,'utf-8').strip('_').upper()}_STRUCT_{str(nm,'utf-8').upper()}_OFFSET__={off}"]
-								REQUIRED_STRUCT_OFFSETS[k].remove(nm)
-								if (len(REQUIRED_STRUCT_OFFSETS[k])==0):
-									break
+							if (k in REQUIRED_STRUCT_OFFSETS):
+								nm=e.split(b" ")[-1].replace(b"[]",b"")
+								if (nm in REQUIRED_STRUCT_OFFSETS[k]):
+									asm_d+=[f"-D__{str(k,'utf-8').strip('_').upper()}_STRUCT_{str(nm,'utf-8').upper()}_OFFSET__={off}"]
+									REQUIRED_STRUCT_OFFSETS[k].remove(nm)
+									if (len(REQUIRED_STRUCT_OFFSETS[k])==0 and k not in REQUIRED_STRUCT_SIZE):
+										break
 							e=e[:-len(e.split(b" ")[-1])].strip()
 							c=0
 							if (e==b"}"):
 								break
 							elif (e[-1:]==b"*"):
-								c=SIZEOF_64BIT_POINTER
+								c=SIZEOF_POINTER
 							elif (e==b"uint32_t"):
 								c=SIZEOF_UINT32_T
 							elif (e==b"uint64_t"):
@@ -125,16 +127,24 @@ for r,_,fl in src_fl:
 								quit()
 							off+=c
 							lc=c
-						if (len(REQUIRED_STRUCT_OFFSETS[k])!=0):
-							for e in REQUIRED_STRUCT_OFFSETS[k]:
-								print(f"Unable to Find Element '{str(e,'utf-8')}' in Structure '{str(k,'utf-8')}'!")
-							quit()
-						del REQUIRED_STRUCT_OFFSETS[k]
+						if (k in REQUIRED_STRUCT_SIZE):
+							asm_d+=[f"-D__{str(k,'utf-8').strip('_').upper()}_STRUCT_SIZE__={off}"]
+							REQUIRED_STRUCT_SIZE.remove(k)
+						if (k in REQUIRED_STRUCT_OFFSETS):
+							if (REQUIRED_STRUCT_OFFSETS[k]):
+								for e in REQUIRED_STRUCT_OFFSETS[k]:
+									print(f"Unable to Find Element '{str(e,'utf-8')}' in Structure '{str(k,'utf-8')}'!")
+								quit()
+							del REQUIRED_STRUCT_OFFSETS[k]
 			with open(r+f,"wb") as wf:
 				wf.write(dt)
 for k in REQUIRED_STRUCT_OFFSETS.keys():
 	print(f"Unable to Find Struture '{str(k,'utf-8')}'!")
 if (REQUIRED_STRUCT_OFFSETS):
+	quit()
+for k in REQUIRED_STRUCT_SIZE:
+	print(f"Unable to Find Struture '{str(k,'utf-8')}'!")
+if (REQUIRED_STRUCT_SIZE):
 	quit()
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"

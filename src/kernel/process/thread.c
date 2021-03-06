@@ -31,18 +31,20 @@ void KERNEL_CALL thread_init(void){
 
 
 
-thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t a,void* arg){
+thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t e,void* a){
+	CHECK_NOT_NULL_STATIC(p);
+	CHECK_NOT_NULL_STATIC(e);
 	thread_t* o=tl+_nti;
 	o->f|=THREAD_SET_PRESENT;
 	o->p=p;
-	o->dt.rcx=(uint64_t)arg;
-	o->dt.rip=(uint64_t)a;
-	_nti++;
-	while (THREAD_GET_PRESENT(tl+_nti)){
+	asm_clear_thread_data(&o->dt);
+	o->dt.rcx=(uint64_t)a;
+	o->dt.rip=(uint64_t)e;
+	do{
 		_nti++;
 		if (_nti>MAX_THREAD_ID){
 			fatal_error("Final Thread Allocated!\n");
 		}
-	}
+	} while (THREAD_GET_PRESENT(tl+_nti));
 	return o;
 }

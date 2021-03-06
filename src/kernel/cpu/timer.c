@@ -8,7 +8,6 @@
 
 
 #define SECONDS_TO_FEMTOSECONDS(n) ((n)*1000000000000000ull)
-#define TIMER_FREQUENCY 1000000ull
 
 
 
@@ -32,10 +31,15 @@ void KERNEL_CALL timer_init(uint64_t b){
 	console_log("HPET Base Ptr: %p\n",b);
 	_tm_ptr=(uint64_t*)(void*)b;
 	*(_tm_ptr+2)&=~1;
+}
+
+
+
+void KERNEL_CALL timer_set_frequency(uint64_t f){
 	uint64_t of=SECONDS_TO_FEMTOSECONDS(1)/((*_tm_ptr)>>32);
-	_tm_freq=(of>TIMER_FREQUENCY?TIMER_FREQUENCY:of);
+	_tm_freq=(of>f?f:of);
 	_tm_upd=of/_tm_freq;
-	console_log("HPET Data: period = %llu, frequency = %lluHz\n",(*_tm_ptr)>>32,of);
+	console_log("HPET Data:\n  period = %llu\n  frequency = %lluHz\n",(*_tm_ptr)>>32,of);
 	regiser_irq_handler(0,_timer_irq_cb);
 	*(_tm_ptr+30)=0;
 	*(_tm_ptr+32)&=~8;

@@ -4,8 +4,6 @@
 #include <memory/vm.h>
 #include <process/process.h>
 #include <process/thread.h>
-#include <stdint.h>
-#include <stdlib.h>
 
 
 
@@ -22,6 +20,7 @@
 process_t* pl;
 uint32_t pll=0;
 uint32_t _npi=0;
+process_t* kernel_process;
 
 
 
@@ -31,7 +30,8 @@ void KERNEL_CALL process_init(void){
 		(pl+i)->f=0;
 		(pl+i)->id=i;
 	}
-	console_log("Max Thread ID: %llu\n",MAX_PROCESS_ID);
+	console_log("Max Process ID: %llu\n",MAX_PROCESS_ID);
+	kernel_process=process_create(0);
 }
 
 
@@ -39,6 +39,7 @@ void KERNEL_CALL process_init(void){
 process_t* KERNEL_CALL process_create(uint8_t p){
 	process_t* o=pl+_npi;
 	o->f|=PROCESS_SET_PRESENT|PROCESS_SET_PRIORITY(p);
+	o->tll=0;
 	_npi++;
 	while (PROCESS_GET_PRESENT(pl+_npi)){
 		_npi++;

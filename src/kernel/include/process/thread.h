@@ -31,7 +31,7 @@ typedef struct __THREAD_DATA{
 } thread_data_t;
 typedef struct __THREAD{
 	uint8_t f;
-	pid_t id;
+	tid_t id;
 	thread_data_t dt;
 	process_t* p;
 } thread_t;
@@ -43,7 +43,11 @@ void KERNEL_CALL thread_init(void);
 
 
 
-thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t a,void* arg);
+thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t e,void* a);
+
+
+
+extern void KERNEL_CALL asm_clear_thread_data(thread_data_t* dt);
 
 
 
