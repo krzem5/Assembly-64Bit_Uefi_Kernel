@@ -3,6 +3,7 @@
 #include <cpu/cpu.h>
 #include <cpu/cpu_info.h>
 #include <cpu/gdt.h>
+#include <cpu/hpet_timer.h>
 #include <cpu/idt.h>
 #include <cpu/irq.h>
 #include <cpu/isr.h>
@@ -58,16 +59,19 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Reading CPU Info...\n");
 	cpu_info_init();
-	console_log("Setting Up ACPI...\n");
-	uint64_t apic_a=acpi_init(ka);
+	console_log("Parsing ACPI...\n");
+	acpi_init(ka);
+	hpet_timer_set_frequency(1000ull);
 	console_log("Setting Up CPUs...\n");
-	cpu_init(apic_a);
+	cpu_init();
 	console_log("Setting Up Process List...\n");
 	process_init();
 	console_log("Setting Up Thread List...\n");
 	thread_init();
 	console_log("Setting Up Scheduler...\n");
 	scheduler_init();
+	console_log("Clearing ACPI Data...\n");
+	acpi_free_data();
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);

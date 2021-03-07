@@ -45,131 +45,155 @@ typedef uint8_t (KERNEL_CALL *isr_handler_t)(registers_t* r);
 
 
 
-extern void KERNEL_CALL _asm_isr0(void);
+extern void KERNEL_CALL asm_isr0(void);
 
 
 
-extern void KERNEL_CALL _asm_isr1(void);
+extern void KERNEL_CALL asm_isr1(void);
 
 
 
-extern void KERNEL_CALL _asm_isr2(void);
+extern void KERNEL_CALL asm_isr2(void);
 
 
 
-extern void KERNEL_CALL _asm_isr3(void);
+extern void KERNEL_CALL asm_isr3(void);
 
 
 
-extern void KERNEL_CALL _asm_isr4(void);
+extern void KERNEL_CALL asm_isr4(void);
 
 
 
-extern void KERNEL_CALL _asm_isr5(void);
+extern void KERNEL_CALL asm_isr5(void);
 
 
 
-extern void KERNEL_CALL _asm_isr6(void);
+extern void KERNEL_CALL asm_isr6(void);
 
 
 
-extern void KERNEL_CALL _asm_isr7(void);
+extern void KERNEL_CALL asm_isr7(void);
 
 
 
-extern void KERNEL_CALL _asm_isr8(void);
+extern void KERNEL_CALL asm_isr8(void);
 
 
 
-extern void KERNEL_CALL _asm_isr9(void);
+extern void KERNEL_CALL asm_isr9(void);
 
 
 
-extern void KERNEL_CALL _asm_isr10(void);
+extern void KERNEL_CALL asm_isr10(void);
 
 
 
-extern void KERNEL_CALL _asm_isr11(void);
+extern void KERNEL_CALL asm_isr11(void);
 
 
 
-extern void KERNEL_CALL _asm_isr12(void);
+extern void KERNEL_CALL asm_isr12(void);
 
 
 
-extern void KERNEL_CALL _asm_isr13(void);
+extern void KERNEL_CALL asm_isr13(void);
 
 
 
-extern void KERNEL_CALL _asm_isr14(void);
+extern void KERNEL_CALL asm_isr14(void);
 
 
 
-extern void KERNEL_CALL _asm_isr15(void);
+extern void KERNEL_CALL asm_isr15(void);
 
 
 
-extern void KERNEL_CALL _asm_isr16(void);
+extern void KERNEL_CALL asm_isr16(void);
 
 
 
-extern void KERNEL_CALL _asm_isr17(void);
+extern void KERNEL_CALL asm_isr17(void);
 
 
 
-extern void KERNEL_CALL _asm_isr18(void);
+extern void KERNEL_CALL asm_isr18(void);
 
 
 
-extern void KERNEL_CALL _asm_isr19(void);
+extern void KERNEL_CALL asm_isr19(void);
 
 
 
-extern void KERNEL_CALL _asm_isr20(void);
+extern void KERNEL_CALL asm_isr20(void);
 
 
 
-extern void KERNEL_CALL _asm_isr21(void);
+extern void KERNEL_CALL asm_isr21(void);
 
 
 
-extern void KERNEL_CALL _asm_isr22(void);
+extern void KERNEL_CALL asm_isr22(void);
 
 
 
-extern void KERNEL_CALL _asm_isr23(void);
+extern void KERNEL_CALL asm_isr23(void);
 
 
 
-extern void KERNEL_CALL _asm_isr24(void);
+extern void KERNEL_CALL asm_isr24(void);
 
 
 
-extern void KERNEL_CALL _asm_isr25(void);
+extern void KERNEL_CALL asm_isr25(void);
 
 
 
-extern void KERNEL_CALL _asm_isr26(void);
+extern void KERNEL_CALL asm_isr26(void);
 
 
 
-extern void KERNEL_CALL _asm_isr27(void);
+extern void KERNEL_CALL asm_isr27(void);
 
 
 
-extern void KERNEL_CALL _asm_isr28(void);
+extern void KERNEL_CALL asm_isr28(void);
 
 
 
-extern void KERNEL_CALL _asm_isr29(void);
+extern void KERNEL_CALL asm_isr29(void);
 
 
 
-extern void KERNEL_CALL _asm_isr30(void);
+extern void KERNEL_CALL asm_isr30(void);
 
 
 
-extern void KERNEL_CALL _asm_isr31(void);
+extern void KERNEL_CALL asm_isr31(void);
+
+
+
+extern void KERNEL_CALL asm_isr208(void);
+
+
+
+extern void KERNEL_CALL asm_isr209(void);
+
+
+
+extern void KERNEL_CALL asm_isr210(void);
+
+
+
+extern void KERNEL_CALL asm_isr211(void);
+
+
+
+extern void KERNEL_CALL asm_isr212(void);
+
+
+
+extern void KERNEL_CALL asm_isr213(void);
 
 
 

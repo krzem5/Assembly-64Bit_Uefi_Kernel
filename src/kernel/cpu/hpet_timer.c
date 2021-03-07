@@ -16,7 +16,7 @@
 
 
 
-uint64_t* _tm_ptr;
+volatile uint64_t* _tm_ptr;
 uint64_t _tm_p;
 uint64_t _tm=0;
 uint64_t _tm_us_r=1;
@@ -65,4 +65,11 @@ uint64_t KERNEL_CALL hpet_timer_get_us(void){
 
 uint64_t KERNEL_CALL hpet_timer_get_s(void){
 	return *(_tm_ptr+30)/_tm_s_r;
+}
+
+
+
+void KERNEL_CALL hpet_timer_spinwait(uint64_t us){
+	uint64_t e=*(_tm_ptr+30)/_tm_us_r+us;
+	while (*(_tm_ptr+30)/_tm_us_r<e);
 }

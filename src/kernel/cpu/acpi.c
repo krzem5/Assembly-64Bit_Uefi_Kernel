@@ -1,9 +1,11 @@
 #include <shared.h>
 #include <cpu/acpi.h>
+#include <cpu/apic.h>
 #include <cpu/fatal_error.h>
 #include <cpu/hpet_timer.h>
 #include <gfx/console.h>
 #include <kmain.h>
+#include <memory/vm.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -55,7 +57,11 @@ struct _ACPI_HPET{
 
 
 
-uint64_t KERNEL_CALL acpi_init(KernelArgs* ka){
+acpi_data_t* _dt_ptr;
+
+
+
+void KERNEL_CALL acpi_init(KernelArgs* ka){
 	console_log("ACPI Pointers: APIC = %p, FADT = %p, HPET = %p\n",ka->apic,ka->fadt,ka->hpet);
 	struct _ACPI_APIC* apic=(struct _ACPI_APIC*)ka->apic;
 	uint32_t i=0;
@@ -79,7 +85,10 @@ uint64_t KERNEL_CALL acpi_init(KernelArgs* ka){
 		i+=*(apic->dt+i+1);
 	}
 	console_log("lAPIC = %u, ioAPIC = %u, Override = %u, NMI = %x\n",lapic_c,ioapic_c,ov_c,nmi_c);
+	_dt_ptr=(acpi_data_t*)(void*)vm_commit((sizeof(acpi_data_t)+sizeof(uint8_t)*lapic_c+4095)>>12);
+	_dt_ptr->cpu_c=lapic_c;
 	i=0;
+	uint32_t j=0;
 	while (i<apic->l){
 		uint8_t t=*(apic->dt+i);
 		if (t>=0x10){
@@ -93,6 +102,10 @@ uint64_t KERNEL_CALL acpi_init(KernelArgs* ka){
 			if (f){
 				if (f&2){
 					console_warn("Processor %.2hhx:%.2hhx Not Enabled Yet! (%llx)\n",p_uid,id,f);
+				}
+				else{
+					_dt_ptr->cpu[j]=id;
+					j++;
 				}
 				console_log("Found Processor: %.2hhx:%.2hhx\n",p_uid,id);
 			}
@@ -127,5 +140,17 @@ uint64_t KERNEL_CALL acpi_init(KernelArgs* ka){
 		}
 	}
 	hpet_timer_init(((struct _ACPI_HPET*)ka->hpet)->b_addr.a);
-	return (uint64_t)apic->lic_a;
+	apic_init((uint64_t)apic->lic_a);
+}
+
+
+
+acpi_data_t* KERNEL_CALL acpi_get_data(void){
+	return _dt_ptr;
+}
+
+
+
+void KERNEL_CALL acpi_free_data(void){
+	console_warn("Not Implemented!\n");
 }

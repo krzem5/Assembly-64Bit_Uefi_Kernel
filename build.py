@@ -11,9 +11,10 @@ FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bd
 FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
-REQUIRED_STRUCT_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"]}
+REQUIRED_STRUCT_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"]}
 REQUIRED_STRUCT_SIZE=[b"__THREAD_DATA"]
 SIZEOF_POINTER=8
+SIZEOF_UINT8_T=1
 SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
 
@@ -115,6 +116,8 @@ for r,_,fl in src_fl:
 								break
 							elif (e[-1:]==b"*"):
 								c=SIZEOF_POINTER
+							elif (e==b"uint8_t"):
+								c=SIZEOF_UINT8_T
 							elif (e==b"uint32_t"):
 								c=SIZEOF_UINT32_T
 							elif (e==b"uint64_t"):

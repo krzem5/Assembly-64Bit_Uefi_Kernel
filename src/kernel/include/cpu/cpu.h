@@ -9,16 +9,21 @@ typedef struct __CPU{
 	struct __CPU* s;
 	uint8_t id;
 	uint8_t idx;
-	uint32_t apic_a;
+	void* rsp0;
+	uint32_t apic;
 } cpu_t;
 
 
 
-void KERNEL_CALL cpu_init(uint64_t apic_a);
+void KERNEL_CALL cpu_init(void);
 
 
 
 extern cpu_t* KERNEL_CALL current_cpu(void);
+
+
+
+extern void KERNEL_CALL asm_copy_starup_code(uint64_t sz);
 
 
 
