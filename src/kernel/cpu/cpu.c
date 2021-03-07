@@ -76,10 +76,12 @@ _nxt:
 			j++;
 		}
 	}
+	console_log("%u/%u CPUs running!\n",_cpu_ap_c,dt->cpu_c);
 }
 
 
 
 void KERNEL_CALL cpu_ap_init(cpu_t* cpu){
 	_cpu_ap_c++;
+	apic_enable();
 }
