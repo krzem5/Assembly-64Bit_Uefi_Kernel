@@ -83,5 +83,6 @@ _nxt:
 
 void KERNEL_CALL cpu_ap_init(cpu_t* cpu){
 	_cpu_ap_c++;
+	asm_wrmsr(MSR_GS_BASE,(uint64_t)(void*)cpu);
 	apic_enable();
 }
