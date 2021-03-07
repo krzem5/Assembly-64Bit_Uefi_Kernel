@@ -48,6 +48,10 @@ vaddr_t KERNEL_CALL vm_get_top(void);
 
 
 
+void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c);
+
+
+
 extern uint64_t KERNEL_CALL asm_get_cr2(void);
 
 

@@ -6,6 +6,7 @@ SECTIONS{
         *(.entry)
         *(.text .text*)
         *(.rodata .rodata* .rdata .rdata*)
+        *(.ap_startup)
     }
     .data ALIGN (0x1000) : AT(ADDR(.data) - ___KERNEL_BASE_VA__) {
         *(.data .data*)

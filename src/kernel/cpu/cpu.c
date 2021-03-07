@@ -15,12 +15,18 @@
 
 
 
+extern void KERNEL_CALL asm_ap_startup(void);
+extern uint64_t asm_ap_startup_len;
+
+
+
 cpu_t* _cpu_dt;
 
 
 
 void KERNEL_CALL cpu_init(void){
 	acpi_data_t* dt=acpi_get_data();
+	console_log("CPU Count: %u\n",dt->cpu_c);
 	_cpu_dt=(cpu_t*)(void*)vm_commit((sizeof(cpu_t)*dt->cpu_c+CPU_INIT_STACK_SIZE*(dt->cpu_c-1)+4095)>>12);
 	_cpu_dt->s=_cpu_dt;
 	_cpu_dt->id=apic_get_id();
@@ -30,8 +36,13 @@ void KERNEL_CALL cpu_init(void){
 	apic_setup_timer();
 	asm_wrmsr(MSR_GS_BASE,(uint64_t)(void*)_cpu_dt);
 	ASSERT(current_cpu()==_cpu_dt);
+	console_log("AP Startup Code Size: %llu\n",asm_ap_startup_len);
+	vm_identity_map(LOW_MEM_AP_INIT_ADDR,(asm_ap_startup_len+4095)>>12);
+	for (uint64_t i=0;i<asm_ap_startup_len;i++){
+		*((uint8_t*)LOW_MEM_AP_INIT_ADDR+i)=*((uint8_t*)asm_ap_startup+i);
+	}
+	console_log("AP Startup Code Addr: %p\n",LOW_MEM_AP_INIT_ADDR);
 	asm_copy_starup_code(LOW_MEM_AP_INIT_ADDR);
-	console_log("CPU Count: %u\n",dt->cpu_c);
 	cpu_t* ap=_cpu_dt+1;
 	uint64_t ap_s=(uint64_t)(void*)_cpu_dt+sizeof(cpu_t)*dt->cpu_c;
 	uint32_t k=1;

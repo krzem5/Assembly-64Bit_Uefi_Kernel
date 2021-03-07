@@ -115,3 +115,13 @@ vaddr_t KERNEL_CALL vm_get_top(void){
 	_n_va+=PAGE_4KB;
 	return o;
 }
+
+
+
+void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c){
+	while (c){
+		paging_set_page(a,a);
+		a+=PAGE_4KB;
+		c--;
+	}
+}

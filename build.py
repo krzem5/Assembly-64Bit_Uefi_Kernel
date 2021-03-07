@@ -103,6 +103,23 @@ for r,_,fl in src_fl:
 								e+=dt[i:i+1]
 								i+=1
 							i+=1
+							t=e[:-len(e.split(b" ")[-1])].strip()
+							c=0
+							if (t==b"}"):
+								break
+							elif (t[-1:]==b"*"):
+								c=SIZEOF_POINTER
+							elif (t==b"uint8_t"):
+								c=SIZEOF_UINT8_T
+							elif (t==b"uint32_t"):
+								c=SIZEOF_UINT32_T
+							elif (t==b"uint64_t"):
+								c=SIZEOF_UINT64_T
+							else:
+								print(f"Unknown sizeof of Type '{str(t,'utf-8')}'!")
+								quit()
+							if (lc!=-1 and lc<c):
+								off+=c-off%c
 							if (k in REQUIRED_STRUCT_OFFSETS):
 								nm=e.split(b" ")[-1].replace(b"[]",b"")
 								if (nm in REQUIRED_STRUCT_OFFSETS[k]):
@@ -110,24 +127,6 @@ for r,_,fl in src_fl:
 									REQUIRED_STRUCT_OFFSETS[k].remove(nm)
 									if (len(REQUIRED_STRUCT_OFFSETS[k])==0 and k not in REQUIRED_STRUCT_SIZE):
 										break
-							e=e[:-len(e.split(b" ")[-1])].strip()
-							c=0
-							if (e==b"}"):
-								break
-							elif (e[-1:]==b"*"):
-								c=SIZEOF_POINTER
-							elif (e==b"uint8_t"):
-								c=SIZEOF_UINT8_T
-							elif (e==b"uint32_t"):
-								c=SIZEOF_UINT32_T
-							elif (e==b"uint64_t"):
-								c=SIZEOF_UINT64_T
-							else:
-								print(f"Unknown sizeof of Type '{str(e,'utf-8')}'!")
-								quit()
-							if (lc!=-1 and lc<c):
-								print(f"Unknown Amount of Padding between {lc}-byte Type and {c}-byte Type!")
-								quit()
 							off+=c
 							lc=c
 						if (k in REQUIRED_STRUCT_SIZE):

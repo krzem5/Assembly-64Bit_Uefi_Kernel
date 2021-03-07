@@ -1,7 +1,7 @@
 bits 16
 section .ap_startup
 global asm_ap_startup
-global asm_ap_startup.len
+global asm_ap_startup_len
 
 
 
@@ -61,9 +61,12 @@ default abs
 	mov fs, ax
 	mov gs, ax
 	mov ss, ax
-	mov rcx, [(LOAD_ADDR + (._init_cpu_data - asm_ap_startup))]
-	mov rsp, [rcx + __CPU_STRUCT_RSP0_OFFSET__]
+	mov rax, [(LOAD_ADDR + (._init_cpu_data - asm_ap_startup))]
+	mov rsp, [rax + __CPU_STRUCT_RSP0_OFFSET__]
 	mov rax, [(LOAD_ADDR + (._init_func - asm_ap_startup))]
 	jmp rax
-.len:
+
+
+
+asm_ap_startup_len:
 	dq ($ - asm_ap_startup)
