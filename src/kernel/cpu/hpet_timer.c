@@ -71,5 +71,7 @@ uint64_t KERNEL_CALL hpet_timer_get_s(void){
 
 void KERNEL_CALL hpet_timer_spinwait(uint64_t us){
 	uint64_t e=*(_tm_ptr+30)/_tm_us_r+us;
-	while (*(_tm_ptr+30)/_tm_us_r<e);
+	while (*(_tm_ptr+30)/_tm_us_r<e){
+		__asm__ volatile("pause");
+	}
 }

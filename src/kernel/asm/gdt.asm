@@ -27,14 +27,14 @@ section .data
 		db 0
 		db 0
 		db 0
-	gdt64_code: equ $-gdt64_start
+	gdt64_code: equ ($ - gdt64_start)
 		dw 0
 		dw 0
 		db 0
 		db 10011010b
 		db 10100000b
 		db 0
-	gdt64_data: equ $-gdt64_start
+	gdt64_data: equ ($ - gdt64_start)
 		dw 0
 		dw 0
 		db 0

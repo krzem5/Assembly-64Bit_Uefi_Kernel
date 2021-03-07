@@ -78,3 +78,9 @@ void KERNEL_CALL paging_set_page(vaddr_t va,paddr_t pa){
 	t[GET_PT_INDEX(va)]=pa|PAGE_READ_WRITE|PAGE_PRESENT;
 	__asm__ volatile("invlpg (%0)"::"r"(va):"memory");
 }
+
+
+
+paddr_t KERNEL_CALL paging_get_phys_pml4(void){
+	return PAGE_TABLE_VIRTUAL_TO_PHYSICAL((vaddr_t)(void*)_pg_pml4);
+}

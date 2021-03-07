@@ -19,11 +19,11 @@ void KERNEL_CALL cpu_init(void);
 
 
 
+void KERNEL_CALL cpu_ap_init(cpu_t* cpu);
+
+
+
 extern cpu_t* KERNEL_CALL current_cpu(void);
-
-
-
-extern void KERNEL_CALL asm_copy_starup_code(uint64_t sz);
 
 
 

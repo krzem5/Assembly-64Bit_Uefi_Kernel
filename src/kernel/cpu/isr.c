@@ -3,7 +3,6 @@
 #include <cpu/idt.h>
 #include <cpu/isr.h>
 #include <gfx/console.h>
-#include <shared.h>
 #include <stddef.h>
 #include <stdint.h>
 
