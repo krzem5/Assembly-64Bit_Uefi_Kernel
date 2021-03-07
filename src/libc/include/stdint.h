@@ -3,6 +3,12 @@
 
 
 
+#define PTRDIFF_MIN -9223372036854775808ll
+#define PTRDIFF_MAX 9223372036854775807ll
+#define SIZE_MAX 18446744073709551615ull
+
+
+
 typedef signed char int8_t;
 typedef signed short int int16_t;
 typedef signed int int32_t;
