@@ -1,3 +1,4 @@
+import hashlib
 import os
 import subprocess
 import sys
@@ -6,6 +7,7 @@ import requests
 
 
 
+FILE_HASH_BUF_SIZE=65536
 FONT_OUT_NAME="font_spleen"
 FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bdf"
 FONT_MAX_CHAR=0x7e
@@ -21,14 +23,39 @@ SIZEOF_UINT64_T=8
 
 
 
-def _sort_inc(m):
+def _sort_inc(m,il):
 	l=[INCLUDE_FILE_REGEX.search(e.strip()).group(1) for e in m.group(1).strip().split(b"\n")]
+	il.extend(l)
 	return (b"#include <shared.h>"+(b"\n" if len(l)>1 else b"") if b"shared.h" in l else b"")+b"\n".join([b"#include <"+e+b">" for e in sorted(l) if e!=b"shared.h"])
 
 
 
+def _check_new(f_h_dt,n_f_h_dt,f_inc,fp):
+	if (fp not in f_h_dt or f_h_dt[fp]!=n_f_h_dt[fp]):
+		return True
+	if (fp not in f_inc):
+		return False
+	for k in f_inc[fp]:
+		if (k not in f_h_dt or f_h_dt[k]!=n_f_h_dt[k]):
+			return True
+	return False
+
+
+
+if (not os.path.exists("build")):
+	os.mkdir("build")
+f_h_dt={}
+if (os.path.exists("build/__last_build_files__")):
+	with open("build/__last_build_files__","r") as f:
+		for k in f.read().split("\n"):
+			k=k.strip().split("\x00")
+			if (len(k)!=2):
+				continue
+			f_h_dt[k[0]]=k[1]
 for k in os.listdir("build"):
 	if (os.path.isdir(f"build/{k}")==True):
+		if (k in ["efi","kernel","libc"]):
+			continue
 		tdl=[f"build/{k}"]
 		for r,dl,fl in os.walk(f"build/{k}"):
 			tdl=[os.path.join(r,e) for e in dl]+tdl
@@ -45,9 +72,6 @@ if (not os.path.exists("build/kernel")):
 	os.mkdir("build/kernel")
 if (not os.path.exists("build/libc")):
 	os.mkdir("build/libc")
-e_fl=[]
-k_fl=[]
-l_fl=[]
 if (not os.path.exists(f"rsrc/{FONT_OUT_NAME}.c") or not os.path.exists(f"rsrc/include/{FONT_OUT_NAME}.h") or "--reload-rsrc" in sys.argv):
 	print(f"Font characters: {FONT_MAX_CHAR+1}\nFont URL: {FONT_URL}\nFont Files: rsrc/include/{FONT_OUT_NAME}.h, rsrc/{FONT_OUT_NAME}.c")
 	dt=requests.get(FONT_URL,headers={"Accept":"application/vnd.github.v3+json","User-Agent":"Font Generation"}).content.replace(b"\r",b"\n").split(b"\n")
@@ -68,7 +92,7 @@ if (not os.path.exists(f"rsrc/{FONT_OUT_NAME}.c") or not os.path.exists(f"rsrc/i
 				elif (dt[i][:6]==b"BITMAP"):
 					j=0
 				elif (j!=-1):
-					o[id_*2+j//8]|=int(bin(int(dt[i],16))[2:].rjust(8,'0')[::-1],2)<<(8*(j%8))
+					o[id_*2+j//8]|=int(bin(int(dt[i],16))[2:].rjust(8,"0")[::-1],2)<<(8*(j%8))
 					j+=1
 				i+=1
 		i+=1
@@ -76,16 +100,38 @@ if (not os.path.exists(f"rsrc/{FONT_OUT_NAME}.c") or not os.path.exists(f"rsrc/i
 		f.write(f"#ifndef __{FONT_OUT_NAME.upper()}_H__\n#define __{FONT_OUT_NAME.upper()}_H__ 1\n#include <gfx/font.h>\n#include <stdint.h>\n\n\n\nextern const uint64_t {FONT_OUT_NAME.upper()}_DATA[];\n\n\n\nextern Font {FONT_OUT_NAME.upper()};\n\n\n\n#endif\n")
 	with open(f"rsrc/{FONT_OUT_NAME}.c","w") as f:
 		f.write(f"#include <gfx/font.h>\n#include <stdint.h>\n#include <{FONT_OUT_NAME}.h>\n\n\n\nconst uint64_t {FONT_OUT_NAME.upper()}_DATA[{(FONT_MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {FONT_OUT_NAME.upper()}={{\n\t{FONT_MAX_CHAR},\n\t{FONT_OUT_NAME.upper()}_DATA\n}};\n")
-src_fl=list(os.walk("rsrc"))+list(os.walk("src"))
+src_fl=list(os.walk("src"))+list(os.walk("rsrc"))
 asm_d=[]
 fd=[]
+f_inc={}
+n_f_h_dt={}
+asm_d_fl={}
+for k,v in REQUIRED_STRUCTURE_OFFSETS.items():
+	for e in v:
+		asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_{str(e,'utf-8').upper()}_OFFSET__"]=[[],[]]
+for k in REQUIRED_STRUCTURE_SIZE:
+	asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_SIZE__"]=[[],[]]
+for k in REQUIRED_DEFINITIONS:
+	asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}__"]=[[],[]]
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
 			print(f"Prettifying C {('Source' if f[-1]=='c' else 'Header')} File: {r+f}")
 			with open(r+f,"rb") as rf:
-				dt=INCLUDE_LIST_REGEX.sub(_sort_inc,rf.read())
+				il=[]
+				dt=INCLUDE_LIST_REGEX.sub(lambda m:_sort_inc(m,il),rf.read())
+				f_inc[r+f]=[]
+				for e in il:
+					e=str(e.replace(b"\\",b"/").split(b"/")[-1],"utf-8")
+					for tr,_,tfl in src_fl:
+						tr=tr.replace("\\","/")+"/"
+						for tf in tfl:
+							if ((tr+tf).replace("\\","/").split("/")[-1]==e):
+								f_inc[r+f]+=[(tr+tf)]
+			h=hashlib.md5()
+			h.update(dt)
+			n_f_h_dt[r+f]=h.hexdigest()
 			if (f[-1]=="h"):
 				for k in set(REQUIRED_STRUCTURE_OFFSETS.keys())|set(REQUIRED_STRUCTURE_SIZE):
 					m=re.search(br"struct\s+"+k+br"\s*\{",dt)
@@ -123,6 +169,7 @@ for r,_,fl in src_fl:
 								nm=e.split(b" ")[-1].replace(b"[]",b"")
 								if (nm in REQUIRED_STRUCTURE_OFFSETS[k]):
 									asm_d+=[f"-D__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_{str(nm,'utf-8').upper()}_OFFSET__={off}"]
+									asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_{str(nm,'utf-8').upper()}_OFFSET__"][0]+=[r+f]
 									REQUIRED_STRUCTURE_OFFSETS[k].remove(nm)
 									if (len(REQUIRED_STRUCTURE_OFFSETS[k])==0 and k not in REQUIRED_STRUCTURE_SIZE):
 										break
@@ -130,6 +177,7 @@ for r,_,fl in src_fl:
 							lc=c
 						if (k in REQUIRED_STRUCTURE_SIZE):
 							asm_d+=[f"-D__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_SIZE__={off}"]
+							asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_SIZE__"][0]+=[r+f]
 							REQUIRED_STRUCTURE_SIZE.remove(k)
 						if (k in REQUIRED_STRUCTURE_OFFSETS):
 							if (REQUIRED_STRUCTURE_OFFSETS[k]):
@@ -143,70 +191,135 @@ for r,_,fl in src_fl:
 					continue
 				if (k not in fd and len(l)==1):
 					asm_d+=[f"-D__C_{str(k,'utf-8').strip('_').upper()}__={str(l[0].strip(),'utf-8')}"]
+					asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}__"][0]+=[r+f]
 					fd+=[k]
 				else:
 					print(f"Found Multiple Preprocessor Definitions of '{str(k,'utf-8')}!")
 					quit()
 			with open(r+f,"wb") as wf:
 				wf.write(dt)
+		elif (f[-4:]==".asm"):
+			dt=b""
+			with open(r+f,"rb") as rf:
+				h=hashlib.md5()
+				while (True):
+					c=rf.read(FILE_HASH_BUF_SIZE)
+					dt+=c
+					if (len(c)==0):
+						break
+					h.update(c)
+				n_f_h_dt[r+f]=h.hexdigest()
+			dt=str(dt,"utf-8")
+			for k in asm_d_fl:
+				if (k in dt):
+					asm_d_fl[k][1]+=[r+f]
+			f_inc[r+f]=[]
 for k in REQUIRED_STRUCTURE_OFFSETS.keys():
 	print(f"Unable to Find Struture '{str(k,'utf-8')}'!")
-if (REQUIRED_STRUCTURE_OFFSETS):
-	quit()
 for k in REQUIRED_STRUCTURE_SIZE:
 	print(f"Unable to Find Struture '{str(k,'utf-8')}'!")
-if (REQUIRED_STRUCTURE_SIZE):
+err=False
+for k,v in asm_d_fl.items():
+	if (len(v[1])==0):
+		print(f"External Definition '{k}' not used in Assembly!")
+		err=True
+	else:
+		for e in v[1]:
+			for se in v[0]:
+				if (se not in f_inc[e]):
+					f_inc[e]+=[se]
+if (REQUIRED_STRUCTURE_OFFSETS or REQUIRED_STRUCTURE_SIZE or err):
 	quit()
+while (True):
+	u=False
+	for k,v in f_inc.items():
+		for e in v:
+			for se in f_inc[e]:
+				if (se not in v):
+					u=True
+					v.append(se)
+	if (not u):
+		break
+e_fl=[]
+k_fl=[]
+l_fl=[]
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
 		if (r[:7]=="src/efi"):
 			if (f[-2:]==".c"):
-				print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
-				if (subprocess.run(["bash","-c",f"gcc -Isrc/kernel/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {r+f} -o build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0):
-					quit()
-				e_fl+=[f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
+					if (subprocess.run(["bash","-c",f"gcc -Isrc/kernel/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {r+f} -o build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0):
+						quit()
+				else:
+					print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o (Already Exists)")
+				e_fl+=[f"build/efi/{(r+f)[8:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
-				print(f"Compiling ASM File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
-				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{(r+f)[8:].replace('/','$')}.o"]).returncode!=0):
-					quit()
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling ASM File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
+					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{(r+f)[8:].replace('/','$')}.o"]).returncode!=0):
+						quit()
+				else:
+					print(f"Compiling ASM File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o (Already Exists)")
 				e_fl+=[f"build/efi/{(r+f)[8:].replace('/','$')}.o"]
 		elif (r[:10]=="src/kernel"):
 			if (f[-2:]==".c"):
-				print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Irsrc/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-					quit()
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
+					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Irsrc/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						quit()
+				else:
+					print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
-				print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+asm_d).returncode!=0):
-					quit()
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
+					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+asm_d).returncode!=0):
+						quit()
+				else:
+					print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 		elif (r[:4]=="rsrc"):
 			if (f[-2:]==".c"):
-				print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o")
-				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f).replace('/','$')}.o","-Irsrc/include","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f).replace('/','$')}.o"]).returncode!=0):
-					quit()
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o")
+					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f).replace('/','$')}.o","-Irsrc/include","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f).replace('/','$')}.o"]).returncode!=0):
+						quit()
+				else:
+					print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f).replace('/','$')}.o"]
 		else:
 			if (f[-2:]==".c"):
-				print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc","-D__KERNEL__=1"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-					quit()
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
+					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc","-D__KERNEL__=1"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						quit()
+					print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
+					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						quit()
+				else:
+					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
+					print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
-				print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-					quit()
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
 			elif (f[-4:]==".asm"):
-				print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-D__KERNEL__=1","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
+					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-D__KERNEL__=1","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+							quit()
+					print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
+					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						quit()
+				else:
+					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
+					print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
-				print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
-				if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-						quit()
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
+print("Writing File Hash List...")
+with open("build/__last_build_files__","w") as f:
+	for k,v in n_f_h_dt.items():
+		f.write(f"{k}\x00{v}\n")
 print(f"Linking EFI OS Loader: {', '.join([e.replace(chr(92)+'$','$') for e in e_fl])}")
 if (subprocess.run(["bash","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib /usr/lib/crt0-efi-x86_64.o {' '.join(e_fl)} -o build/efi/main.efi -lefi -lgnuefi"]).returncode==0 and subprocess.run(["objcopy","-j",".text","-j",".sdata","-j",".data","-j",".dynamic","-j",".dynsym","-j",".rel","-j",".rela","-j",".reloc","--target=efi-app-x86_64","build/efi/main.efi","build/efi/main.efi"]).returncode!=0 or subprocess.run(["strip","-s","build/efi/main.efi"]).returncode!=0):
 	quit()
@@ -222,17 +335,7 @@ if (subprocess.run(["ld","-melf_x86_64","-o","build/libc/libc.so","-s","-shared"
 print("Creaing OS Image...")
 if (subprocess.run(["dd","if=/dev/zero","of=build/os.img","bs=512","count=93750"]).returncode!=0 or subprocess.run(["bash","-c","parted build/os.img -s -a minimal mklabel gpt&&parted build/os.img -s -a minimal mkpart EFI FAT32 2048s 93716s&&parted build/os.img -s -a minimal toggle 1 boot&&dd if=/dev/zero of=build/tmp.img bs=512 count=91669&&mformat -i build/tmp.img -h 32 -t 32 -n 64 -c 1&&mmd -i build/tmp.img ::/EFI ::/EFI/BOOT ::/os&&mcopy -i build/tmp.img build/kernel/kernel.elf ::/KERNEL.ELF&&mcopy -i build/tmp.img build/efi/main.efi ::/EFI/BOOT/BOOTX64.EFI&&mcopy -i build/tmp.img build/libc/libc.so ::/os/libc.so&&dd if=build/tmp.img of=build/os.img bs=512 count=91669 seek=2048 conv=notrunc"]).returncode!=0):
 	quit()
-dl=[]
-for r,sdl,fl in os.walk("build"):
-	r=r.replace("\\","/")+"/"
-	for f in fl:
-		f=r+f
-		if (f not in ["build/dbg_kernel.elf","build/os.img"]):
-			os.remove(f)
-	if (r=="build"):
-		dl+=sdl
-for k in dl:
-	os.rmdir(f"build/{k}")
+os.remove("build/tmp.img")
 print("Creating Virtual HDD...")
 if (subprocess.run(["qemu-img","create","-f","qcow2","build/hdd.qcow2","16G"]).returncode!=0):
 	quit()

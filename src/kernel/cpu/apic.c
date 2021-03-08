@@ -21,7 +21,6 @@
 #define APIC_ICR_PENDING 0x1000
 #define APIC_TIMER_REPEAT 0x20000
 #define APIC_TIMER_CALIB_US 10000
-#define UINT32_MAX 0xffffffff
 
 
 

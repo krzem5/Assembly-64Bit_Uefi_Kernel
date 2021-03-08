@@ -1,5 +1,6 @@
-bits 16
 section .ap_startup
+bits 16
+default rel
 global asm_ap_startup
 extern cpu_ap_init
 
@@ -10,7 +11,6 @@ extern cpu_ap_init
 
 
 
-default rel
 asm_ap_startup:
 	cli
 	xor ax, ax
