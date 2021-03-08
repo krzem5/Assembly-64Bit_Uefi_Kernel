@@ -86,11 +86,11 @@ extern cpu_info_t cpu_info_data;
 
 
 
-void KERNEL_CALL cpu_info_init(void);
-
-
-
 extern void KERNEL_CALL asm_cpuid(uint32_t t,cpuid_t* o);
+
+
+
+void KERNEL_CALL cpu_info_init(void);
 
 
 

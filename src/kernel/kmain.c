@@ -61,7 +61,7 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	cpu_info_init();
 	console_log("Parsing ACPI...\n");
 	acpi_init(ka);
-	hpet_timer_set_frequency(1000ull);
+	hpet_timer_set_frequency(1000);
 	console_log("Setting Up CPUs...\n");
 	cpu_init();
 	console_log("Setting Up Process List...\n");
@@ -76,8 +76,5 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
 	console_ok("Starting Scheduler...\n");
-	// scheduler_start();
-	for (;;){
-		__asm__("hlt");
-	}
+	scheduler_start();
 }

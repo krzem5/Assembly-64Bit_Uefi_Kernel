@@ -13,11 +13,12 @@ FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bd
 FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
-REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"]}
-REQUIRED_STRUCTURE_SIZE=[b"__THREAD_DATA"]
-REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR"]
+REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"],b"__IDT_TABLE":[b"b"]}
+REQUIRED_STRUCTURE_SIZE=[b"__THREAD_DATA",b"__IDT_ENTRY"]
+REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR",b"MSR_GS_BASE",b"PAGE_PRESENT",b"PAGE_READ_WRITE",b"PAGE_DIR_PRESENT",b"PAGE_DIR_READ_WRITE",b"PAGE_4KB_SIZE",b"TOTAL_INTERRUPT_NUMBER"]
 SIZEOF_POINTER=8
 SIZEOF_UINT8_T=1
+SIZEOF_UINT16_T=2
 SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
 
@@ -48,23 +49,12 @@ f_h_dt={}
 if (os.path.exists("build/__last_build_files__")):
 	with open("build/__last_build_files__","r") as f:
 		for k in f.read().split("\n"):
-			k=k.strip().split("\x00")
-			if (len(k)!=2):
+			k=k.strip()
+			if (len(k)<33):
 				continue
-			f_h_dt[k[0]]=k[1]
+			f_h_dt[k[:-32]]=k[-32:]
 for k in os.listdir("build"):
-	if (os.path.isdir(f"build/{k}")==True):
-		if (k in ["efi","kernel","libc"]):
-			continue
-		tdl=[f"build/{k}"]
-		for r,dl,fl in os.walk(f"build/{k}"):
-			tdl=[os.path.join(r,e) for e in dl]+tdl
-			for f in fl:
-				os.remove(os.path.join(r,f))
-		for e in tdl:
-			if (e not in ["build/efi","build/kernel","build/libc"]):
-				os.rmdir(e)
-	else:
+	if (os.path.isfile(f"build/{k}")):
 		os.remove(f"build/{k}")
 if (not os.path.exists("build/efi")):
 	os.mkdir("build/efi")
@@ -137,6 +127,17 @@ for r,_,fl in src_fl:
 					m=re.search(br"struct\s+"+k+br"\s*\{",dt)
 					if (m is not None):
 						i=m.end()
+						b=1
+						while (b>0 or dt[i:i+1] in b" \t\r\n\v\f"):
+							if (dt[i:i+1]==b"{"):
+								b+=1
+							elif (dt[i:i+1]==b"}"):
+								b-=1
+							i+=1
+						p=False
+						if (dt[i:i+15]==b"__attribute__((" and dt[i+15:].split(b")")[0].strip(b"_")==b"packed"):
+							p=True
+						i=m.end()
 						off=0
 						lc=-1
 						while (True):
@@ -150,12 +151,14 @@ for r,_,fl in src_fl:
 							i+=1
 							t=e[:-len(e.split(b" ")[-1])].strip()
 							c=0
-							if (t==b"}"):
+							if (t[:1]==b"}"):
 								break
 							elif (t[-1:]==b"*"):
 								c=SIZEOF_POINTER
 							elif (t==b"uint8_t"):
 								c=SIZEOF_UINT8_T
+							elif (t==b"uint16_t"):
+								c=SIZEOF_UINT16_T
 							elif (t==b"uint32_t"):
 								c=SIZEOF_UINT32_T
 							elif (t==b"uint64_t"):
@@ -163,7 +166,7 @@ for r,_,fl in src_fl:
 							else:
 								print(f"Unknown sizeof of Type '{str(t,'utf-8')}'!")
 								quit()
-							if (lc!=-1 and lc<c and off%c!=0):
+							if (p==False and lc!=-1 and lc<c and off%c!=0):
 								off+=c-off%c
 							if (k in REQUIRED_STRUCTURE_OFFSETS):
 								nm=e.split(b" ")[-1].replace(b"[]",b"")
@@ -243,6 +246,7 @@ while (True):
 e_fl=[]
 k_fl=[]
 l_fl=[]
+cl={k:(v if k[-2:]!=".h" else n_f_h_dt[k]) for k,v in f_h_dt.items() if k in n_f_h_dt}
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:
@@ -251,90 +255,136 @@ for r,_,fl in src_fl:
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
 					if (subprocess.run(["bash","-c",f"gcc -Isrc/kernel/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {r+f} -o build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o (Already Exists)")
 				e_fl+=[f"build/efi/{(r+f)[8:].replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 			elif (f[-4:]==".asm"):
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling ASM File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{(r+f)[8:].replace('/','$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling ASM File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o (Already Exists)")
 				e_fl+=[f"build/efi/{(r+f)[8:].replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 		elif (r[:10]=="src/kernel"):
 			if (f[-2:]==".c"):
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Irsrc/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 			elif (f[-4:]==".asm"):
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+asm_d).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 		elif (r[:4]=="rsrc"):
 			if (f[-2:]==".c"):
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f).replace('/','$')}.o","-Irsrc/include","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f).replace('/','$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f).replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 		else:
 			if (f[-2:]==".c"):
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc","-D__KERNEL__=1"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 					print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 					print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 			elif (f[-4:]==".asm"):
 				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
 					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-D__KERNEL__=1","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
-							quit()
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
+						quit()
 					print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
+						print("Writing File Hash List...")
+						with open("build/__last_build_files__","w") as f:
+							for k,v in cl.items():
+								f.write(f"{k}{v}\n")
 						quit()
 				else:
 					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 					print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
+				cl[r+f]=n_f_h_dt[r+f]
 print("Writing File Hash List...")
 with open("build/__last_build_files__","w") as f:
 	for k,v in n_f_h_dt.items():
-		f.write(f"{k}\x00{v}\n")
-print(f"Linking EFI OS Loader: {', '.join([e.replace(chr(92)+'$','$') for e in e_fl])}")
-if (subprocess.run(["bash","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib /usr/lib/crt0-efi-x86_64.o {' '.join(e_fl)} -o build/efi/main.efi -lefi -lgnuefi"]).returncode==0 and subprocess.run(["objcopy","-j",".text","-j",".sdata","-j",".data","-j",".dynamic","-j",".dynsym","-j",".rel","-j",".rela","-j",".reloc","--target=efi-app-x86_64","build/efi/main.efi","build/efi/main.efi"]).returncode!=0 or subprocess.run(["strip","-s","build/efi/main.efi"]).returncode!=0):
+		f.write(f"{k}{v}\n")
+print(f"Linking EFI OS Loader: {', '.join(e_fl)}")
+if (subprocess.run(["bash","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib /usr/lib/crt0-efi-x86_64.o {' '.join(e_fl)} -o build/loader.efi -lefi -lgnuefi"]).returncode==0 and subprocess.run(["objcopy","-j",".text","-j",".sdata","-j",".data","-j",".dynamic","-j",".dynsym","-j",".rel","-j",".rela","-j",".reloc","--target=efi-app-x86_64","build/loader.efi","build/loader.efi"]).returncode!=0 or subprocess.run(["strip","-s","build/loader.efi"]).returncode!=0):
 	quit()
-print(f"Linking Kernel: {', '.join([e.replace(chr(92)+'$','$') for e in k_fl])}")
-if (subprocess.run(["ld","-melf_x86_64","-o","build/kernel/kernel.elf","-s","-T","kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
+print(f"Linking Kernel: {', '.join(k_fl)}")
+if (subprocess.run(["ld","-melf_x86_64","-o","build/kernel.elf","-s","-T","kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
 	quit()
-print(f"Linking Debug Kernel: {', '.join([e.replace(chr(92)+'$','$') for e in k_fl])}")
+print(f"Linking Debug Kernel: {', '.join(k_fl)}")
 if (subprocess.run(["ld","-melf_x86_64","-o","build/dbg_kernel.elf","-T","kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
 	quit()
-print(f"Linking LibC: {', '.join([e.replace(chr(92)+'$','$') for e in l_fl])}")
-if (subprocess.run(["ld","-melf_x86_64","-o","build/libc/libc.so","-s","-shared","-flinker-output=pie","--oformat","elf64-x86-64"]+l_fl).returncode!=0):
+print(f"Linking LibC: {', '.join(l_fl)}")
+if (subprocess.run(["ld","-melf_x86_64","-o","build/libc.so","-s","-shared","-flinker-output=pie","--oformat","elf64-x86-64"]+l_fl).returncode!=0):
 	quit()
 print("Creaing OS Image...")
-if (subprocess.run(["dd","if=/dev/zero","of=build/os.img","bs=512","count=93750"]).returncode!=0 or subprocess.run(["bash","-c","parted build/os.img -s -a minimal mklabel gpt&&parted build/os.img -s -a minimal mkpart EFI FAT32 2048s 93716s&&parted build/os.img -s -a minimal toggle 1 boot&&dd if=/dev/zero of=build/tmp.img bs=512 count=91669&&mformat -i build/tmp.img -h 32 -t 32 -n 64 -c 1&&mmd -i build/tmp.img ::/EFI ::/EFI/BOOT ::/os&&mcopy -i build/tmp.img build/kernel/kernel.elf ::/KERNEL.ELF&&mcopy -i build/tmp.img build/efi/main.efi ::/EFI/BOOT/BOOTX64.EFI&&mcopy -i build/tmp.img build/libc/libc.so ::/os/libc.so&&dd if=build/tmp.img of=build/os.img bs=512 count=91669 seek=2048 conv=notrunc"]).returncode!=0):
+if (subprocess.run(["dd","if=/dev/zero","of=build/os.img","bs=512","count=93750"]).returncode!=0 or subprocess.run(["bash","-c","parted build/os.img -s -a minimal mklabel gpt&&parted build/os.img -s -a minimal mkpart EFI FAT32 2048s 93716s&&parted build/os.img -s -a minimal toggle 1 boot&&dd if=/dev/zero of=build/tmp.img bs=512 count=91669&&mformat -i build/tmp.img -h 32 -t 32 -n 64 -c 1&&mmd -i build/tmp.img ::/EFI ::/EFI/BOOT ::/os&&mcopy -i build/tmp.img build/kernel.elf ::/KERNEL.ELF&&mcopy -i build/tmp.img build/loader.efi ::/EFI/BOOT/BOOTX64.EFI&&mcopy -i build/tmp.img build/libc.so ::/os/libc.so&&dd if=build/tmp.img of=build/os.img bs=512 count=91669 seek=2048 conv=notrunc"]).returncode!=0):
 	quit()
+os.remove("build/loader.efi")
+os.remove("build/kernel.elf")
+os.remove("build/libc.so")
 os.remove("build/tmp.img")
 print("Creating Virtual HDD...")
 if (subprocess.run(["qemu-img","create","-f","qcow2","build/hdd.qcow2","16G"]).returncode!=0):

@@ -31,12 +31,6 @@ global asm_isr28
 global asm_isr29
 global asm_isr30
 global asm_isr31
-global asm_isr208
-global asm_isr209
-global asm_isr210
-global asm_isr211
-global asm_isr212
-global asm_isr213
 extern _handle_isr
 
 
@@ -75,303 +69,222 @@ _asm_isr_h_call:
 	pop r14
 	pop r15
 	add rsp, 16
-	sti
 	iretq
 
 
 
 asm_isr0:
-	cli
-	push byte 0x00
-	push byte 0x00
+	push qword 0x00
+	push qword 0x00
 	jmp _asm_isr_h_call
 
 
 
 asm_isr1:
-	cli
-	push byte 0x00
-	push byte 0x01
+	push qword 0x00
+	push qword 0x01
 	jmp _asm_isr_h_call
 
 
 
 asm_isr2:
-	cli
-	push byte 0x00
-	push byte 0x02
+	push qword 0x00
+	push qword 0x02
 	jmp _asm_isr_h_call
 
 
 
 asm_isr3:
-	cli
-	push byte 0x00
-	push byte 0x03
+	push qword 0x00
+	push qword 0x03
 	jmp _asm_isr_h_call
 
 
 
 asm_isr4:
-	cli
-	push byte 0x00
-	push byte 0x04
+	push qword 0x00
+	push qword 0x04
 	jmp _asm_isr_h_call
 
 
 
 asm_isr5:
-	cli
-	push byte 0x00
-	push byte 0x05
+	push qword 0x00
+	push qword 0x05
 	jmp _asm_isr_h_call
 
 
 
 asm_isr6:
-	cli
-	push byte 0x00
-	push byte 0x06
+	push qword 0x00
+	push qword 0x06
 	jmp _asm_isr_h_call
 
 
 
 asm_isr7:
-	cli
-	push byte 0x00
-	push byte 0x07
+	push qword 0x00
+	push qword 0x07
 	jmp _asm_isr_h_call
 
 
 
 asm_isr8:
-	cli
-	push byte 0x08
+	push qword 0x08
 	jmp _asm_isr_h_call
 
 
 
 asm_isr9:
-	cli
-	push byte 0x00
-	push byte 0x09
+	push qword 0x00
+	push qword 0x09
 	jmp _asm_isr_h_call
 
 
 
 asm_isr10:
-	cli
-	push byte 0x0a
+	push qword 0x0a
 	jmp _asm_isr_h_call
 
 
 
 asm_isr11:
-	cli
-	push byte 0x0b
+	push qword 0x0b
 	jmp _asm_isr_h_call
 
 
 
 asm_isr12:
-	cli
-	push byte 0x0c
+	push qword 0x0c
 	jmp _asm_isr_h_call
 
 
 
 asm_isr13:
-	cli
-	push byte 0x0d
+	push qword 0x0d
 	jmp _asm_isr_h_call
 
 
 
 asm_isr14:
-	cli
-	push byte 0x0e
+	push qword 0x0e
 	jmp _asm_isr_h_call
 
 
 
 asm_isr15:
-	cli
-	push byte 0x00
-	push byte 0x0f
+	push qword 0x00
+	push qword 0x0f
 	jmp _asm_isr_h_call
 
 
 
 asm_isr16:
-	cli
-	push byte 0x00
-	push byte 0x10
+	push qword 0x00
+	push qword 0x10
 	jmp _asm_isr_h_call
 
 
 
 asm_isr17:
-	cli
-	push byte 0x00
-	push byte 0x11
+	push qword 0x00
+	push qword 0x11
 	jmp _asm_isr_h_call
 
 
 
 asm_isr18:
-	cli
-	push byte 0x00
-	push byte 0x12
+	push qword 0x00
+	push qword 0x12
 	jmp _asm_isr_h_call
 
 
 
 asm_isr19:
-	cli
-	push byte 0x00
-	push byte 0x13
+	push qword 0x00
+	push qword 0x13
 	jmp _asm_isr_h_call
 
 
 
 asm_isr20:
-	cli
-	push byte 0x00
-	push byte 0x14
+	push qword 0x00
+	push qword 0x14
 	jmp _asm_isr_h_call
 
 
 
 asm_isr21:
-	cli
-	push byte 0x00
-	push byte 0x15
+	push qword 0x00
+	push qword 0x15
 	jmp _asm_isr_h_call
 
 
 
 asm_isr22:
-	cli
-	push byte 0x00
-	push byte 0x16
+	push qword 0x00
+	push qword 0x16
 	jmp _asm_isr_h_call
 
 
 
 asm_isr23:
-	cli
-	push byte 0x00
-	push byte 0x17
+	push qword 0x00
+	push qword 0x17
 	jmp _asm_isr_h_call
 
 
 
 asm_isr24:
-	cli
-	push byte 0x00
-	push byte 0x18
+	push qword 0x00
+	push qword 0x18
 	jmp _asm_isr_h_call
 
 
 
 asm_isr25:
-	cli
-	push byte 0x00
-	push byte 0x19
+	push qword 0x00
+	push qword 0x19
 	jmp _asm_isr_h_call
 
 
 
 asm_isr26:
-	cli
-	push byte 0x00
-	push byte 0x1a
+	push qword 0x00
+	push qword 0x1a
 	jmp _asm_isr_h_call
 
 
 
 asm_isr27:
-	cli
-	push byte 0x00
-	push byte 0x1b
+	push qword 0x00
+	push qword 0x1b
 	jmp _asm_isr_h_call
 
 
 
 asm_isr28:
-	cli
-	push byte 0x00
-	push byte 0x1c
+	push qword 0x00
+	push qword 0x1c
 	jmp _asm_isr_h_call
 
 
 
 asm_isr29:
-	cli
-	push byte 0x00
-	push byte 0x1d
+	push qword 0x00
+	push qword 0x1d
 	jmp _asm_isr_h_call
 
 
 
 asm_isr30:
-	cli
-	push byte 0x00
-	push byte 0x1e
+	push qword 0x00
+	push qword 0x1e
 	jmp _asm_isr_h_call
 
 
 
 asm_isr31:
-	cli
-	push byte 0x00
-	push byte 0x1f
-	jmp _asm_isr_h_call
-
-
-
-asm_isr208:
-	cli
-	push byte 0x00
-	push word 0xd0
-	jmp _asm_isr_h_call
-
-
-
-asm_isr209:
-	cli
-	push byte 0x00
-	push word 0xd1
-	jmp _asm_isr_h_call
-
-
-
-asm_isr210:
-	cli
-	push byte 0x00
-	push word 0xd2
-	jmp _asm_isr_h_call
-
-
-
-asm_isr211:
-	cli
-	push byte 0x00
-	push word 0xd3
-	jmp _asm_isr_h_call
-
-
-
-asm_isr212:
-	cli
-	push byte 0x00
-	push word 0xd4
-	jmp _asm_isr_h_call
-
-
-
-asm_isr213:
-	cli
-	push byte 0x00
-	push word 0xd5
+	push qword 0x00
+	push qword 0x1f
 	jmp _asm_isr_h_call

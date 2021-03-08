@@ -6,6 +6,10 @@
 
 
 
+#define TOTAL_INTERRUPT_NUMBER 256
+
+
+
 typedef struct __REGISTERS{
 	uint64_t rax;
 	uint64_t rbx;

@@ -1,6 +1,7 @@
 #include <shared.h>
 #include <cpu/fatal_error.h>
 #include <cpu/idt.h>
+#include <gfx/console.h>
 #include <kmain.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -10,7 +11,7 @@
 
 idt_entry_t* idt_l=NULL;
 idt_table_t idt={
-	4095,
+	TOTAL_INTERRUPT_NUMBER*sizeof(idt_entry_t)-1,
 	0
 };
 

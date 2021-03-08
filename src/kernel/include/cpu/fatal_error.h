@@ -15,15 +15,15 @@
 
 
 
+extern void KERNEL_CALL asm_halt_cpu(void);
+
+
+
 void KERNEL_CALL fatal_error(char* s);
 
 
 
 void KERNEL_CALL fatal_error_line(char* s,const char* f,int l,const char* fn,char* p);
-
-
-
-extern void KERNEL_CALL asm_halt_cpu(void);
 
 
 

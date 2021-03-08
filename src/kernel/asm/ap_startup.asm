@@ -3,16 +3,15 @@ bits 16
 default rel
 global asm_ap_startup
 extern cpu_ap_init
-
-
-
-%define PAGE_DIR_FLAGS 3
-%define PAGE_FLAGS 3
+extern asm_setup_gdt
+extern idt
+extern _cpu_ap_c
 
 
 
 asm_ap_startup:
 	cli
+	cld
 	xor ax, ax
 	mov ds, ax
 	mov es, ax
@@ -86,10 +85,21 @@ default abs
 	mov ss, ax
 	mov rax, qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (._init_pml4 - asm_ap_startup))]
 	mov cr3, rax
-	mov rcx, qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (._init_cpu_data - asm_ap_startup))]
-	mov rbp, qword [rcx + __C_CPU_STRUCT_RSP0_OFFSET__]
+	mov r8, qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (._init_cpu_data - asm_ap_startup))]
+	mov rbp, qword [r8 + __C_CPU_STRUCT_RSP0_OFFSET__]
 	mov rsp, rbp
+	inc dword [_cpu_ap_c]
+	xor rax, rax
+	mov eax, r8d
+	mov rcx, __C_MSR_GS_BASE__
+	mov rdx, r8
+	shr rdx, 32
+	wrmsr
+	lidt [idt]
+	mov rax, asm_setup_gdt
+	call rax
 	mov rax, cpu_ap_init
+	mov rcx, r8
 	call rax
 	sti
 ._loop:
@@ -99,6 +109,9 @@ default abs
 
 
 asm_ap_startup_len equ ($ - asm_ap_startup)
+%if asm_ap_startup_len > 4096
+%error AP Startup Code too long!
+%endif
 
 
 
@@ -118,23 +131,17 @@ asm_init_ap_startup_code:
 	rep movsq
 	mov rdi, __C_LOW_MEM_AP_PML4_ADDR__
 	xor rax, rax
-	mov rcx, 2048
+	mov rcx, ((__C_PAGE_4KB_SIZE__ * 4) / 8)
 	rep stosq
 	mov qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (asm_ap_startup._init_pml4 - asm_ap_startup))], r8
 	mov rdi, __C_LOW_MEM_AP_PML4_ADDR__
-	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + 0x1000) | PAGE_DIR_FLAGS)
-	add rdi, 0x1000
-	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + 0x2000) | PAGE_DIR_FLAGS)
-	add rdi, 0x1000
-	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + 0x3000) | PAGE_DIR_FLAGS)
-	add rdi, 0x1000
-	mov rax, PAGE_FLAGS
-	mov rcx, 512
-._set_pt:
-	mov qword [rdi], rax
-	add rax, 0x1000
-	add rdi, 8
-	loop ._set_pt
+	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
+	add rdi, __C_PAGE_4KB_SIZE__
+	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__*2) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
+	add rdi, __C_PAGE_4KB_SIZE__
+	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__*3) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
+	add rdi, (__C_PAGE_4KB_SIZE__ + (__C_LOW_MEM_AP_INIT_ADDR__ / __C_PAGE_4KB_SIZE__) * 8)
+	mov qword [rdi], (__C_LOW_MEM_AP_INIT_ADDR__ | __C_PAGE_READ_WRITE__ | __C_PAGE_PRESENT__)
 	pop rsi
 	pop rdi
 	ret

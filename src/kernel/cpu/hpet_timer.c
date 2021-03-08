@@ -26,7 +26,6 @@ uint64_t _tm_s_r=1;
 
 void _hpet_timer_irq_cb(registers_t* r){
 	*(_tm_ptr+33)=1000ull*FEMPTOSECONDS_IN_MICROSECOND/_tm_p;
-	scheduler_tick(*(_tm_ptr+30)/_tm_us_r);
 }
 
 

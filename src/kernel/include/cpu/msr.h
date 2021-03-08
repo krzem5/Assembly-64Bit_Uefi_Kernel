@@ -12,8 +12,8 @@ extern uint64_t KERNEL_CALL asm_rdmsr(uint64_t a);
 
 
 
-
 extern void KERNEL_CALL asm_wrmsr(uint64_t a,uint64_t v);
+
 
 
 #endif

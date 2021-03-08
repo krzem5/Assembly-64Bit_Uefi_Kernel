@@ -15,15 +15,15 @@ typedef struct __CPU{
 
 
 
+extern cpu_t* KERNEL_CALL asm_current_cpu(void);
+
+
+
 void KERNEL_CALL cpu_init(void);
 
 
 
 void KERNEL_CALL cpu_ap_init(cpu_t* cpu);
-
-
-
-extern cpu_t* KERNEL_CALL current_cpu(void);
 
 
 

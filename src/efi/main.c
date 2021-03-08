@@ -30,9 +30,9 @@
 
 
 
-extern uint64_t* __attribute__((ms_abi)) asm_clear_pages_get_cr3(uint64_t pml4,uint64_t pg_c);
-extern void __attribute__((ms_abi)) asm_enable_paging(uint64_t pml4);
-extern void __attribute__((ms_abi)) asm_halt(void);
+extern uint64_t* KERNEL_CALL asm_clear_pages_get_cr3(uint64_t pml4,uint64_t pg_c);
+extern void KERNEL_CALL asm_enable_paging(uint64_t pml4);
+extern void KERNEL_CALL asm_halt(void);
 
 
 
@@ -406,7 +406,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t i=0;
 	j=0;
 	uint64_t k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[0].b);
-	while (i<k_pg+1){
+	while (i<k_pg+OTHER_PAGE_COUNT){
 		if (k>=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b)+ka->mmap[j].l){
 			j++;
 			if (j>=ka->mmap_l){
@@ -482,16 +482,16 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 		if (i<pe){
-			Print(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
+			Print(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 		}
 		else if (i<pe+IDT_SIZE){
-			Print(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
+			Print(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 			ka->idt=(void*)i;
 		}
 		else{
-			Print(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx\r\n",li[0],li[1],li[2],li[3],i);
+			Print(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 			if (!ka->k_sp){
-				ka->k_sp=i;
+				ka->k_sp=i+STACK_SIZE;
 			}
 		}
 	}

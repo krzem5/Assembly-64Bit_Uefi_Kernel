@@ -1,6 +1,7 @@
 #include <shared.h>
 #include <cpu/fatal_error.h>
 #include <gfx/console.h>
+#include <memory/paging.h>
 #include <memory/vm.h>
 #include <process/process.h>
 #include <process/thread.h>
@@ -8,7 +9,6 @@
 
 
 
-#define PAGE_4KB_POWER_OF_2 12
 #define THREAD_4KB_PAGES_COUNT 64
 #define MAX_THREAD_ID ((THREAD_4KB_PAGES_COUNT<<PAGE_4KB_POWER_OF_2)/sizeof(thread_t)-1)
 #define THREAD_GET_PRESENT(p) ((p)->f&1)

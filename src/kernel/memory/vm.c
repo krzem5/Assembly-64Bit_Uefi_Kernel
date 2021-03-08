@@ -11,9 +11,6 @@
 
 
 
-#define BITS_IN_BYTE 8
-#define PAGE_4KB 4096
-#define PAGE_4KB_POWER_OF_2 12
 #define MIN_RAM_RESERVE_FOR_SYSTEM 0x40000000
 #define PAGE_GET_ARRAY_INDEX(a) ((a)>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)
 #define PAGE_GET_BIT_INDEX(a) ((uint8_t)(((a)>>PAGE_4KB_POWER_OF_2)%(sizeof(VmMemMapData)*BITS_IN_BYTE)))
@@ -54,7 +51,7 @@ void KERNEL_CALL vm_init(KernelArgs* ka){
 
 
 void KERNEL_CALL vm_after_pm_init(KernelArgs* ka){
-	uint64_t pg_c=(((MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)*sizeof(VmMemMapData)+sizeof(sizeof(VmMemMap)))+PAGE_4KB-1)>>PAGE_4KB_POWER_OF_2;
+	uint64_t pg_c=(((MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)*sizeof(VmMemMapData)+sizeof(sizeof(VmMemMap)))+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
 	_vm_dt=(VmMemMap*)(void*)_vm_dt->n_va;
 	while (pg_c){
 		uint64_t pa=pm_get_free();
@@ -69,7 +66,7 @@ void KERNEL_CALL vm_after_pm_init(KernelArgs* ka){
 	for (uint64_t i=0;i<(MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE);i++){
 		_vm_dt->e[i]=0;
 	}
-	regiser_isr_handler(PAGE_FAULT,_vm_pg_f_handler);
+	regiser_isr_handler(ISR_PAGE_FAULT,_vm_pg_f_handler);
 }
 
 
@@ -78,7 +75,7 @@ vaddr_t KERNEL_CALL vm_reserve(uint64_t c){
 	vaddr_t o=_vm_dt->n_va;
 	while (c){
 		_vm_dt->e[PAGE_GET_ARRAY_INDEX(_vm_dt->n_va-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(_vm_dt->n_va-_vm_dt->b));
-		_vm_dt->n_va+=PAGE_4KB;
+		_vm_dt->n_va+=PAGE_4KB_SIZE;
 		c--;
 	}
 	return o;
@@ -96,7 +93,7 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c){
 		}
 		_vm_dt->e[PAGE_GET_ARRAY_INDEX(_vm_dt->n_va-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(_vm_dt->n_va-_vm_dt->b));
 		paging_set_page(_vm_dt->n_va,pa);
-		_vm_dt->n_va+=PAGE_4KB;
+		_vm_dt->n_va+=PAGE_4KB_SIZE;
 		c--;
 	}
 	return o;
@@ -112,7 +109,7 @@ vaddr_t KERNEL_CALL vm_current_top(void){
 
 vaddr_t KERNEL_CALL vm_get_top(void){
 	vaddr_t o=_n_va;
-	_n_va+=PAGE_4KB;
+	_n_va+=PAGE_4KB_SIZE;
 	return o;
 }
 
@@ -121,7 +118,7 @@ vaddr_t KERNEL_CALL vm_get_top(void){
 void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c){
 	while (c){
 		paging_set_page(a,a);
-		a+=PAGE_4KB;
+		a+=PAGE_4KB_SIZE;
 		c--;
 	}
 }

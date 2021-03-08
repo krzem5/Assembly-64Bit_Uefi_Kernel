@@ -39,15 +39,15 @@ typedef void (KERNEL_CALL *thread_start_t)(void* arg);
 
 
 
+extern void KERNEL_CALL asm_clear_thread_data(thread_data_t* dt);
+
+
+
 void KERNEL_CALL thread_init(void);
 
 
 
 thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t e,void* a);
-
-
-
-extern void KERNEL_CALL asm_clear_thread_data(thread_data_t* dt);
 
 
 
