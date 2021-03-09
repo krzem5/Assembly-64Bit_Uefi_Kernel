@@ -31,9 +31,12 @@ def _sort_inc(m,il):
 
 
 
-def _check_new(f_h_dt,n_f_h_dt,f_inc,fp):
+def _check_new(f_h_dt,n_f_h_dt,f_inc,fp,*o_fp):
 	if (fp not in f_h_dt or f_h_dt[fp]!=n_f_h_dt[fp]):
 		return True
+	for k in o_fp:
+		if (not os.path.exists(k)):
+			return True
 	if (fp not in f_inc):
 		return False
 	for k in f_inc[fp]:
@@ -252,7 +255,7 @@ for r,_,fl in src_fl:
 	for f in fl:
 		if (r[:7]=="src/efi"):
 			if (f[-2:]==".c"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/efi/{(r+f)[8:].replace('/','$')}.o")):
 					print(f"Compiling C File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
 					if (subprocess.run(["bash","-c",f"gcc -Isrc/kernel/include -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol -fno-stack-protector -O3 -fpic -fshort-wchar -fno-common -mno-red-zone -DHAVE_USE_MS_ABI -Wall -Werror -c {r+f} -o build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/efi/{(r+f)[8:].replace('/',chr(92)+'$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -265,7 +268,7 @@ for r,_,fl in src_fl:
 				e_fl+=[f"build/efi/{(r+f)[8:].replace('/','$')}.o"]
 				cl[r+f]=n_f_h_dt[r+f]
 			elif (f[-4:]==".asm"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/efi/{(r+f)[8:].replace('/','$')}.o")):
 					print(f"Compiling ASM File (Efi): {r+f} -> build/efi/{(r+f)[8:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/efi/{(r+f)[8:].replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -279,7 +282,7 @@ for r,_,fl in src_fl:
 				cl[r+f]=n_f_h_dt[r+f]
 		elif (r[:10]=="src/kernel"):
 			if (f[-2:]==".c"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/kernel/{(r+f)[4:].replace('/','$')}.o")):
 					print(f"Compiling C File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Irsrc/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -292,7 +295,7 @@ for r,_,fl in src_fl:
 				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				cl[r+f]=n_f_h_dt[r+f]
 			elif (f[-4:]==".asm"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/kernel/{(r+f)[4:].replace('/','$')}.o")):
 					print(f"Compiling ASM File (Kernel): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]+asm_d).returncode!=0):
 						print("Writing File Hash List...")
@@ -306,7 +309,7 @@ for r,_,fl in src_fl:
 				cl[r+f]=n_f_h_dt[r+f]
 		elif (r[:4]=="rsrc"):
 			if (f[-2:]==".c"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/kernel/{(r+f).replace('/','$')}.o")):
 					print(f"Compiling C File (Kernel Resource): {r+f} -> build/kernel/{(r+f).replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f).replace('/','$')}.o","-Irsrc/include","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f).replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -320,7 +323,7 @@ for r,_,fl in src_fl:
 				cl[r+f]=n_f_h_dt[r+f]
 		else:
 			if (f[-2:]==".c"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/kernel/{(r+f)[4:].replace('/','$')}.o")):
 					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o","-Isrc/kernel/include","-Isrc/libc/include","-Irsrc","-D__KERNEL__=1"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -328,6 +331,10 @@ for r,_,fl in src_fl:
 							for k,v in cl.items():
 								f.write(f"{k}{v}\n")
 						quit()
+				else:
+					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
+				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/libc/{(r+f)[4:].replace('/','$')}.o")):
 					print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["gcc","-mcmodel=large","-mno-red-zone","-fno-common","-m64","-Wall","-Werror","-fpic","-ffreestanding","-fno-stack-protector","-O3","-nostdinc","-nostdlib","-c",r+f,"-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o","-Isrc/libc/include","-Irsrc"]).returncode!=0 or subprocess.run(["strip","-R",".rdata$zzz","--keep-file-symbols","--strip-debug","--strip-unneeded","--discard-locals",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -336,13 +343,11 @@ for r,_,fl in src_fl:
 								f.write(f"{k}{v}\n")
 						quit()
 				else:
-					print(f"Compiling C File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 					print(f"Compiling C File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
-				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
 				cl[r+f]=n_f_h_dt[r+f]
 			elif (f[-4:]==".asm"):
-				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f)):
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/kernel/{(r+f)[4:].replace('/','$')}.o")):
 					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-D__KERNEL__=1","-o",f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -350,6 +355,10 @@ for r,_,fl in src_fl:
 							for k,v in cl.items():
 								f.write(f"{k}{v}\n")
 						quit()
+				else:
+					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
+				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
+				if (_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/libc/{(r+f)[4:].replace('/','$')}.o")):
 					print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o")
 					if (subprocess.run(["nasm",r+f,"-f","elf64","-O3","-Wall","-Werror","-o",f"build/libc/{(r+f)[4:].replace('/','$')}.o"]).returncode!=0):
 						print("Writing File Hash List...")
@@ -358,9 +367,7 @@ for r,_,fl in src_fl:
 								f.write(f"{k}{v}\n")
 						quit()
 				else:
-					print(f"Compiling ASM File (Kernel LibC): {r+f} -> build/kernel/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
 					print(f"Compiling ASM File (LibC): {r+f} -> build/libc/{(r+f)[4:].replace('/','$')}.o (Already Exists)")
-				k_fl+=[f"build/kernel/{(r+f)[4:].replace('/','$')}.o"]
 				l_fl+=[f"build/libc/{(r+f)[4:].replace('/','$')}.o"]
 				cl[r+f]=n_f_h_dt[r+f]
 print("Writing File Hash List...")

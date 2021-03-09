@@ -77,13 +77,13 @@ uint8_t KERNEL_CALL apic_get_id(void){
 
 
 void KERNEL_CALL apic_setup_timer(void){
-	*(_apic_ptr+APIC_LVT_TIMER_REGISER)=APIC_TIMER_REPEAT|APIC_SPURIOUS_INTERRUPT;
+	*(_apic_ptr+APIC_LVT_TIMER_REGISER)=APIC_SPURIOUS_INTERRUPT;
 	*(_apic_ptr+APIC_TIMER_DIVISOR_REGISER)=0xb;
 	*(_apic_ptr+APIC_TIMER_INIT_REGISER)=UINT32_MAX;
 	hpet_timer_spinwait(APIC_TIMER_CALIB_US);
 	uint32_t v=*(_apic_ptr+APIC_TIMER_VALUE_REGISER);
 	_apic_t_per_us=(UINT32_MAX-v)/APIC_TIMER_CALIB_US;
-	console_log("APIC Timer: %u t/us\n",_apic_t_per_us);
+	console_log("APIC Timer: %llu t/us\n",_apic_t_per_us);
 }
 
 

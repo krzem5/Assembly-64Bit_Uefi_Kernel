@@ -5,6 +5,14 @@ global asm_apic_lint0_int
 global asm_apic_lint1_int
 global asm_apic_err_int
 extern _handle_apic_int
+extern _apic_ptr
+extern _tm_ptr
+extern _tm_us_r
+
+
+
+%define TIMER_DIV_FLAGS 0xb
+%define APIC_TIMER_DISABLE 0x10000
 
 
 
