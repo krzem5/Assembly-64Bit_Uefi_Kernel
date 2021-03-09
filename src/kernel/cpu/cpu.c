@@ -82,5 +82,6 @@ _nxt:
 
 
 void KERNEL_CALL cpu_ap_init(cpu_t* cpu){
+	console_ok("CPU%#.2hhx Loaded!\n",cpu->id);
 	apic_enable();
 }

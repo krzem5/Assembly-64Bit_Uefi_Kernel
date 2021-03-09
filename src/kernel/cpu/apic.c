@@ -35,7 +35,7 @@ uint64_t _apic_t_per_us;
 
 void KERNEL_CALL _handle_apic_int(apic_interrupt_registers_t* r){
 	if (r->t==APIC_TIMER_INTERRUPT){
-		scheduler_tick(0);
+		scheduler_tick();
 	}
 	else{
 		console_warn("APIC:\n  rax    = %#.18llx\n  rbx    = %#.18llx\n  rcx    = %#.18llx\n  rdx    = %#.18llx\n  rsi    = %#.18llx\n  rdi    = %#.18llx\n  rbp    = %#.18llx\n  r8     = %#.18llx\n  r9     = %#.18llx\n  r10    = %#.18llx\n  r11    = %#.18llx\n  r12    = %#.18llx\n  r13    = %#.18llx\n  r14    = %#.18llx\n  r15    = %#.18llx\n  rflags = %#.8llx\n  t      = %#.4llx\n",r->rax,r->rbx,r->rcx,r->rdx,r->rsi,r->rdi,r->rbp,r->r8,r->r9,r->r10,r->r11,r->r12,r->r13,r->r14,r->r15,r->rflags,r->t);
