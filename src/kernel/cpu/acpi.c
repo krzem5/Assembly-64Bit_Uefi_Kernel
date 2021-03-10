@@ -140,7 +140,6 @@ void KERNEL_CALL acpi_init(KernelArgs* ka){
 		}
 	}
 	hpet_timer_init(((struct _ACPI_HPET*)ka->hpet)->b_addr.a);
-	apic_init((uint64_t)apic->lic_a);
 }
 
 

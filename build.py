@@ -13,9 +13,10 @@ FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bd
 FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
-REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"],b"__IDT_TABLE":[b"b"]}
+REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0",b"apic",b"apic_tpus",b"id"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"],b"__IDT_TABLE":[b"b"]}
 REQUIRED_STRUCTURE_SIZE=[b"__THREAD_DATA",b"__IDT_ENTRY"]
-REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR",b"MSR_GS_BASE",b"PAGE_PRESENT",b"PAGE_READ_WRITE",b"PAGE_DIR_PRESENT",b"PAGE_DIR_READ_WRITE",b"PAGE_4KB_SIZE",b"TOTAL_INTERRUPT_NUMBER"]
+REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR",b"MSR_GS_BASE",b"PAGE_PRESENT",b"PAGE_READ_WRITE",b"PAGE_DIR_PRESENT",b"PAGE_DIR_READ_WRITE",b"PAGE_4KB_SIZE",b"TOTAL_INTERRUPT_NUMBER",b"APIC_EOI_REGISTER",b"MSR_APIC_BASE",b"APIC_LVT_ERROR_REGISER",b"APIC_ERROR_INTERRUPT",b"APIC_SPURIOUS_REGISTER",b"APIC_SPURIOUS_INTERRUPT",b"APIC_SVR_ENABLE",b"APIC_LVT_TIMER_REGISER",b"APIC_TIMER_CALIB_US",b"APIC_TIMER_DIVISOR_REGISER",b"APIC_TIMER_INIT_REGISER",b"APIC_TIMER_VALUE_REGISER",b"APIC_TIMER_REPEAT",b"APIC_TIMER_INTERRUPT",b"APIC_ID_REGISTER"]
+REQUIRED_TYPE_SIZE=[b"uint32_t"]
 SIZEOF_POINTER=8
 SIZEOF_UINT8_T=1
 SIZEOF_UINT16_T=2
@@ -106,6 +107,15 @@ for k in REQUIRED_STRUCTURE_SIZE:
 	asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_SIZE__"]=[[],[]]
 for k in REQUIRED_DEFINITIONS:
 	asm_d_fl[f"__C_{str(k,'utf-8').strip('_').upper()}__"]=[[],[]]
+err=False
+for k in REQUIRED_TYPE_SIZE:
+	if (k==b"uint32_t"):
+		asm_d+=[f"-D__C_SIZEOF_UINT32_T__={SIZEOF_UINT32_T}"]
+	else:
+		err=True
+		print(f"Unknown Size of Type '{str(k,'utf-8')}'!")
+if (err):
+	quit()
 for r,_,fl in src_fl:
 	r=r.replace("\\","/")+"/"
 	for f in fl:

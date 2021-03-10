@@ -4,7 +4,10 @@ default rel
 global asm_ap_startup
 extern cpu_ap_init
 extern asm_setup_gdt
+extern asm_apic_setup
+extern scheduler_start
 extern idt
+extern scheduler_ready
 extern _cpu_ap_c
 
 
@@ -88,23 +91,8 @@ default abs
 	mov r8, qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (._init_cpu_data - asm_ap_startup))]
 	mov rbp, qword [r8 + __C_CPU_STRUCT_RSP0_OFFSET__]
 	mov rsp, rbp
-	inc dword [_cpu_ap_c]
-	xor rax, rax
-	mov eax, r8d
-	mov rcx, __C_MSR_GS_BASE__
-	mov rdx, r8
-	shr rdx, 32
-	wrmsr
-	lidt [idt]
-	mov rax, asm_setup_gdt
-	call rax
-	mov rax, cpu_ap_init
-	mov rcx, r8
-	call rax
-	sti
-._loop:
-	hlt
-	jmp ._loop
+	mov rax, _asm_ap_startup_kernel
+	jmp rax
 
 
 
@@ -118,6 +106,40 @@ asm_ap_startup_len equ ($ - asm_ap_startup)
 section .text
 global asm_init_ap_startup_code
 global asm_setup_ap_startup_vars
+
+
+
+_asm_ap_startup_kernel:
+	inc dword [_cpu_ap_c]
+	mov rcx, __C_MSR_APIC_BASE__
+	rdmsr
+	shl rdx, 32
+	or rax, rdx
+	xor ax, ax
+	mov qword [r8 + __C_CPU_STRUCT_APIC_OFFSET__], rax
+	push rax
+	xor rax, rax
+	mov eax, r8d
+	mov rcx, __C_MSR_GS_BASE__
+	mov rdx, r8
+	shr rdx, 32
+	wrmsr
+	pop rcx
+	call asm_apic_setup
+	lidt [idt]
+	call asm_setup_gdt
+	inc dword [_cpu_ap_c]
+	jmp ._start_w
+._wait:
+	pause
+._start_w:
+	cmp byte [scheduler_ready], 1
+	jne ._wait
+	call scheduler_start
+	sti
+._loop:
+	hlt
+	jmp ._loop
 
 
 

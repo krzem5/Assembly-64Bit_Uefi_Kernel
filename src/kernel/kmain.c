@@ -1,5 +1,6 @@
 #include <shared.h>
 #include <cpu/acpi.h>
+#include <cpu/apic.h>
 #include <cpu/cpu.h>
 #include <cpu/cpu_info.h>
 #include <cpu/gdt.h>
@@ -64,6 +65,8 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	console_log("Parsing ACPI...\n");
 	acpi_init(ka);
 	hpet_timer_set_frequency(1000);
+	console_log("Initialising APIC Interrupts...\n");
+	apic_init();
 	console_log("Setting Up CPUs...\n");
 	cpu_init();
 	console_log("Setting Up Process List...\n");
@@ -77,6 +80,7 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
+	for (;;);
 	console_ok("Starting Scheduler...\n");
 	scheduler_start();
 }

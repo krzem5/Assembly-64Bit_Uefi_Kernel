@@ -12,7 +12,7 @@
 
 
 
-uint64_t _l_tm;
+uint8_t scheduler_ready=0;
 
 
 
@@ -23,14 +23,18 @@ void KERNEL_CALL scheduler_init(void){
 
 
 void KERNEL_CALL scheduler_start(void){
-	_l_tm=hpet_timer_get_us();
-	apic_start_timer(PROCESS_TIME_US);
+	scheduler_ready=1;
+	cpu_t* cpu=asm_current_cpu();
+	cpu->l_s_tm=hpet_timer_get_us();
 }
 
 
 
-void KERNEL_CALL scheduler_tick(void){
+void KERNEL_CALL scheduler_yield(void){
+	cpu_t* cpu=asm_current_cpu();
 	uint64_t tm=hpet_timer_get_us();
-	console_log("Reschedule: %lluus (%u)\n",tm-_l_tm,asm_current_cpu()->id);
-	_l_tm=tm;
+	if (cpu->idx==0){
+		console_log("Reschedule: %lluus (%u)\n",tm-cpu->l_s_tm,cpu->id);
+	}
+	cpu->l_s_tm=tm;
 }

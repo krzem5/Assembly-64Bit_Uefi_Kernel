@@ -52,6 +52,10 @@ typedef struct __APIC_INTERRUPT_REGISTERS{
 
 
 
+extern void KERNEL_CALL asm_apic_setup(uint64_t apic);
+
+
+
 extern void KERNEL_CALL asm_apic_spurious_int(void);
 
 
@@ -76,31 +80,11 @@ void KERNEL_CALL _handle_apic_int(apic_interrupt_registers_t* r);
 
 
 
-void KERNEL_CALL apic_init(uint64_t a);
+void KERNEL_CALL apic_init(void);
 
 
 
-uint64_t KERNEL_CALL apic_base(void);
-
-
-
-void KERNEL_CALL apic_enable(void);
-
-
-
-uint8_t KERNEL_CALL apic_get_id(void);
-
-
-
-void KERNEL_CALL apic_setup_timer(void);
-
-
-
-void KERNEL_CALL apic_start_timer(uint64_t us);
-
-
-
-void KERNEL_CALL apic_send_ipi(uint16_t t,uint8_t v,uint8_t d);
+void KERNEL_CALL apic_send_ipi(uint64_t apic,uint16_t t,uint8_t v,uint8_t d);
 
 
 
