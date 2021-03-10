@@ -80,7 +80,6 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
-	for (;;);
 	console_ok("Starting Scheduler...\n");
 	scheduler_start();
 }
