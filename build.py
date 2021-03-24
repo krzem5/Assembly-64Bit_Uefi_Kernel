@@ -13,15 +13,48 @@ FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bd
 FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
-REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0",b"apic",b"apic_tpus",b"id"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"],b"__IDT_TABLE":[b"b"]}
-REQUIRED_STRUCTURE_SIZE=[b"__THREAD_DATA",b"__IDT_ENTRY"]
-REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR",b"MSR_GS_BASE",b"PAGE_PRESENT",b"PAGE_READ_WRITE",b"PAGE_DIR_PRESENT",b"PAGE_DIR_READ_WRITE",b"PAGE_4KB_SIZE",b"TOTAL_INTERRUPT_NUMBER",b"APIC_EOI_REGISTER",b"MSR_APIC_BASE",b"APIC_LVT_ERROR_REGISER",b"APIC_ERROR_INTERRUPT",b"APIC_SPURIOUS_REGISTER",b"APIC_SPURIOUS_INTERRUPT",b"APIC_SVR_ENABLE",b"APIC_LVT_TIMER_REGISER",b"APIC_TIMER_CALIB_US",b"APIC_TIMER_DIVISOR_REGISER",b"APIC_TIMER_INIT_REGISER",b"APIC_TIMER_VALUE_REGISER",b"APIC_TIMER_REPEAT",b"APIC_TIMER_INTERRUPT",b"APIC_ID_REGISTER"]
-REQUIRED_TYPE_SIZE=[b"uint32_t"]
+REQUIRED_STRUCTURE_OFFSETS={}
+REQUIRED_STRUCTURE_SIZE=[]
+REQUIRED_DEFINITIONS=[]
+REQUIRED_TYPE_SIZE=[]
 SIZEOF_POINTER=8
 SIZEOF_UINT8_T=1
 SIZEOF_UINT16_T=2
 SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
+with open("exports.txt","rb") as f:
+	c=None
+	c_s=None
+	c_s_i=None
+	indt=[b""]
+	for k in f.read().replace(b"\r\n",b"\n").split(b"\n"):
+		c_i=b""
+		while (k[:1] in b" \t\r\n\v\f"):
+			c_i+=k[:1]
+			k=k[1:]
+			if (len(k)==0):
+				break
+		if (len(k)==0):
+			break
+		if (len(c_i)==0 and k in [b"structures:",b"defs:",b"sizes:"]):
+			c=k[:-1]
+		else:
+			if (c==b"structures"):
+				if (c_s==None or len(c_i)==len(c_s_i)):
+					c_s=k[:-1]
+					c_s_i=c_i
+				else:
+					if (k==b"$$size$$"):
+						REQUIRED_STRUCTURE_SIZE.append(c_s)
+					else:
+						if (c_s not in REQUIRED_STRUCTURE_OFFSETS):
+							REQUIRED_STRUCTURE_OFFSETS[c_s]=[k]
+						else:
+							REQUIRED_STRUCTURE_OFFSETS[c_s].append(k)
+			elif (c==b"defs"):
+				REQUIRED_DEFINITIONS.append(k)
+			else:
+				REQUIRED_TYPE_SIZE.append(k)
 
 
 

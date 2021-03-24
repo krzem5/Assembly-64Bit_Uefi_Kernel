@@ -4,9 +4,43 @@ import re
 
 
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$",re.M)
-REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0",b"apic",b"apic_tpus",b"id"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"],b"__IDT_TABLE":[b"b"]}
-REQUIRED_STRUCTURE_SIZE=[b"__THREAD_DATA",b"__IDT_ENTRY"]
-REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR",b"MSR_GS_BASE",b"PAGE_PRESENT",b"PAGE_READ_WRITE",b"PAGE_DIR_PRESENT",b"PAGE_DIR_READ_WRITE",b"PAGE_4KB_SIZE",b"TOTAL_INTERRUPT_NUMBER",b"APIC_EOI_REGISTER",b"MSR_APIC_BASE",b"APIC_LVT_ERROR_REGISER",b"APIC_ERROR_INTERRUPT",b"APIC_SPURIOUS_REGISTER",b"APIC_SPURIOUS_INTERRUPT",b"APIC_SVR_ENABLE",b"APIC_LVT_TIMER_REGISER",b"APIC_TIMER_CALIB_US",b"APIC_TIMER_DIVISOR_REGISER",b"APIC_TIMER_INIT_REGISER",b"APIC_TIMER_VALUE_REGISER",b"APIC_TIMER_REPEAT",b"APIC_TIMER_INTERRUPT",b"APIC_ID_REGISTER"]
+REQUIRED_STRUCTURE_OFFSETS={}
+REQUIRED_STRUCTURE_SIZE=[]
+REQUIRED_DEFINITIONS=[]
+REQUIRED_TYPE_SIZE=[]
+with open("exports.txt","rb") as f:
+	c=None
+	c_s=None
+	c_s_i=None
+	indt=[b""]
+	for k in f.read().replace(b"\r\n",b"\n").split(b"\n"):
+		c_i=b""
+		while (k[:1] in b" \t\r\n\v\f"):
+			c_i+=k[:1]
+			k=k[1:]
+			if (len(k)==0):
+				break
+		if (len(k)==0):
+			break
+		if (len(c_i)==0 and k in [b"structures:",b"defs:",b"sizes:"]):
+			c=k[:-1]
+		else:
+			if (c==b"structures"):
+				if (c_s==None or len(c_i)==len(c_s_i)):
+					c_s=k[:-1]
+					c_s_i=c_i
+				else:
+					if (k==b"$$size$$"):
+						REQUIRED_STRUCTURE_SIZE.append(c_s)
+					else:
+						if (c_s not in REQUIRED_STRUCTURE_OFFSETS):
+							REQUIRED_STRUCTURE_OFFSETS[c_s]=[k]
+						else:
+							REQUIRED_STRUCTURE_OFFSETS[c_s].append(k)
+			elif (c==b"defs"):
+				REQUIRED_DEFINITIONS.append(k)
+			else:
+				REQUIRED_TYPE_SIZE.append(k)
 
 
 
@@ -65,9 +99,6 @@ for r,_,fl in src_fl:
 							asm_inc[f"__C_{str(k,'utf-8').strip('_').upper()}_STRUCT_SIZE__"][0]+=[r+f]
 							REQUIRED_STRUCTURE_SIZE.remove(k)
 						if (k in REQUIRED_STRUCTURE_OFFSETS):
-							if (REQUIRED_STRUCTURE_OFFSETS[k]):
-								for e in REQUIRED_STRUCTURE_OFFSETS[k]:
-									print(f"Unable to Find Element '{str(e,'utf-8')}' in Structure '{str(k,'utf-8')}'!")
 							del REQUIRED_STRUCTURE_OFFSETS[k]
 			for k in REQUIRED_DEFINITIONS:
 				if (len(re.findall(br"\#define\s+"+k+br"\s*(.*)$",dt,re.M))==1):
@@ -98,6 +129,11 @@ while (True):
 					v["refs_far"].append(se)
 	if (not u):
 		break
-f_dt={k:{"type":v["type"],"size":v["size"],"loc":v["loc"],"sloc":v["sloc"],"refs":sorted(v["refs"]),"refs_far":sorted(v["refs_far"])} for k,v in sorted(f_dt.items(),key=lambda e:e[0])}
-for k,v in f_dt.items():
-	print(f"File '{k}':\n  type: {v['type']}\n  size: {v['size']:,} (loc: {v['loc']}, sloc: {v['sloc']})\n  references:\n    {('(none)' if len(v['refs'])==0 else (chr(10)+'    ').join(v['refs']))}\n  indirect references:\n    {('(none)' if len(v['refs_far'])==0 else (chr(10)+'    ').join(v['refs_far']))}")
+dt={"total":{"size":0,"loc":0,"sloc":0},"files":{}}
+for k,v in sorted(f_dt.items(),key=lambda e:e[0]):
+	dt["total"]["size"]+=v["size"]
+	dt["total"]["loc"]+=v["loc"]
+	dt["total"]["sloc"]+=v["sloc"]
+	dt["files"][k]={"type":v["type"],"size":v["size"],"loc":v["loc"],"sloc":v["sloc"],"refs":sorted(v["refs"]),"refs_far":sorted(v["refs_far"])}
+for k,v in dt["files"].items():
+	print(f"File '{k}':\n  type: {v['type']}\n  size: {v['size']:,} ({v['size']/dt['total']['size']*100:.2f}%) (loc: {v['loc']} ({v['loc']/dt['total']['loc']*100:.2f}%), sloc: {v['sloc']} ({v['sloc']/dt['total']['sloc']*100:.2f}%))\n  references:\n    {('(none)' if len(v['refs'])==0 else (chr(10)+'    ').join(v['refs']))}\n  indirect references:\n    {('(none)' if len(v['refs_far'])==0 else (chr(10)+'    ').join(v['refs_far']))}")
