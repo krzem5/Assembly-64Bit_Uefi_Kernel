@@ -1,9 +1,11 @@
+import minify
 import os
 import re
 
 
 
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$",re.M)
+UNQUOTED_JS_KEY=re.compile(r"^[a-zA-Z0-9_]+$")
 REQUIRED_STRUCTURE_OFFSETS={}
 REQUIRED_STRUCTURE_SIZE=[]
 REQUIRED_DEFINITIONS=[]
@@ -12,7 +14,6 @@ with open("exports.txt","rb") as f:
 	c=None
 	c_s=None
 	c_s_i=None
-	indt=[b""]
 	for k in f.read().replace(b"\r\n",b"\n").split(b"\n"):
 		c_i=b""
 		while (k[:1] in b" \t\r\n\v\f"):
@@ -44,6 +45,74 @@ with open("exports.txt","rb") as f:
 
 
 
+def _render_md(fp):
+	print(fp)
+	if (not os.path.exists(fp)):
+		return "<span class=\"none\">No Description</span>"
+
+
+
+def _dump_json(json):
+	if (type(json)==dict):
+		o="{"
+		for k,v in json.items():
+			if (len(o)>1):
+				o+=","
+			if (UNQUOTED_JS_KEY.fullmatch(k)):
+				o+=k+":"+_dump_json(v)
+			else:
+				o+=f"\"{k.replace(chr(92),chr(92)+chr(92)).replace('`',chr(92)+'`').replace(chr(39),chr(92)+chr(39))}\":{_dump_json(v)}"
+		return o+"}"
+	if (type(json)==list):
+		o="["
+		for k in json:
+			if (len(o)>1):
+				o+=","
+			o+=_dump_json(k)
+		return o+"]"
+	if (type(json)==str):
+		return f"`{json.replace(chr(92),chr(92)+chr(92)).replace(chr(34),chr(92)+chr(34)).replace(chr(39),chr(92)+chr(39))}`"
+	return str(json)
+
+
+
+def _write_f_tree(dt):
+	def _rec(d,i,p):
+		o=b""
+		for k,v in d[0].items():
+			for j in range(0,i):
+				o+=b"<span class=\"vl\">  </span>"
+			tp=p+(b"/" if len(p)>0 else b"")+bytes(k,"utf-8")
+			o+=b"<span class=\""+(b"root" if i==0 else b"dir")+b"\" onclick=\"window._show_dir('"+tp+b"')\">"+bytes(k,"utf-8")+b"</span><span class=\"txt\">:</span>\n"+_rec(v,i+1,tp)
+		for k in d[1]:
+			for j in range(0,i):
+				o+=b"<span class=\"vl\">  </span>"
+			o+=b"<span class=\""+(b"c" if k[-1]=="c" else (b"h" if k[-1]=="h" else b"asm"))+b"\" onclick=\"window._show('"+p+b"/"+bytes(k,"utf-8")+b"')\">"+bytes(k,"utf-8")+b"</span>\n"
+		return o
+	r=({},[])
+	for s in dt.keys():
+		s=s.split("/")
+		p=""
+		for k in s:
+			t=r
+			for e in p[1:].split("/"):
+				if (len(e)==0):
+					continue
+				t=t[0][e]
+			if (k==s[-1]):
+				t[1].append(k)
+				continue
+			if (k not in t[0]):
+				t[0][k]=({},[])
+				_t=sorted([[e,t[0][e]] for e in t[0].keys()],key=lambda e:e[0])
+				t[0].clear()
+				for e in _t:
+					t[0][e[0]]=e[1]
+			p+=f"/{k}"
+	return _rec(r,0,b"")
+
+
+
 src_fl=list(os.walk("src"))+list(os.walk("rsrc"))
 f_dt={}
 asm_inc={}
@@ -60,7 +129,7 @@ for r,_,fl in src_fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
 			with open(r+f,"rb") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[]}
+			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("docs/raw/"+(r+f).replace("/","$")+".md")}
 			for k in dt.split(b"\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -106,7 +175,7 @@ for r,_,fl in src_fl:
 		elif (f[-4:]==".asm"):
 			with open(r+f,"r") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[]}
+			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("docs/raw/"+(r+f).replace("/","$")+".md")}
 			for k in dt.split("\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -129,11 +198,24 @@ while (True):
 					v["refs_far"].append(se)
 	if (not u):
 		break
-dt={"total":{"size":0,"loc":0,"sloc":0},"files":{}}
+dt={"total":{"size":0,"loc":0,"sloc":0},"files":{},"dirs":{}}
 for k,v in sorted(f_dt.items(),key=lambda e:e[0]):
+	p=""
+	for e in k.split("/")[:-1]:
+		p+=("/" if len(p) else "")+e
+		if (p not in dt["dirs"]):
+			dt["dirs"][p]={"files":0,"size":0,"loc":0,"sloc":0,"desc":_render_md("docs/raw/"+p.replace("/","$")+".md")}
+		dt["dirs"][p]["files"]+=1
+		dt["dirs"][p]["size"]+=v["size"]
+		dt["dirs"][p]["loc"]+=v["loc"]
+		dt["dirs"][p]["sloc"]+=v["sloc"]
 	dt["total"]["size"]+=v["size"]
 	dt["total"]["loc"]+=v["loc"]
 	dt["total"]["sloc"]+=v["sloc"]
-	dt["files"][k]={"type":v["type"],"size":v["size"],"loc":v["loc"],"sloc":v["sloc"],"refs":sorted(v["refs"]),"refs_far":sorted(v["refs_far"])}
-for k,v in dt["files"].items():
-	print(f"File '{k}':\n  type: {v['type']}\n  size: {v['size']:,} ({v['size']/dt['total']['size']*100:.2f}%) (loc: {v['loc']} ({v['loc']/dt['total']['loc']*100:.2f}%), sloc: {v['sloc']} ({v['sloc']/dt['total']['sloc']*100:.2f}%))\n  references:\n    {('(none)' if len(v['refs'])==0 else (chr(10)+'    ').join(v['refs']))}\n  indirect references:\n    {('(none)' if len(v['refs_far'])==0 else (chr(10)+'    ').join(v['refs_far']))}")
+	dt["files"][k]={"type":v["type"],"size":v["size"],"loc":v["loc"],"sloc":v["sloc"],"refs":sorted(v["refs"]),"refs_far":sorted(v["refs_far"]),"desc":v["desc"]}
+if (not os.path.exists("build")):
+	os.mkdir("build")
+if (not os.path.exists("build/docs")):
+	os.mkdir("build/docs")
+with open("build/docs/index.html","wb") as wf,open("docs/web/index.html","rb") as rf:
+	wf.write(minify.minify_html(rf.read().replace(b"$$__FILE_TREE__$$",_write_f_tree(dt["files"])).replace(b"$$__DATA__$$",bytes(_dump_json(dt),"utf-8")),"docs/web/index.html","docs/web"))

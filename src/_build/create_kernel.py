@@ -1,16 +1,11 @@
 import hashlib
 import os
 import subprocess
-import sys
 import re
-import requests
 
 
 
 FILE_HASH_BUF_SIZE=65536
-FONT_OUT_NAME="font_spleen"
-FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bdf"
-FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
 REQUIRED_STRUCTURE_OFFSETS={}
@@ -26,7 +21,6 @@ with open("exports.txt","rb") as f:
 	c=None
 	c_s=None
 	c_s_i=None
-	indt=[b""]
 	for k in f.read().replace(b"\r\n",b"\n").split(b"\n"):
 		c_i=b""
 		while (k[:1] in b" \t\r\n\v\f"):
@@ -90,43 +84,12 @@ if (os.path.exists("build/__last_build_files__")):
 			if (len(k)<33):
 				continue
 			f_h_dt[k[:-32]]=k[-32:]
-for k in os.listdir("build"):
-	if (os.path.isfile(f"build/{k}")):
-		os.remove(f"build/{k}")
 if (not os.path.exists("build/efi")):
 	os.mkdir("build/efi")
 if (not os.path.exists("build/kernel")):
 	os.mkdir("build/kernel")
 if (not os.path.exists("build/libc")):
 	os.mkdir("build/libc")
-if (not os.path.exists(f"rsrc/{FONT_OUT_NAME}.c") or not os.path.exists(f"rsrc/include/{FONT_OUT_NAME}.h") or "--reload-rsrc" in sys.argv):
-	print(f"Font characters: {FONT_MAX_CHAR+1}\nFont URL: {FONT_URL}\nFont Files: rsrc/include/{FONT_OUT_NAME}.h, rsrc/{FONT_OUT_NAME}.c")
-	dt=requests.get(FONT_URL,headers={"Accept":"application/vnd.github.v3+json","User-Agent":"Font Generation"}).content.replace(b"\r",b"\n").split(b"\n")
-	i=0
-	o=[0 for _ in range(0,(FONT_MAX_CHAR+1)*2)]
-	while (i<len(dt)):
-		if (dt[i][:9]==b"STARTCHAR"):
-			i+=1
-			id_=-1
-			j=-1
-			while (dt[i]!=b"ENDCHAR"):
-				if (dt[i][:8]==b"ENCODING"):
-					id_=int(dt[i][8:].strip())
-					if (id_>FONT_MAX_CHAR):
-						while (dt[i]!=b"ENDCHAR"):
-							i+=1
-						break
-				elif (dt[i][:6]==b"BITMAP"):
-					j=0
-				elif (j!=-1):
-					o[id_*2+j//8]|=int(bin(int(dt[i],16))[2:].rjust(8,"0")[::-1],2)<<(8*(j%8))
-					j+=1
-				i+=1
-		i+=1
-	with open(f"rsrc/include/{FONT_OUT_NAME}.h","w") as f:
-		f.write(f"#ifndef __{FONT_OUT_NAME.upper()}_H__\n#define __{FONT_OUT_NAME.upper()}_H__ 1\n#include <gfx/font.h>\n#include <stdint.h>\n\n\n\nextern const uint64_t {FONT_OUT_NAME.upper()}_DATA[];\n\n\n\nextern Font {FONT_OUT_NAME.upper()};\n\n\n\n#endif\n")
-	with open(f"rsrc/{FONT_OUT_NAME}.c","w") as f:
-		f.write(f"#include <gfx/font.h>\n#include <stdint.h>\n#include <{FONT_OUT_NAME}.h>\n\n\n\nconst uint64_t {FONT_OUT_NAME.upper()}_DATA[{(FONT_MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {FONT_OUT_NAME.upper()}={{\n\t{FONT_MAX_CHAR},\n\t{FONT_OUT_NAME.upper()}_DATA\n}};\n")
 src_fl=list(os.walk("src"))+list(os.walk("rsrc"))
 asm_d=[]
 fd=[]
@@ -436,11 +399,3 @@ os.remove("build/loader.efi")
 os.remove("build/kernel.elf")
 os.remove("build/libc.so")
 os.remove("build/tmp.img")
-print("Creating Virtual HDD...")
-if (subprocess.run(["qemu-img","create","-f","qcow2","build/hdd.qcow2","16G"]).returncode!=0):
-	quit()
-print("Starting QEMU...")
-try:
-	subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=1,cores=8,threads=1","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])
-except KeyboardInterrupt:
-	pass
