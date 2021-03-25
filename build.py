@@ -1,54 +1,27 @@
 import hashlib
 import os
 import subprocess
+import sys
 import re
+import requests
 
 
 
 FILE_HASH_BUF_SIZE=65536
+FONT_OUT_NAME="font_spleen"
+FONT_URL="https://raw.githubusercontent.com/fcambus/spleen/master/spleen-8x16.bdf"
+FONT_MAX_CHAR=0x7e
 INCLUDE_LIST_REGEX=re.compile(br"^\s*?((?:\s*#\s*include\s*<[^>]*?>)+)",re.M)
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$")
-REQUIRED_STRUCTURE_OFFSETS={}
-REQUIRED_STRUCTURE_SIZE=[]
-REQUIRED_DEFINITIONS=[]
-REQUIRED_TYPE_SIZE=[]
+REQUIRED_STRUCTURE_OFFSETS={b"__KERNEL_ARGS":[b"k_sp"],b"__CPU":[b"s",b"rsp0",b"apic",b"apic_tpus",b"id"],b"__CPUID_INFO":[b"eax",b"ebx",b"ecx",b"edx"],b"__IDT_TABLE":[b"b"]}
+REQUIRED_STRUCTURE_SIZE=[b"__THREAD_DATA",b"__IDT_ENTRY"]
+REQUIRED_DEFINITIONS=[b"LOW_MEM_AP_INIT_ADDR",b"LOW_MEM_AP_PML4_ADDR",b"MSR_GS_BASE",b"PAGE_PRESENT",b"PAGE_READ_WRITE",b"PAGE_DIR_PRESENT",b"PAGE_DIR_READ_WRITE",b"PAGE_4KB_SIZE",b"TOTAL_INTERRUPT_NUMBER",b"APIC_EOI_REGISTER",b"MSR_APIC_BASE",b"APIC_LVT_ERROR_REGISER",b"APIC_ERROR_INTERRUPT",b"APIC_SPURIOUS_REGISTER",b"APIC_SPURIOUS_INTERRUPT",b"APIC_SVR_ENABLE",b"APIC_LVT_TIMER_REGISER",b"APIC_TIMER_CALIB_US",b"APIC_TIMER_DIVISOR_REGISER",b"APIC_TIMER_INIT_REGISER",b"APIC_TIMER_VALUE_REGISER",b"APIC_TIMER_REPEAT",b"APIC_TIMER_INTERRUPT",b"APIC_ID_REGISTER"]
+REQUIRED_TYPE_SIZE=[b"uint32_t"]
 SIZEOF_POINTER=8
 SIZEOF_UINT8_T=1
 SIZEOF_UINT16_T=2
 SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
-with open("exports.txt","rb") as f:
-	c=None
-	c_s=None
-	c_s_i=None
-	for k in f.read().replace(b"\r\n",b"\n").split(b"\n"):
-		c_i=b""
-		while (k[:1] in b" \t\r\n\v\f"):
-			c_i+=k[:1]
-			k=k[1:]
-			if (len(k)==0):
-				break
-		if (len(k)==0):
-			break
-		if (len(c_i)==0 and k in [b"structures:",b"defs:",b"sizes:"]):
-			c=k[:-1]
-		else:
-			if (c==b"structures"):
-				if (c_s==None or len(c_i)==len(c_s_i)):
-					c_s=k[:-1]
-					c_s_i=c_i
-				else:
-					if (k==b"$$size$$"):
-						REQUIRED_STRUCTURE_SIZE.append(c_s)
-					else:
-						if (c_s not in REQUIRED_STRUCTURE_OFFSETS):
-							REQUIRED_STRUCTURE_OFFSETS[c_s]=[k]
-						else:
-							REQUIRED_STRUCTURE_OFFSETS[c_s].append(k)
-			elif (c==b"defs"):
-				REQUIRED_DEFINITIONS.append(k)
-			else:
-				REQUIRED_TYPE_SIZE.append(k)
 
 
 
@@ -84,12 +57,43 @@ if (os.path.exists("build/__last_build_files__")):
 			if (len(k)<33):
 				continue
 			f_h_dt[k[:-32]]=k[-32:]
+for k in os.listdir("build"):
+	if (os.path.isfile(f"build/{k}")):
+		os.remove(f"build/{k}")
 if (not os.path.exists("build/efi")):
 	os.mkdir("build/efi")
 if (not os.path.exists("build/kernel")):
 	os.mkdir("build/kernel")
 if (not os.path.exists("build/libc")):
 	os.mkdir("build/libc")
+if (not os.path.exists(f"rsrc/{FONT_OUT_NAME}.c") or not os.path.exists(f"rsrc/include/{FONT_OUT_NAME}.h") or "--reload-rsrc" in sys.argv):
+	print(f"Font characters: {FONT_MAX_CHAR+1}\nFont URL: {FONT_URL}\nFont Files: rsrc/include/{FONT_OUT_NAME}.h, rsrc/{FONT_OUT_NAME}.c")
+	dt=requests.get(FONT_URL,headers={"Accept":"application/vnd.github.v3+json","User-Agent":"Font Generation"}).content.replace(b"\r",b"\n").split(b"\n")
+	i=0
+	o=[0 for _ in range(0,(FONT_MAX_CHAR+1)*2)]
+	while (i<len(dt)):
+		if (dt[i][:9]==b"STARTCHAR"):
+			i+=1
+			id_=-1
+			j=-1
+			while (dt[i]!=b"ENDCHAR"):
+				if (dt[i][:8]==b"ENCODING"):
+					id_=int(dt[i][8:].strip())
+					if (id_>FONT_MAX_CHAR):
+						while (dt[i]!=b"ENDCHAR"):
+							i+=1
+						break
+				elif (dt[i][:6]==b"BITMAP"):
+					j=0
+				elif (j!=-1):
+					o[id_*2+j//8]|=int(bin(int(dt[i],16))[2:].rjust(8,"0")[::-1],2)<<(8*(j%8))
+					j+=1
+				i+=1
+		i+=1
+	with open(f"rsrc/include/{FONT_OUT_NAME}.h","w") as f:
+		f.write(f"#ifndef __{FONT_OUT_NAME.upper()}_H__\n#define __{FONT_OUT_NAME.upper()}_H__ 1\n#include <gfx/font.h>\n#include <stdint.h>\n\n\n\nextern const uint64_t {FONT_OUT_NAME.upper()}_DATA[];\n\n\n\nextern Font {FONT_OUT_NAME.upper()};\n\n\n\n#endif\n")
+	with open(f"rsrc/{FONT_OUT_NAME}.c","w") as f:
+		f.write(f"#include <gfx/font.h>\n#include <stdint.h>\n#include <{FONT_OUT_NAME}.h>\n\n\n\nconst uint64_t {FONT_OUT_NAME.upper()}_DATA[{(FONT_MAX_CHAR+1)*2}]={{\n\t{(','+chr(10)+chr(9)).join(['0x'+hex(e)[2:].rjust(16,'0') for e in o])}\n}};\n\n\n\nFont {FONT_OUT_NAME.upper()}={{\n\t{FONT_MAX_CHAR},\n\t{FONT_OUT_NAME.upper()}_DATA\n}};\n")
 src_fl=list(os.walk("src"))+list(os.walk("rsrc"))
 asm_d=[]
 fd=[]
@@ -399,3 +403,11 @@ os.remove("build/loader.efi")
 os.remove("build/kernel.elf")
 os.remove("build/libc.so")
 os.remove("build/tmp.img")
+print("Creating Virtual HDD...")
+if (subprocess.run(["qemu-img","create","-f","qcow2","build/hdd.qcow2","16G"]).returncode!=0):
+	quit()
+print("Starting QEMU...")
+try:
+	subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=1,cores=8,threads=1","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])
+except KeyboardInterrupt:
+	pass
