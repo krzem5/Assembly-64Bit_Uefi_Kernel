@@ -106,7 +106,7 @@ for r,_,fl in src_fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
 			with open(r+f,"rb") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("docs/raw/"+(r+f).replace("/","$")+".md")}
+			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$")+".md")}
 			for k in dt.split(b"\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -152,7 +152,7 @@ for r,_,fl in src_fl:
 		elif (f[-4:]==".asm"):
 			with open(r+f,"r") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("docs/raw/"+(r+f).replace("/","$")+".md")}
+			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$")+".md")}
 			for k in dt.split("\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -206,7 +206,7 @@ for k,v in dt["dirs"].items():
 		for i,e in enumerate(k.split("/")):
 			if (i):
 				o+=b"/"
-			p+=(b"/" if len(p)>0 else b"")+bytes(e,"utf-8")
+			p+=(b"$" if len(p)>0 else b"")+bytes(e,"utf-8")
 			o+=b"<a class=\""+(b"root" if i==0 else b"dir")+(b" e" if i==k.count("/") else b"")+(b"\" href=\""+p+b".html\">" if i<k.count("/") else b"\">")+bytes(e,"utf-8")+b"</a>"
 		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"tree/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"src/docs/web/{k.replace('/','$').replace('.','_')}.html","src/docs/web"))
 for k,v in dt["files"].items():
@@ -216,6 +216,6 @@ for k,v in dt["files"].items():
 		for i,e in enumerate(k.split("/")):
 			if (i):
 				o+=b"/"
-			p+=(b"/" if len(p)>0 else b"")+bytes(e,"utf-8")
+			p+=(b"$" if len(p)>0 else b"")+bytes(e,"utf-8")
 			o+=b"<a class=\""+((b"root" if i==0 else b"dir") if i<k.count("/") else bytes(k.split(".")[-1],"utf-8")+b" e")+(b"\" href=\""+p+b".html\">" if i<k.count("/") else b"\">")+bytes(e,"utf-8")+b"</a>"
 		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"blob/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"src/docs/web/{k.replace('/','$').replace('.','_')}.html","src/docs/web"))

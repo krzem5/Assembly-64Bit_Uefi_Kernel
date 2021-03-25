@@ -1053,6 +1053,6 @@ def minify_html(html,fp,fp_b):
 		css_t[0]=("__text__",css_o)
 		css_s=f"{sl} -> {len(css_o)} (-{round(10000-10000*len(css_o)/sl)/100}%)"
 	print(f"  Writing HTML ({ttc} tag{('s' if ttc!=1 else '')})...")
-	o=b"<!DOCTYPE html>"+_write_html(r,ntcm,js_om)
+	o=b"<!DOCTYPE html>\n"+_write_html(r,ntcm,js_om)
 	print(f"Minified HTML: {{\n  JS: {js_s}\n  CSS: {css_s}\n  HTML: {l} -> {len(o)} (-{round(10000-10000*len(o)/l)/100}%)\n}}")
 	return o
