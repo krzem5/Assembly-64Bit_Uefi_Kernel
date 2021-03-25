@@ -73,7 +73,6 @@ body {
 	border-right: 8px solid #040404;
 	user-select: none;
 	overflow: scroll;
-	margin: 0;
 }
 .left .file-view::-webkit-scrollbar {
 	width: 8px;
@@ -94,6 +93,7 @@ body {
 .left .file-view .view {
 	font-size: 17px;
 	padding: 4px 8px 4px 8px;
+	margin: 0;
 }
 .left .file-view .view .vl {
 	border-left: 0.9px dotted #373737;
