@@ -190,19 +190,17 @@ for k,v in sorted(f_dt.items(),key=lambda e:e[0]):
 	dt["total"]["loc"]+=v["loc"]
 	dt["total"]["sloc"]+=v["sloc"]
 	dt["files"][k]={"type":v["type"],"size":v["size"],"loc":v["loc"],"sloc":v["sloc"],"refs":sorted(v["refs"]),"refs_far":sorted(v["refs_far"]),"desc":v["desc"]}
-if (not os.path.exists("build")):
-	os.mkdir("build")
-if (not os.path.exists("build/docs")):
-	os.mkdir("build/docs")
-for k in os.listdir("build/docs"):
-	os.remove(f"build/docs/{k}")
+if (not os.path.exists("docs")):
+	os.mkdir("docs")
+for k in os.listdir("docs"):
+	os.remove(f"docs/{k}")
 ft=_write_f_tree(dt["files"])
-with open("build/docs/index.html","wb") as wf,open("docs/web/index.html","rb") as rf:
-	wf.write(minify.minify_html(rf.read().replace(b"$$__FILE_TREE__$$",ft),"docs/web/index.html","docs/web"))
-with open("docs/web/file_template.html","rb") as f:
+with open("docs/index.html","wb") as wf,open("src/docs/web/index.html","rb") as rf:
+	wf.write(minify.minify_html(rf.read().replace(b"$$__FILE_TREE__$$",ft),"src/docs/web/index.html","src/docs/web"))
+with open("src/docs/web/file_template.html","rb") as f:
 	ft_dt=f.read().replace(b"$$__FILE_TREE__$$",ft)
 for k,v in dt["dirs"].items():
-	with open(f"build/docs/{k.replace('/','$').replace('.','_')}.html","wb") as wf:
+	with open(f"docs/{k.replace('/','$').replace('.','_')}.html","wb") as wf:
 		o=b""
 		p=b""
 		for i,e in enumerate(k.split("/")):
@@ -210,9 +208,9 @@ for k,v in dt["dirs"].items():
 				o+=b"/"
 			p+=(b"/" if len(p)>0 else b"")+bytes(e,"utf-8")
 			o+=b"<a class=\""+(b"root" if i==0 else b"dir")+(b" e" if i==k.count("/") else b"")+(b"\" href=\""+p+b".html\">" if i<k.count("/") else b"\">")+bytes(e,"utf-8")+b"</a>"
-		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"tree/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"docs/web/{k.replace('/','$').replace('.','_')}.html","docs/web"))
+		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"tree/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"src/docs/web/{k.replace('/','$').replace('.','_')}.html","src/docs/web"))
 for k,v in dt["files"].items():
-	with open(f"build/docs/{k.replace('/','$').replace('.','_')}.html","wb") as wf:
+	with open(f"docs/{k.replace('/','$').replace('.','_')}.html","wb") as wf:
 		o=b""
 		p=b""
 		for i,e in enumerate(k.split("/")):
@@ -220,4 +218,4 @@ for k,v in dt["files"].items():
 				o+=b"/"
 			p+=(b"/" if len(p)>0 else b"")+bytes(e,"utf-8")
 			o+=b"<a class=\""+((b"root" if i==0 else b"dir") if i<k.count("/") else bytes(k.split(".")[-1],"utf-8")+b" e")+(b"\" href=\""+p+b".html\">" if i<k.count("/") else b"\">")+bytes(e,"utf-8")+b"</a>"
-		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"blob/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"docs/web/{k.replace('/','$').replace('.','_')}.html","docs/web"))
+		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"blob/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"src/docs/web/{k.replace('/','$').replace('.','_')}.html","src/docs/web"))
