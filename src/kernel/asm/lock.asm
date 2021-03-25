@@ -1,11 +1,11 @@
 bits 64
-global asm_mutex_acquire
-global asm_mutex_release
+global asm_lock_acquire
+global asm_lock_release
 extern scheduler_yield
 
 
 
-asm_mutex_acquire:
+asm_lock_acquire:
 	xor rax, rax
 	mov dl, 1
 	jmp ._start
@@ -21,6 +21,6 @@ asm_mutex_acquire:
 
 
 
-asm_mutex_release:
+asm_lock_release:
 	mov byte [rcx], 0
 	ret

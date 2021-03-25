@@ -14,7 +14,7 @@
 #include <memory/paging.h>
 #include <memory/pm.h>
 #include <memory/vm.h>
-#include <process/mutex.h>
+#include <process/lock.h>
 #include <process/process.h>
 #include <process/scheduler.h>
 #include <process/thread.h>
@@ -41,7 +41,7 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	pm_init(ka);
 	vm_after_pm_init(ka);
 	gfx_init(ka);
-	mutex_init();
+	lock_init();
 	console_init(ka);
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
