@@ -47,9 +47,12 @@ with open("exports.txt","rb") as f:
 
 
 def _render_md(fp):
-	print(fp)
-	if (not os.path.exists(fp)):
-		return "<span class=\"none\">No Description</span>"
+	md_fp="src/docs/raw/"+fp.replace("/","$").split(".")[0]+".md"
+	if (not os.path.exists(md_fp)):
+		with open(md_fp,"wb") as f:
+			f.write(b"# `"+bytes(fp.split("/")[-1],"utf-8")+b"`\n\n**No Description**\n")
+	with open(md_fp,"rb") as f:
+		return f.read()
 
 
 
@@ -60,11 +63,11 @@ def _write_f_tree(dt):
 			for j in range(0,i):
 				o+=b"<span class=\"vl\">  </span>"
 			tp=p+(b"$" if len(p)>0 else b"")+bytes(k,"utf-8")
-			o+=b"<a class=\""+(b"root" if i==0 else b"dir")+b"\" href=\""+tp+b".html\">"+bytes(k.replace(".","_"),"utf-8")+b"</a><span class=\"txt\">:</span>\n"+_rec(v,i+1,tp)
+			o+=b"<a class=\""+(b"root" if i==0 else b"dir")+b"\" href=\""+tp+b".html\">"+bytes(k.split(".")[0],"utf-8")+b"</a><span class=\"txt\">:</span>\n"+_rec(v,i+1,tp)
 		for k in d[1]:
 			for j in range(0,i):
 				o+=b"<span class=\"vl\">  </span>"
-			o+=b"<a class=\""+(b"c" if k[-1]=="c" else (b"h" if k[-1]=="h" else b"asm"))+b"\" href=\""+p+b"$"+bytes(k.replace(".","_"),"utf-8")+b".html\">"+bytes(k,"utf-8")+b"</a>\n"
+			o+=b"<a class=\""+(b"c" if k[-1]=="c" else (b"h" if k[-1]=="h" else b"asm"))+b"\" href=\""+p+b"$"+bytes(k.split(".")[0],"utf-8")+b".html\">"+bytes(k,"utf-8")+b"</a>\n"
 		return o
 	r=({},[])
 	for s in dt.keys():
@@ -106,7 +109,7 @@ for r,_,fl in src_fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
 			with open(r+f,"rb") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$").replace(".","_")+".md")}
+			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md(r+f)}
 			for k in dt.split(b"\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -152,7 +155,7 @@ for r,_,fl in src_fl:
 		elif (f[-4:]==".asm"):
 			with open(r+f,"r") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$").replace(".","_")+".md")}
+			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md(r+f)}
 			for k in dt.split("\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -181,7 +184,7 @@ for k,v in sorted(f_dt.items(),key=lambda e:e[0]):
 	for e in k.split("/")[:-1]:
 		p+=("/" if len(p) else "")+e
 		if (p not in dt["dirs"]):
-			dt["dirs"][p]={"files":0,"size":0,"loc":0,"sloc":0,"desc":_render_md("src/docs/raw/"+p.replace("/","$").replace(".","_")+".md")}
+			dt["dirs"][p]={"files":0,"size":0,"loc":0,"sloc":0,"desc":_render_md(p)}
 		dt["dirs"][p]["files"]+=1
 		dt["dirs"][p]["size"]+=v["size"]
 		dt["dirs"][p]["loc"]+=v["loc"]
@@ -196,11 +199,11 @@ for k in os.listdir("docs"):
 	os.remove(f"docs/{k}")
 ft=_write_f_tree(dt["files"])
 with open("docs/index.html","wb") as wf,open("src/docs/web/index.html","rb") as rf:
-	wf.write(minify.minify_html(rf.read().replace(b"$$__FILE_TREE__$$",ft),"src/docs/web/index.html","src/docs/web"))
+	wf.write(minify.minify_html(rf.read().replace(b"$$__FILE_TREE__$$",ft).replace(b"$$__BASE_URL__$$",GITHUB_BASE_LINK),"src/docs/web/index.html","src/docs/web"))
 with open("src/docs/web/file_template.html","rb") as f:
-	ft_dt=f.read().replace(b"$$__FILE_TREE__$$",ft)
+	ft_dt=f.read().replace(b"$$__FILE_TREE__$$",ft).replace(b"$$__BASE_URL__$$",GITHUB_BASE_LINK)
 for k,v in dt["dirs"].items():
-	with open(f"docs/{k.replace('/','$').replace('.','_')}.html","wb") as wf:
+	with open(f"docs/{k.replace('/','$')}.html","wb") as wf:
 		o=b""
 		p=b""
 		for i,e in enumerate(k.split("/")):
@@ -208,9 +211,9 @@ for k,v in dt["dirs"].items():
 				o+=b"/"
 			p+=(b"$" if len(p)>0 else b"")+bytes(e,"utf-8")
 			o+=b"<a class=\""+(b"root" if i==0 else b"dir")+(b" e" if i==k.count("/") else b"")+(b"\" href=\""+p+b".html\">" if i<k.count("/") else b"\">")+bytes(e,"utf-8")+b"</a>"
-		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"tree/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"src/docs/web/{k.replace('/','$').replace('.','_')}.html","src/docs/web"))
+		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"tree/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o).replace(b"$$__DESC__$$",v["desc"]),f"src/docs/web/{k.replace('/','$')}.html","src/docs/web"))
 for k,v in dt["files"].items():
-	with open(f"docs/{k.replace('/','$').replace('.','_')}.html","wb") as wf:
+	with open(f"docs/{k.replace('/','$').split('.')[0]}.html","wb") as wf:
 		o=b""
 		p=b""
 		for i,e in enumerate(k.split("/")):
@@ -218,4 +221,4 @@ for k,v in dt["files"].items():
 				o+=b"/"
 			p+=(b"$" if len(p)>0 else b"")+bytes(e,"utf-8")
 			o+=b"<a class=\""+((b"root" if i==0 else b"dir") if i<k.count("/") else bytes(k.split(".")[-1],"utf-8")+b" e")+(b"\" href=\""+p+b".html\">" if i<k.count("/") else b"\">")+bytes(e,"utf-8")+b"</a>"
-		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"blob/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o),f"src/docs/web/{k.replace('/','$').replace('.','_')}.html","src/docs/web"))
+		wf.write(minify.minify_html(ft_dt.replace(b"$$__GH_LINK__$$",GITHUB_BASE_LINK+b"blob/main/"+bytes(k,"utf-8")).replace(b"$$__PATH__$$",o).replace(b"$$__DESC__$$",v["desc"]),f"src/docs/web/{k.replace('/','$').split('.')[0]}.html","src/docs/web"))

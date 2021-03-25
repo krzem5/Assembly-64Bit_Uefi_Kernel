@@ -860,6 +860,7 @@ def minify_html(html,fp,fp_b):
 	vfm={}
 	vfma={}
 	svg=0
+	n_pm={}
 	print("  Parsing HTML...")
 	while (i<len(html)):
 		m=HTML_TAG_REGEX.search(html[i:])
@@ -879,7 +880,8 @@ def minify_html(html,fp,fp_b):
 			svg-=1
 		e=m.group(3)
 		v=None
-		pm={}
+		pm={**n_pm}
+		n_pm.clear()
 		if (len(m.group(2))>0):
 			for k,v in re.findall(HTML_ATTRIBUTE_REGEX,m.group(2)):
 				if (svg==0 and (not (k[:5]==b"data-" and len(k)>5) and str(k,"utf-8") not in HTML_TAG_ATTRIBUTE_MAP or (HTML_TAG_ATTRIBUTE_MAP[str(k,"utf-8")]!=None and str(t_nm,"utf-8") not in HTML_TAG_ATTRIBUTE_MAP[str(k,"utf-8")]))):
@@ -931,6 +933,9 @@ def minify_html(html,fp,fp_b):
 				dt=rf.read()
 				l+=len(dt)
 				html=html[:i]+HTML_REMOVE_WHITEPSACE_REGEX.sub(br"",dt)+html[i+m.end(0):]
+				for k,v in pm.items():
+					if (k!=b"src"):
+						n_pm[k]=v
 				continue
 		elif (t_nm==b"svg"):
 			svg+=1
