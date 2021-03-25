@@ -1,3 +1,3 @@
 # `cpu_info.c`
 
-**No Description**
+*No Description*

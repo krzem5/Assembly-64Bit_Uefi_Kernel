@@ -1,3 +1,3 @@
 # `fatal_error.h`
 
-**No Description**
+*No Description*

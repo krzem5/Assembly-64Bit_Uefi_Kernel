@@ -50,7 +50,7 @@ def _render_md(fp):
 	md_fp="src/docs/raw/"+fp.replace("/","$").split(".")[0]+".md"
 	if (not os.path.exists(md_fp)):
 		with open(md_fp,"wb") as f:
-			f.write(b"# `"+bytes(fp.split("/")[-1],"utf-8")+b"`\n\n**No Description**\n")
+			f.write(b"# `"+bytes(fp.split("/")[-1],"utf-8")+b"`\n\n*No Description*\n")
 	with open(md_fp,"rb") as f:
 		return f.read()
 

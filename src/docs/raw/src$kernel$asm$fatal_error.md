@@ -1,3 +1,3 @@
 # `fatal_error.asm`
 
-**No Description**
+*No Description*

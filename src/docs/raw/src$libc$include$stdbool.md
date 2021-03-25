@@ -1,3 +1,3 @@
 # `stdbool.h`
 
-**No Description**
+*No Description*
