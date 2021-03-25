@@ -106,7 +106,7 @@ for r,_,fl in src_fl:
 		if (f[-2:]==".c" or f[-2:]==".h"):
 			with open(r+f,"rb") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$")+".md")}
+			f_dt[r+f]={"type":("Header" if f[-1]=="h" else "Source"),"size":len(dt.replace(b"\r\n",b"\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$").replace(".","_")+".md")}
 			for k in dt.split(b"\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -152,7 +152,7 @@ for r,_,fl in src_fl:
 		elif (f[-4:]==".asm"):
 			with open(r+f,"r") as rf:
 				dt=rf.read()
-			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$")+".md")}
+			f_dt[r+f]={"type":"Assembly Source","size":len(dt.replace("\r\n","\n")),"loc":0,"sloc":0,"refs":[],"refs_far":[],"desc":_render_md("src/docs/raw/"+(r+f).replace("/","$").replace(".","_")+".md")}
 			for k in dt.split("\n"):
 				f_dt[r+f]["loc"]+=1
 				if (len(k.strip())>0):
@@ -181,7 +181,7 @@ for k,v in sorted(f_dt.items(),key=lambda e:e[0]):
 	for e in k.split("/")[:-1]:
 		p+=("/" if len(p) else "")+e
 		if (p not in dt["dirs"]):
-			dt["dirs"][p]={"files":0,"size":0,"loc":0,"sloc":0,"desc":_render_md("docs/raw/"+p.replace("/","$")+".md")}
+			dt["dirs"][p]={"files":0,"size":0,"loc":0,"sloc":0,"desc":_render_md("src/docs/raw/"+p.replace("/","$").replace(".","_")+".md")}
 		dt["dirs"][p]["files"]+=1
 		dt["dirs"][p]["size"]+=v["size"]
 		dt["dirs"][p]["loc"]+=v["loc"]
