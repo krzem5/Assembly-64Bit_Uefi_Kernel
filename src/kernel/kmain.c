@@ -82,6 +82,5 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	create_thread(kernel_process,thread2,NULL);
 	console_log("Unmap: %p -> +%llu\n",__KERNEL_UNMAP_START__,__KERNEL_UNMAP_END__-__KERNEL_UNMAP_START__);
 	console_ok("Starting Scheduler...\n");
-	for (;;);
 	scheduler_start();
 }
