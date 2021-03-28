@@ -56,6 +56,7 @@ _asm_isr_h_call:
 
 
 
+section .unmap
 asm_apic_setup:
 	cmp dword [rcx + (__C_APIC_LVT_TIMER_REGISER__ * __C_SIZEOF_UINT32_T__)], (__C_APIC_SPURIOUS_INTERRUPT__ | __C_APIC_SVR_ENABLE__)
 	je ._end
@@ -89,6 +90,7 @@ asm_apic_setup:
 
 
 
+section .text
 asm_apic_spurious_int:
 	iretq
 

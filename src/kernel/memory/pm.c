@@ -19,7 +19,7 @@ PageArrayData* _pg_dt;
 
 
 
-void KERNEL_CALL pm_init(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pm_init(KernelArgs* ka){
 	uint64_t sz=((((KERNEL_MEM_MAP_GET_BASE(ka->mmap[ka->mmap_l-1].b)+ka->mmap[ka->mmap_l-1].l-1+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)+sizeof(PageData)*BITS_IN_BYTE-1)/(sizeof(PageData)*BITS_IN_BYTE)*sizeof(PageData)+sizeof(PageArrayData)+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
 	_pg_dt=(PageArrayData*)(void*)vm_current_top();
 	while (sz){

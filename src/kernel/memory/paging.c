@@ -27,7 +27,7 @@ uint64_t _pg_va_to_pa;
 
 
 
-void KERNEL_CALL paging_init(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD paging_init(KernelArgs* ka){
 	_pg_pml4=ka->pml4;
 	_pg_t_pg=ka->t_pg;
 	_pg_u_pg=ka->u_pg;

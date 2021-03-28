@@ -7,6 +7,8 @@ import re
 GITHUB_BASE_LINK=b"https://github.com/Krzem5/Assembly-64Bit_Uefi_Kernel/"
 INCLUDE_FILE_REGEX=re.compile(br"^\s*#\s*include\s*<([^>]*?)>$",re.M)
 UNQUOTED_JS_KEY=re.compile(r"^[a-zA-Z0-9_]+$")
+MARKDOWN_EMPTY_LINE_REGEX=re.compile(br"^[ \t]+$",re.M)
+MARKDOWN_TOKEN_REGEX={"newline":re.compile(br"\n+"),"break":re.compile(br" {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})\n+"),"code":re.compile(br"( {0,3})(`{3,}|~{3,})([^`\n]*)\n(?:|([\s\S]*?)\n)(?: {0,3}\2[~`]* *\n+|$)"),"indent_code":re.compile(br"\n*(?:(?: {4}| *\t)[^\n]+\n*)+"),"block_quote":re.compile(br"(?: {0,3}>[^\n]*\n)+"),"list":re.compile(br"( {0,3})([\*\+-]|\d{1,9}[.)])(?:[ \t]*|[ \t][^\n]+)\n+"),"head":re.compile(br" {0,3}(#{1,6})(?!#+)(?: *\n+|\s+([^\n]*?)(?:\n+|\s+?#+\s*\n+))")}
 REQUIRED_STRUCTURE_OFFSETS={}
 REQUIRED_STRUCTURE_SIZE=[]
 REQUIRED_DEFINITIONS=[]
@@ -52,7 +54,7 @@ def _render_md(fp):
 		with open(md_fp,"wb") as f:
 			f.write(b"# `"+bytes(fp.split("/")[-1],"utf-8")+b"`\n\n*No Description*\n")
 	with open(md_fp,"rb") as f:
-		return f.read()
+		return MARKDOWN_EMPTY_LINE_REGEX.sub(br"",f.read().replace(b"\r\n",b"\n").rstrip()+b"\n")
 
 
 

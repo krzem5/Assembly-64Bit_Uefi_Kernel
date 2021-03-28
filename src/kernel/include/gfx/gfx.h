@@ -15,7 +15,7 @@ typedef uint32_t color_t;
 
 
 
-void KERNEL_CALL gfx_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD gfx_init(KernelArgs* ka);
 
 
 

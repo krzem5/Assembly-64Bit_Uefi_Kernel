@@ -5,7 +5,7 @@
 
 #define OS_VERSION 1
 #define KERNEL_CALL __attribute__((ms_abi))
-#define KERNEL_NO_RETURN __attribute__((__noreturn__))
+#define KERNEL_UNMAP_AFTER_LOAD __attribute__((section(".unmap")))
 
 
 

@@ -56,7 +56,7 @@ void KERNEL_CALL _handle_isr(registers_t* r){
 
 
 
-void KERNEL_CALL setup_isr(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_isr(void){
 	set_idt_entry(ISR_DIVIDE_BY_ZERO_ERROR,asm_isr0,0x08,0x8e);
 	set_idt_entry(ISR_DEBUG,asm_isr1,0x08,0x8e);
 	set_idt_entry(ISR_NON_MASKABLE_INTERRUPT,asm_isr2,0x08,0x8e);

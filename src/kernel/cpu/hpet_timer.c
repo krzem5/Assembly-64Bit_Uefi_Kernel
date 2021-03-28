@@ -30,7 +30,7 @@ void _hpet_timer_irq_cb(registers_t* r){
 
 
 
-void KERNEL_CALL hpet_timer_init(uint64_t b){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD hpet_timer_init(uint64_t b){
 	console_log("HPET Base Pointer: %p\n",b);
 	_tm_ptr=(uint64_t*)(void*)b;
 	*(_tm_ptr+2)&=~3;

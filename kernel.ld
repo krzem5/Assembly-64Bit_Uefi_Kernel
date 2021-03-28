@@ -5,13 +5,18 @@ SECTIONS{
     .text : AT(ADDR(.text) - ___KERNEL_BASE_VA__) {
         *(.entry)
         *(.text .text*)
-        *(.rodata .rodata* .rdata .rdata*)
-        *(.ap_startup)
+        *(.rdata .rdata* .rodata .rodata*)
     }
-    .data ALIGN (0x1000) : AT(ADDR(.data) - ___KERNEL_BASE_VA__) {
-        *(.data .data*)
+    .data ALIGN (16) : AT(ADDR(.data) - ___KERNEL_BASE_VA__) {
+        *(.data .data* .pdata .xdata)
     }
-    .bss ALIGN (0x1000) : AT(ADDR(.bss) - ___KERNEL_BASE_VA__) {
+    .bss ALIGN (16) : AT(ADDR(.bss) - ___KERNEL_BASE_VA__) {
         *(.bss .bss*)
+    }
+    .text_unmap ALIGN(16) : AT(ADDR(.text_unmap) - ___KERNEL_BASE_VA__){
+        ___KERNEL_UNMAP_START__ = .;
+        *(.unmap)
+        . = ALIGN(8);
+        ___KERNEL_UNMAP_END__ = .;
     }
 }

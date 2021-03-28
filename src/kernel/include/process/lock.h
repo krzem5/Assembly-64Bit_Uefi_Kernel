@@ -17,7 +17,7 @@ extern void KERNEL_CALL asm_lock_release(lock_t s);
 
 
 
-void KERNEL_CALL lock_init(void);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD lock_init(void);
 
 
 

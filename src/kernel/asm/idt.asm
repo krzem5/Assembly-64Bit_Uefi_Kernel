@@ -4,6 +4,7 @@ extern idt
 
 
 
+section .unmap
 asm_setup_idt:
 	push rdi
 	xor rax, rax

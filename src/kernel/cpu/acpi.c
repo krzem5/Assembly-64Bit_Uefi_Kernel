@@ -61,7 +61,7 @@ acpi_data_t* _dt_ptr;
 
 
 
-void KERNEL_CALL acpi_init(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_init(KernelArgs* ka){
 	console_log("ACPI Pointers: APIC = %p, FADT = %p, HPET = %p\n",ka->apic,ka->fadt,ka->hpet);
 	struct _ACPI_APIC* apic=(struct _ACPI_APIC*)ka->apic;
 	uint32_t i=0;
@@ -144,12 +144,12 @@ void KERNEL_CALL acpi_init(KernelArgs* ka){
 
 
 
-acpi_data_t* KERNEL_CALL acpi_get_data(void){
+acpi_data_t* KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_get_data(void){
 	return _dt_ptr;
 }
 
 
 
-void KERNEL_CALL acpi_free_data(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_free_data(void){
 	console_warn("Not Implemented!\n");
 }

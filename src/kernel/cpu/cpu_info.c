@@ -9,7 +9,7 @@ cpu_info_t cpu_info_data;
 
 
 
-void KERNEL_CALL cpu_info_init(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_info_init(void){
 	cpuid_t dt;
 	asm_cpuid(0,&dt);
 	cpu_info_data.mx=dt.eax;

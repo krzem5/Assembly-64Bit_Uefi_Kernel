@@ -23,7 +23,7 @@ uint32_t _nsi=0;
 
 
 
-void KERNEL_CALL lock_init(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD lock_init(void){
 	sl=(lock_t)(void*)vm_commit(LOCK_4KB_PAGES_COUNT);
 	for (uint32_t i=0;i<LOCK_COUNT;i++){
 		*(sl+i)=UINT8_MAX;

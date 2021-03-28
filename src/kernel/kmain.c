@@ -35,7 +35,7 @@ void KERNEL_CALL thread2(void* ta){
 
 
 
-void KERNEL_CALL kmain(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	paging_init(ka);
 	vm_init(ka);
 	pm_init(ka);
@@ -80,6 +80,8 @@ void KERNEL_CALL kmain(KernelArgs* ka){
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
+	console_log("Unmap: %p -> +%llu\n",__KERNEL_UNMAP_START__,__KERNEL_UNMAP_END__-__KERNEL_UNMAP_START__);
 	console_ok("Starting Scheduler...\n");
+	for (;;);
 	scheduler_start();
 }

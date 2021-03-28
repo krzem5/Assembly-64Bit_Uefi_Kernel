@@ -31,7 +31,7 @@
 
 
 
-void KERNEL_CALL paging_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD paging_init(KernelArgs* ka);
 
 
 

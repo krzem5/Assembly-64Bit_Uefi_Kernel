@@ -24,7 +24,7 @@ volatile uint32_t _cpu_ap_c=1;
 
 
 
-void KERNEL_CALL cpu_init(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_init(void){
 	acpi_data_t* dt=acpi_get_data();
 	console_log("CPU Count: %u\n",dt->cpu_c);
 	_cpu_dt=(cpu_t*)(void*)vm_commit((sizeof(cpu_t)*dt->cpu_c+CPU_INIT_STACK_SIZE*(dt->cpu_c-1)+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);

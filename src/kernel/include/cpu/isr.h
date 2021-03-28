@@ -177,7 +177,7 @@ void KERNEL_CALL _handle_isr(registers_t* r);
 
 
 
-void KERNEL_CALL setup_isr(void);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_isr(void);
 
 
 

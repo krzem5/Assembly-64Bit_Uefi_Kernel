@@ -24,11 +24,11 @@ extern uint64_t KERNEL_CALL asm_get_cr2(void);
 
 
 
-void KERNEL_CALL vm_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_init(KernelArgs* ka);
 
 
 
-void KERNEL_CALL vm_after_pm_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_after_pm_init(KernelArgs* ka);
 
 
 

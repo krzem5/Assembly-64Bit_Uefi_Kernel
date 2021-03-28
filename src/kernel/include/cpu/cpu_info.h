@@ -90,7 +90,7 @@ extern void KERNEL_CALL asm_cpuid(uint32_t t,cpuid_t* o);
 
 
 
-void KERNEL_CALL cpu_info_init(void);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_info_init(void);
 
 
 

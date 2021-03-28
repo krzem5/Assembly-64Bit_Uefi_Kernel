@@ -5,6 +5,7 @@ extern asm_apic_setup
 
 
 
+section .unmap
 asm_cpu_setup_data:
 	mov r8, rcx
 	mov rcx, __C_MSR_APIC_BASE__
@@ -29,6 +30,7 @@ asm_cpu_setup_data:
 
 
 
+section .text
 asm_current_cpu:
 	mov rax, qword [gs:__C_CPU_STRUCT_S_OFFSET__]
 	ret

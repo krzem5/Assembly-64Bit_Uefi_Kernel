@@ -1,4 +1,3 @@
-section .ap_startup
 bits 16
 default rel
 global asm_ap_startup
@@ -12,6 +11,7 @@ extern _cpu_ap_c
 
 
 
+section .unmap
 asm_ap_startup:
 	cli
 	cld
@@ -96,14 +96,14 @@ default abs
 
 
 
+align 8
 asm_ap_startup_len equ ($ - asm_ap_startup)
-%if asm_ap_startup_len > 4096
+%if asm_ap_startup_len > __C_PAGE_4KB_SIZE__
 %error AP Startup Code too long!
 %endif
 
 
 
-section .text
 global asm_init_ap_startup_code
 global asm_setup_ap_startup_vars
 
@@ -159,9 +159,9 @@ asm_init_ap_startup_code:
 	mov rdi, __C_LOW_MEM_AP_PML4_ADDR__
 	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
 	add rdi, __C_PAGE_4KB_SIZE__
-	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__*2) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
+	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__ * 2) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
 	add rdi, __C_PAGE_4KB_SIZE__
-	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__*3) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
+	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__ * 3) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
 	add rdi, (__C_PAGE_4KB_SIZE__ + (__C_LOW_MEM_AP_INIT_ADDR__ / __C_PAGE_4KB_SIZE__) * 8)
 	mov qword [rdi], (__C_LOW_MEM_AP_INIT_ADDR__ | __C_PAGE_READ_WRITE__ | __C_PAGE_PRESENT__)
 	pop rsi

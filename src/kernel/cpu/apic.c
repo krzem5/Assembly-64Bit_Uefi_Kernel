@@ -44,7 +44,7 @@ void KERNEL_CALL _handle_apic_int(apic_interrupt_registers_t* r){
 
 
 
-void KERNEL_CALL apic_init(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD apic_init(void){
 	set_idt_entry(APIC_SPURIOUS_INTERRUPT,asm_apic_spurious_int,0x08,0x8e);
 	set_idt_entry(APIC_TIMER_INTERRUPT,asm_apic_timer_int,0x08,0x8e);
 	set_idt_entry(APIC_LINT0_INTERRUPT,asm_apic_lint0_int,0x08,0x8e);

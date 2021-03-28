@@ -27,7 +27,7 @@ void KERNEL_CALL _handle_irq(registers_t* r){
 
 
 
-void KERNEL_CALL setup_irq(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_irq(void){
 	port_out(0x20,0x11);
 	port_out(0xa0,0x11);
 	port_out(0x21,0x20);

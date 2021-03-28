@@ -16,13 +16,13 @@ uint8_t scheduler_ready=0;
 
 
 
-void KERNEL_CALL scheduler_init(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD scheduler_init(void){
 
 }
 
 
 
-void KERNEL_CALL scheduler_start(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD scheduler_start(void){
 	scheduler_ready=1;
 	cpu_t* cpu=asm_current_cpu();
 	cpu->l_s_tm=hpet_timer_get_us();
