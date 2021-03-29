@@ -27,7 +27,7 @@ asm_ap_startup:
 	mov cr4, eax
 	mov eax, __C_LOW_MEM_AP_PML4_ADDR__
 	mov cr3, eax
-	mov ecx, 0xc0000080
+	mov ecx, __C_MSR_EFER__
 	rdmsr
 	bts eax, 8
 	wrmsr

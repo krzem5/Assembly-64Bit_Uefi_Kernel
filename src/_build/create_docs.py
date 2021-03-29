@@ -13,7 +13,7 @@ REQUIRED_STRUCTURE_OFFSETS={}
 REQUIRED_STRUCTURE_SIZE=[]
 REQUIRED_DEFINITIONS=[]
 REQUIRED_TYPE_SIZE=[]
-with open("exports.txt","rb") as f:
+with open("src/_build/exports.txt","rb") as f:
 	c=None
 	c_s=None
 	c_s_i=None

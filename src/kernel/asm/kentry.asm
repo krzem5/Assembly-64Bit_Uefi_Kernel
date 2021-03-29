@@ -25,14 +25,13 @@ _start:
 	mov rcx, r8
 	add rcx, (__C_PAGE_4KB_SIZE__ - 1)
 	shr rcx, __C_PAGE_4KB_POWER_OF_2__
-	shl rcx, __C_PAGE_4KB_POWER_OF_2__
 	mov rdx, r9
 	add rdx, (__C_PAGE_4KB_SIZE__ - 1)
 	shr rdx, __C_PAGE_4KB_POWER_OF_2__
-	shl rdx, __C_PAGE_4KB_POWER_OF_2__
 	sub rdx, rcx
-	shr rdx, __C_PAGE_4KB_POWER_OF_2__
+	shl rcx, __C_PAGE_4KB_POWER_OF_2__
 	call vm_release
+	mov byte [0xffffffffffffffff], 1
 	sti
 ._loop:
 	hlt

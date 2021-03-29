@@ -17,7 +17,7 @@ SIZEOF_UINT8_T=1
 SIZEOF_UINT16_T=2
 SIZEOF_UINT32_T=4
 SIZEOF_UINT64_T=8
-with open("exports.txt","rb") as f:
+with open("src/_build/exports.txt","rb") as f:
 	c=None
 	c_s=None
 	c_s_i=None
@@ -386,10 +386,10 @@ print(f"Linking EFI OS Loader: {', '.join(e_fl)}")
 if (subprocess.run(["bash","-c",f"ld -nostdlib -znocombreloc -fshort-wchar -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib /usr/lib/crt0-efi-x86_64.o {' '.join([e.replace('$',chr(92)+'$') for e in e_fl])} -o build/loader.efi -lefi -lgnuefi"]).returncode==0 and subprocess.run(["objcopy","-j",".text","-j",".sdata","-j",".data","-j",".dynamic","-j",".dynsym","-j",".rel","-j",".rela","-j",".reloc","--target=efi-app-x86_64","build/loader.efi","build/loader.efi"]).returncode!=0 or subprocess.run(["strip","-s","build/loader.efi"]).returncode!=0):
 	quit()
 print(f"Linking Kernel: {', '.join(k_fl)}")
-if (subprocess.run(["ld","-melf_x86_64","-o","build/kernel.elf","-s","-T","kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
+if (subprocess.run(["ld","-melf_x86_64","-o","build/kernel.elf","-s","-T","src/_build/kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
 	quit()
 print(f"Linking Debug Kernel: {', '.join(k_fl)}")
-if (subprocess.run(["ld","-melf_x86_64","-o","build/dbg_kernel.elf","-T","kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
+if (subprocess.run(["ld","-melf_x86_64","-o","build/dbg_kernel.elf","-T","src/_build/kernel.ld","--oformat","elf64-x86-64"]+k_fl).returncode!=0):
 	quit()
 print(f"Linking LibC: {', '.join(l_fl)}")
 if (subprocess.run(["ld","-melf_x86_64","-o","build/libc.so","-s","-shared","-flinker-output=pie","--oformat","elf64-x86-64"]+l_fl).returncode!=0):
