@@ -104,8 +104,8 @@ asm_ap_startup_len equ ($ - asm_ap_startup)
 
 
 
-global asm_init_ap_startup_code
-global asm_setup_ap_startup_vars
+global asm_setup_ap_startup_code
+global asm_setup_ap_startup_data
 
 
 
@@ -128,13 +128,19 @@ _asm_ap_startup_kernel:
 	call asm_apic_setup
 	lidt [idt]
 	call asm_setup_gdt
+	jmp _asm_ap_startup_kernel_wait
+
+
+
+section .text
+_asm_ap_startup_kernel_wait:
 	inc dword [_cpu_ap_c]
 	jmp ._start_w
-._wait:
+._w_loop:
 	pause
 ._start_w:
 	cmp byte [scheduler_ready], 1
-	jne ._wait
+	jne ._w_loop
 	call scheduler_start
 	sti
 ._loop:
@@ -143,26 +149,27 @@ _asm_ap_startup_kernel:
 
 
 
-asm_init_ap_startup_code:
+section .unmap
+asm_setup_ap_startup_code:
 	push rdi
 	push rsi
-	mov r8, rcx
+	mov rdx, rcx
 	mov rdi, __C_LOW_MEM_AP_INIT_ADDR__
 	mov rsi, asm_ap_startup
-	mov rcx, ((asm_ap_startup_len + 7) / 8)
+	mov rcx, ((asm_ap_startup_len + __C_SIZEOF_UINT64_T__ - 1) / __C_SIZEOF_UINT64_T__)
 	rep movsq
 	mov rdi, __C_LOW_MEM_AP_PML4_ADDR__
 	xor rax, rax
-	mov rcx, ((__C_PAGE_4KB_SIZE__ * 4) / 8)
+	mov rcx, ((__C_PAGE_4KB_SIZE__ * 4) / __C_SIZEOF_UINT64_T__)
 	rep stosq
-	mov qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (asm_ap_startup._init_pml4 - asm_ap_startup))], r8
+	mov qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (asm_ap_startup._init_pml4 - asm_ap_startup))], rdx
 	mov rdi, __C_LOW_MEM_AP_PML4_ADDR__
 	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
 	add rdi, __C_PAGE_4KB_SIZE__
 	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__ * 2) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
 	add rdi, __C_PAGE_4KB_SIZE__
 	mov qword [rdi], ((__C_LOW_MEM_AP_PML4_ADDR__ + __C_PAGE_4KB_SIZE__ * 3) | __C_PAGE_DIR_READ_WRITE__ | __C_PAGE_DIR_PRESENT__)
-	add rdi, (__C_PAGE_4KB_SIZE__ + (__C_LOW_MEM_AP_INIT_ADDR__ / __C_PAGE_4KB_SIZE__) * 8)
+	add rdi, (__C_PAGE_4KB_SIZE__ + (__C_LOW_MEM_AP_INIT_ADDR__ / __C_PAGE_4KB_SIZE__) * __C_SIZEOF_UINT64_T__)
 	mov qword [rdi], (__C_LOW_MEM_AP_INIT_ADDR__ | __C_PAGE_READ_WRITE__ | __C_PAGE_PRESENT__)
 	pop rsi
 	pop rdi
@@ -170,6 +177,6 @@ asm_init_ap_startup_code:
 
 
 
-asm_setup_ap_startup_vars:
+asm_setup_ap_startup_data:
 	mov qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (asm_ap_startup._init_cpu_data - asm_ap_startup))], rcx
 	ret

@@ -35,7 +35,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_init(void){
 	console_log("BSP CPU ID: %hhu\nAPIC address: %p, APIC timer t/us: %lu\n",_cpu_dt->id,_cpu_dt->apic,_cpu_dt->apic_tpus);
 	vm_identity_map(LOW_MEM_AP_INIT_ADDR,5);
 	uint64_t pml4=paging_get_phys_pml4();
-	asm_init_ap_startup_code(pml4);
+	asm_setup_ap_startup_code(pml4);
 	cpu_t* ap=_cpu_dt+1;
 	uint64_t ap_s=(uint64_t)(void*)_cpu_dt+sizeof(cpu_t)*dt->cpu_c+CPU_INIT_STACK_SIZE;
 	uint32_t j=1;
@@ -49,7 +49,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_init(void){
 			ap->id=id;
 			ap->idx=j;
 			ap->rsp0=(void*)ap_s;
-			asm_setup_ap_startup_vars((uint64_t)(void*)ap);
+			asm_setup_ap_startup_data((uint64_t)(void*)ap);
 			for (uint8_t k=0;k<200;k++){
 				if (k%100){
 					apic_send_ipi(_cpu_dt->apic,IPI_LEVEL_ASSERT|IPI_DELIVERY_STARTUP,LOW_MEM_AP_INIT_ADDR>>PAGE_4KB_POWER_OF_2,id);

@@ -107,6 +107,8 @@ err=False
 for k in REQUIRED_TYPE_SIZE:
 	if (k==b"uint32_t"):
 		asm_d+=[f"-D__C_SIZEOF_UINT32_T__={SIZEOF_UINT32_T}"]
+	elif (k==b"uint64_t"):
+		asm_d+=[f"-D__C_SIZEOF_UINT64_T__={SIZEOF_UINT64_T}"]
 	else:
 		err=True
 		print(f"Unknown Size of Type '{str(k,'utf-8')}'!")

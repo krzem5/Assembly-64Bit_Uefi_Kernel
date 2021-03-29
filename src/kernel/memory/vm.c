@@ -122,3 +122,9 @@ void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c){
 		c--;
 	}
 }
+
+
+
+void KERNEL_CALL vm_release(vaddr_t va,uint64_t c){
+	console_warn("vm_release(%p, %llu)\n",va,c);
+}

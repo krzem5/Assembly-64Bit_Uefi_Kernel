@@ -80,7 +80,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
-	console_log("Unmap: %p -> +%llu\n",__KERNEL_UNMAP_START__,__KERNEL_UNMAP_END__-__KERNEL_UNMAP_START__);
+	console_log("Kernel Unmap Segments: %p -> +%llu (Pages: %p -> +%llu)\n",__KERNEL_UNMAP_START__,__KERNEL_UNMAP_END__-__KERNEL_UNMAP_START__,((__KERNEL_UNMAP_START__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)<<PAGE_4KB_POWER_OF_2,(((__KERNEL_UNMAP_END__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)<<PAGE_4KB_POWER_OF_2)-(((__KERNEL_UNMAP_START__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)<<PAGE_4KB_POWER_OF_2));
 	console_ok("Starting Scheduler...\n");
-	scheduler_start();
+	// scheduler_start();
 }

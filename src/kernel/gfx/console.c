@@ -29,7 +29,7 @@ lock_t _console_l;
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD _console_print_char(char c,color_t cl,Font f){
+void KERNEL_CALL _console_print_char(char c,color_t cl,Font f){
 	if (c=='\n'){
 		_console_x=0;
 		_console_y++;
@@ -78,7 +78,7 @@ void LIBC_CALL _console_vprintf_write_func(char c,void* ctx){
 
 
 
-void KERNEL_CALL console_init(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD console_init(KernelArgs* ka){
 	_console_w=ka->vmem_w/(8*SCALE);
 	_console_h=ka->vmem_h/(16*SCALE);
 	_console_bf=(uint32_t*)(void*)vm_commit((_console_w*_console_h*sizeof(uint32_t)+4095)>>12);
