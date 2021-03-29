@@ -1,7 +1,6 @@
 #include <shared.h>
 #include <cpu/fatal_error.h>
 #include <cpu/isr.h>
-#include <gfx/console.h>
 #include <kmain.h>
 #include <memory/paging.h>
 #include <memory/pm.h>
@@ -88,16 +87,6 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c){
 		c--;
 	}
 	return o;
-}
-
-
-
-void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c){
-	while (c){
-		paging_map_page(a,a);
-		a+=PAGE_4KB_SIZE;
-		c--;
-	}
 }
 
 

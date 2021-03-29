@@ -1,6 +1,5 @@
 #include <shared.h>
 #include <cpu/fatal_error.h>
-#include <gfx/console.h>
 #include <kmain.h>
 #include <memory/paging.h>
 #include <memory/pm.h>

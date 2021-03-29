@@ -51,4 +51,12 @@ void KERNEL_CALL paging_unmap_page(vaddr_t va);
 
 
 
+void KERNEL_CALL paging_identity_map(vaddr_t a,uint64_t c);
+
+
+
+void KERNEL_CALL paging_identity_unmap(vaddr_t a,uint64_t c);
+
+
+
 #endif

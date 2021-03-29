@@ -36,14 +36,6 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c);
 
 
 
-vaddr_t KERNEL_CALL vm_commit_2mb(uint64_t c);
-
-
-
-void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c);
-
-
-
 void KERNEL_CALL vm_release(vaddr_t va,uint64_t c);
 
 
