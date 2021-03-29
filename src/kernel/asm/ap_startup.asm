@@ -89,8 +89,8 @@ default abs
 	mov rax, qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (._init_pml4 - asm_ap_startup))]
 	mov cr3, rax
 	mov r8, qword [(__C_LOW_MEM_AP_INIT_ADDR__ + (._init_cpu_data - asm_ap_startup))]
-	mov rbp, qword [r8 + __C_CPU_STRUCT_RSP0_OFFSET__]
-	mov rsp, rbp
+	mov rsp, qword [r8 + __C_CPU_STRUCT_RSP0_OFFSET__]
+	mov rbp, rsp
 	mov rax, _asm_ap_startup_kernel
 	jmp rax
 

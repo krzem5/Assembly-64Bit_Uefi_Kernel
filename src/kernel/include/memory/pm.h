@@ -26,4 +26,8 @@ paddr_t KERNEL_CALL pm_get_free(void);
 
 
 
+void KERNEL_CALL pm_set_free(paddr_t pa);
+
+
+
 #endif

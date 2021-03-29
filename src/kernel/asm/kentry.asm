@@ -10,8 +10,8 @@ extern ___KERNEL_UNMAP_END__
 section .entry
 _start:
 	cli
-	mov rbp, qword [rcx + __C_KERNEL_ARGS_STRUCT_K_SP_OFFSET__]
-	mov rsp, rbp
+	mov rsp, qword [rcx + __C_KERNEL_ARGS_STRUCT_K_SP_OFFSET__]
+	mov rbp, rsp
 	call kmain
 	mov r8, ___KERNEL_UNMAP_START__
 	mov r9, ___KERNEL_UNMAP_END__
@@ -31,7 +31,6 @@ _start:
 	sub rdx, rcx
 	shl rcx, __C_PAGE_4KB_POWER_OF_2__
 	call vm_release
-	mov byte [0xffffffffffffffff], 1
 	sti
 ._loop:
 	hlt

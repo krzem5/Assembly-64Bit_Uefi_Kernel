@@ -35,11 +35,19 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD paging_init(KernelArgs* ka);
 
 
 
-void KERNEL_CALL paging_set_page(vaddr_t va,paddr_t pa);
+void KERNEL_CALL paging_map_page(vaddr_t va,paddr_t pa);
 
 
 
 paddr_t KERNEL_CALL paging_get_phys_pml4(void);
+
+
+
+paddr_t KERNEL_CALL paging_reverse_translate(vaddr_t va);
+
+
+
+void KERNEL_CALL paging_unmap_page(vaddr_t va);
 
 
 

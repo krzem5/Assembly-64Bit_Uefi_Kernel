@@ -28,10 +28,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_init(KernelArgs* ka);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_after_pm_init(KernelArgs* ka);
-
-
-
 vaddr_t KERNEL_CALL vm_reserve(uint64_t c);
 
 
@@ -41,14 +37,6 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c);
 
 
 vaddr_t KERNEL_CALL vm_commit_2mb(uint64_t c);
-
-
-
-vaddr_t KERNEL_CALL vm_current_top(void);
-
-
-
-vaddr_t KERNEL_CALL vm_get_top(void);
 
 
 
