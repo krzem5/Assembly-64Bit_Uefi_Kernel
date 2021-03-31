@@ -8,6 +8,7 @@
 #include <cpu/idt.h>
 #include <cpu/irq.h>
 #include <cpu/isr.h>
+#include <cpu/pci.h>
 #include <gfx/console.h>
 #include <gfx/gfx.h>
 #include <kmain.h>
@@ -61,6 +62,8 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Reading CPU Info...\n");
 	cpu_info_init();
+	console_log("Setting Up PCI...\n");
+	pci_init();
 	console_log("Parsing ACPI...\n");
 	acpi_init(ka);
 	console_log("Initialising APIC Interrupts...\n");

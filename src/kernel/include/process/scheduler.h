@@ -13,7 +13,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD scheduler_init(void);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD scheduler_start(void);
+void KERNEL_CALL scheduler_start(void);
 
 
 

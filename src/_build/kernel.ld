@@ -8,7 +8,7 @@ SECTIONS{
         *(.rdata .rdata* .rodata .rodata*)
     }
     .data ALIGN (16) : AT(ADDR(.data) - ___KERNEL_BASE_VA__) {
-        *(.data .data* .pdata .xdata)
+        *(.data .data* .pdata .pdata* .xdata .xdata*)
     }
     .bss ALIGN (16) : AT(ADDR(.bss) - ___KERNEL_BASE_VA__) {
         *(.bss .bss*)

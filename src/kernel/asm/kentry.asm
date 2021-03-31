@@ -31,6 +31,7 @@ _start:
 	sub rdx, rcx
 	shl rcx, __C_PAGE_4KB_POWER_OF_2__
 	call vm_release
+	mov byte [0xffffffffffffffff], 1
 	sti
 ._loop:
 	hlt
