@@ -5,101 +5,49 @@
 
 
 
-
-typedef struct __PCI_DEVICE_TYPE0{
-	uint32_t bar0;
-	uint32_t bar1;
-	uint32_t bar2;
-	uint32_t bar3;
-	uint32_t bar4;
-	uint32_t bar5;
-	uint16_t subsystem_vendor_id;
-	uint32_t cardbus_cis_pointer;
-	uint32_t expansion_rom_addr;
-	uint8_t capablities;
-	uint8_t interrupt_line;
-	uint8_t interrupt_pin;
-	uint8_t min_grant;
-	uint8_t max_latency;
-} pci_device_type0_t;
-
-
-
-typedef struct __PCI_DEVICE_TYPE1{
-	uint32_t bar0;
-	uint32_t bar1;
-	uint8_t primary_bus_number;
-	uint8_t	secondary_bus_number;
-	uint8_t subordinate_bus_number;
-	uint8_t second_latency_timer;
-	uint32_t io_base;
-	uint32_t io_limit;
-	uint16_t secondary_status;
-	uint16_t mem_base;
-	uint16_t mem_limit;
-	uint16_t prefetchable_mem_base;
-	uint16_t prefetchable_mem_limit;
-	uint64_t prefetchable_base;
-	uint8_t capablities;
-	uint32_t expansion_rom_addr;
-	uint8_t interrupt_line;
-	uint8_t interrupt_pin;
-	uint16_t bridge_control;
-} pci_device_type1_t;
-
-
-
-typedef struct __PCI_DEVICE_TYPE2{
-	uint32_t ex_ca_base_addr;
-	uint8_t capablities;
-	uint16_t secondary_status;
-	uint8_t	pci_bus_number;
-	uint8_t cb_number;
-	uint8_t subordinate_bus_number;
-	uint8_t cb_latency_timer;
-	uint32_t mem_base_addr0;
-	uint32_t mem_limit0;
-	uint32_t mem_base_addr1;
-	uint32_t mem_limit1;
-	uint32_t io_base_addr0;
-	uint32_t io_limit0;
-	uint32_t io_base_addr1;
-	uint32_t io_limit1;
-	uint8_t interrupt_line;
-	uint8_t interrupt_pin;
-	uint16_t bridge_control;
-	uint16_t subsystem_device_id;
-	uint16_t subsystem_vendor_id;
-	uint32_t legacy_base_addr;
-} pci_device_type2_t;
-
-
-
-typedef union __PCI_DEVICE_TYPE{
-	pci_device_type0_t t0;
-	pci_device_type1_t t1;
-	pci_device_type2_t t2;
-} pci_device_type_t;
+#define PCI_VENDOR_REGISTER 0
+#define PCI_STATUS_COMMAND_REGISTER 0x04
+#define PCI_ID_REGISTER 0x08
+#define PCI_MISC_REGISTER 0x0c
+#define PCI_BAR0_REGISTER 0x10
+#define PCI_BAR1_REGISTER 0x14
+#define PCI_BAR2_REGISTER 0x18
+#define PCI_BAR3_REGISTER 0x1c
+#define PCI_BAR4_REGISTER 0x20
+#define PCI_BAR5_REGISTER 0x24
+#define PCI_COMMAND_IO_SPACE 1
+#define PCI_COMMAND_MEMORY_SPACE 2
+#define PCI_COMMAND_MASTER 4
+#define PCI_COMMAND_SPECIAL_CYCLES 8
+#define PCI_COMMAND_MEMORY_WRITE_INVALIDATE 16
+#define PCI_COMMAND_VGA_PALETTE 32
+#define PCI_COMMAND_PARITY_ERROR 64
+#define PCI_COMMAND_SERR 256
+#define PCI_COMMAND_FAST_BACK_TO_BACK 512
+#define PCI_COMMAND_DISABLE_INTERRUPT 1024
+#define PCI_GET_STATUS(v) ((v)>>16)
+#define PCI_GET_COMMAND(v) ((v)&0xffff)
 
 
 
 typedef struct __PCI_DEVICE{
+	uint32_t port;
+	uint8_t bus;
+	uint8_t dev_func;
 	uint16_t vendor_id;
 	uint16_t device_id;
-	uint16_t command;
-	uint16_t status;
 	uint8_t revision;
 	uint8_t interface;
 	uint8_t subclass;
-	uint8_t class_;
+	uint8_t class_code;
 	uint8_t cache_line_size;
 	uint8_t latency_timer;
 	uint8_t type;
 	uint8_t bist;
-	const char* class_str;
+	const char* class_code_str;
 	const char* subclass_str;
 	const char* interface_str;
-	pci_device_type_t dt;
+	void* drv_dt;
 } pci_device_t;
 
 
@@ -112,6 +60,14 @@ typedef struct __PCI_DEVICE_LIST{
 
 
 extern pci_device_list_t pci_list;
+
+
+
+extern uint32_t KERNEL_CALL asm_pci_read(uint32_t p);
+
+
+
+extern void KERNEL_CALL asm_pci_write(uint32_t p,uint32_t v);
 
 
 

@@ -10,6 +10,11 @@ structures:
 		ebx
 		ecx
 		edx
+	__IDE_DEVICE_CHANNEL:
+		base
+		ctrl
+		bmide
+		int_
 	__IDT_ENTRY:
 		$$size$$
 	__IDT_TABLE:
