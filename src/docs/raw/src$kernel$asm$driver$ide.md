@@ -1,3 +1,0 @@
-# `ide.asm`
-
-*No Description*

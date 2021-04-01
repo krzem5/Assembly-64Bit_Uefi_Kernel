@@ -1,3 +1,0 @@
-# `thread.asm`
-
-*No Description*

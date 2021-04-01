@@ -5,7 +5,7 @@
 
 
 
-extern uint8_t KERNEL_CALL asm_port_in(uint16_t p);
+extern uint8_t KERNEL_CALL asm_port_in8(uint16_t p);
 
 
 
@@ -17,7 +17,7 @@ extern uint32_t KERNEL_CALL asm_port_in32(uint16_t p);
 
 
 
-extern void KERNEL_CALL asm_port_out(uint16_t p,uint8_t v);
+extern void KERNEL_CALL asm_port_out8(uint16_t p,uint8_t v);
 
 
 

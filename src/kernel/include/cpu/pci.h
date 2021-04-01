@@ -25,8 +25,6 @@
 #define PCI_COMMAND_SERR 256
 #define PCI_COMMAND_FAST_BACK_TO_BACK 512
 #define PCI_COMMAND_DISABLE_INTERRUPT 1024
-#define PCI_GET_STATUS(v) ((v)>>16)
-#define PCI_GET_COMMAND(v) ((v)&0xffff)
 
 
 
@@ -46,7 +44,6 @@ typedef struct __PCI_DEVICE{
 	uint8_t bist;
 	const char* class_code_str;
 	const char* subclass_str;
-	const char* interface_str;
 	void* drv_dt;
 } pci_device_t;
 

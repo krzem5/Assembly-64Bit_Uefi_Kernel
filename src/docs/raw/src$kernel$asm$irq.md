@@ -1,3 +1,0 @@
-# `irq.asm`
-
-*No Description*

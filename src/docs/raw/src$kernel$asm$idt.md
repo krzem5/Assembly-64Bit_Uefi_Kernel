@@ -1,3 +1,0 @@
-# `idt.asm`
-
-*No Description*

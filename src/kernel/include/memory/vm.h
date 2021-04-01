@@ -36,6 +36,10 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c);
 
 
 
+vaddr_t KERNEL_CALL vm_commit_fixed(paddr_t pa);
+
+
+
 void KERNEL_CALL vm_release(vaddr_t va,uint64_t c);
 
 

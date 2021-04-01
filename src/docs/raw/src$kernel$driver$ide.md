@@ -1,3 +1,0 @@
-# `ide.c`
-
-*No Description*

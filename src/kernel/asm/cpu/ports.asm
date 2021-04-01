@@ -1,15 +1,14 @@
 bits 64
-global asm_port_in
+global asm_port_in8
 global asm_port_in16
 global asm_port_in32
-global asm_port_out
+global asm_port_out8
 global asm_port_out16
 global asm_port_out32
 
 
 
-asm_port_in:
-	xor rax, rax
+asm_port_in8:
 	mov dx, cx
 	in al, dx
 	ret
@@ -17,7 +16,6 @@ asm_port_in:
 
 
 asm_port_in16:
-	xor rax, rax
 	mov dx, cx
 	in ax, dx
 	ret
@@ -25,14 +23,13 @@ asm_port_in16:
 
 
 asm_port_in32:
-	xor rax, rax
 	mov dx, cx
 	in eax, dx
 	ret
 
 
 
-asm_port_out:
+asm_port_out8:
 	mov al, dl
 	mov dx, cx
 	out dx, al

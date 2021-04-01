@@ -61,7 +61,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 					pci->bist=v>>24;
 					pci->class_code_str="-";
 					pci->subclass_str="-";
-					pci->interface_str="-";
 					if (!pci->class_code){
 						pci->class_code_str="Unclassified";
 						if (!pci->subclass){
@@ -77,31 +76,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 							pci->subclass_str="SCSI Bus Controller";
 						}
 						else if (pci->subclass==1){
-							pci->subclass_str="IDE Controller";
-							if (!pci->interface){
-								pci->interface_str="ISA Compatibility mode-only controller";
-							}
-							else if (pci->interface==5){
-								pci->interface_str="PCI native mode-only controller";
-							}
-							else if (pci->interface==10){
-								pci->interface_str="ISA Compatibility mode controller, supports both channels switched to PCI native mode";
-							}
-							else if (pci->interface==15){
-								pci->interface_str="PCI native mode controller, supports both channels switched to ISA compatibility mode";
-							}
-							else if (pci->interface==128){
-								pci->interface_str="ISA Compatibility mode-only controller, supports bus mastering";
-							}
-							else if (pci->interface==133){
-								pci->interface_str="PCI native mode-only controller, supports bus mastering";
-							}
-							else if (pci->interface==138){
-								pci->interface_str="ISA Compatibility mode controller, supports both channels switched to PCI native mode, supports bus mastering";
-							}
-							else if (pci->interface==143){
-								pci->interface_str="PCI native mode controller, supports both channels switched to ISA compatibility mode, supports bus mastering";
-							}
+							pci->subclass_str="ATA Controller";
 						}
 						else if (pci->subclass==2){
 							pci->subclass_str="Floppy Disk Controller";
@@ -114,42 +89,15 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						}
 						else if (pci->subclass==5){
 							pci->subclass_str="ATA Controller";
-							if (pci->interface==32){
-								pci->interface_str="Single DMA";
-							}
-							else if (pci->interface==48){
-								pci->interface_str="Chained DMA";
-							}
 						}
 						else if (pci->subclass==6){
 							pci->subclass_str="Serial ATA";
-							if (!pci->interface){
-								pci->interface_str="Vendor Specific Interface";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="AHCI 1.0";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="Serial Storage Bus";
-							}
 						}
 						else if (pci->subclass==7){
 							pci->subclass_str="Serial Attached SCSI";
-							if (!pci->interface){
-								pci->interface_str="SAS";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="Serial Storage Bus";
-							}
 						}
 						else if (pci->subclass==8){
 							pci->subclass_str="Non-Volatile Memory Controller";
-							if (pci->interface==1){
-								pci->interface_str="NVMHCI";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="NVM Express";
-							}
 						}
 						else if (pci->subclass==128){
 							pci->subclass_str="Other";
@@ -192,12 +140,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						pci->class_code_str="Display Controller";
 						if (!pci->subclass){
 							pci->subclass_str="VGA Compatible Controller";
-							if (!pci->interface){
-								pci->interface_str="VGA Controller";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="8514-Compatible Controller";
-							}
 						}
 						else if (pci->subclass==1){
 							pci->subclass_str="XGA Controller";
@@ -255,12 +197,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						}
 						else if (pci->subclass==4){
 							pci->subclass_str="PCI-to-PCI Bridge";
-							if (!pci->interface){
-								pci->interface_str="Normal Decode";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="Subtractive Decode";
-							}
 						}
 						else if (pci->subclass==5){
 							pci->subclass_str="PCMCIA Bridge";
@@ -273,21 +209,9 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						}
 						else if (pci->subclass==8){
 							pci->subclass_str="RACEway Bridge";
-							if (!pci->interface){
-								pci->interface_str="Transparent Mode";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="Endpoint Mode";
-							}
 						}
 						else if (pci->subclass==9){
 							pci->subclass_str="PCI-to-PCI Bridge";
-							if (pci->interface==64){
-								pci->interface_str="Semi-Transparent, Primary bus towards host CPU";
-							}
-							else if (pci->interface==128){
-								pci->interface_str="Semi-Transparent, Secondary bus towards host CPU";
-							}
 						}
 						else if (pci->subclass==10){
 							pci->subclass_str="InfiniBand-to-PCI Host Bridge";
@@ -300,66 +224,15 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						pci->class_code_str="Simple Communication Controller";
 						if (!pci->subclass){
 							pci->subclass_str="Serial Controller";
-							if (!pci->interface){
-								pci->interface_str="8250-Compatible (Generic XT)";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="16450-Compatible";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="16550-Compatible";
-							}
-							else if (pci->interface==3){
-								pci->interface_str="16650-Compatible";
-							}
-							else if (pci->interface==4){
-								pci->interface_str="16750-Compatible";
-							}
-							else if (pci->interface==5){
-								pci->interface_str="16850-Compatible";
-							}
-							else if (pci->interface==6){
-								pci->interface_str="16950-Compatible";
-							}
 						}
 						else if (pci->subclass==1){
 							pci->subclass_str="Parallel Controller";
-							if (!pci->interface){
-								pci->interface_str="Standard Parallel Port";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="Bi-Directional Parallel Port";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="ECP 1.X Compliant Parallel Port";
-							}
-							else if (pci->interface==3){
-								pci->interface_str="IEEE 1284 Controller";
-							}
-							else if (pci->interface==254){
-								pci->interface_str="IEEE 1284 Target Device";
-							}
 						}
 						else if (pci->subclass==2){
 							pci->subclass_str="Multiport Serial Controller";
 						}
 						else if (pci->subclass==3){
 							pci->subclass_str="Modem";
-							if (!pci->interface){
-								pci->interface_str="Generic Modem";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="Hayes 16450-Compatible Interface";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="Hayes 16550-Compatible Interface";
-							}
-							else if (pci->interface==3){
-								pci->interface_str="Hayes 16650-Compatible Interface";
-							}
-							else if (pci->interface==4){
-								pci->interface_str="Hayes 16750-Compatible Interface";
-							}
 						}
 						else if (pci->subclass==4){
 							pci->subclass_str="IEEE 488.1/2 (GPIB) Controller";
@@ -375,57 +248,15 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						pci->class_code_str="Base System Peripheral";
 						if (!pci->subclass){
 							pci->subclass_str="PIC";
-							if (!pci->interface){
-								pci->interface_str="Generic 8259-Compatible";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="ISA-Compatible";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="EISA-Compatible";
-							}
-							else if (pci->interface==16){
-								pci->interface_str="I/O APIC Interrupt Controller";
-							}
-							else if (pci->interface==32){
-								pci->interface_str="I/O(x) APIC Interrupt Controller";
-							}
 						}
 						else if (pci->subclass==1){
 							pci->subclass_str="DMA Controller";
-							if (!pci->interface){
-								pci->interface_str="Generic 8237-Compatible";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="ISA-Compatible";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="EISA-Compatible";
-							}
 						}
 						else if (pci->subclass==2){
 							pci->subclass_str="Timer";
-							if (!pci->interface){
-								pci->interface_str="Generic 8254-Compatible";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="ISA-Compatible";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="EISA-Compatible";
-							}
-							else if (pci->interface==3){
-								pci->interface_str="HPET";
-							}
 						}
 						else if (pci->subclass==3){
 							pci->subclass_str="RTC Controller";
-							if (!pci->interface){
-								pci->interface_str="Generic RTC";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="ISA-Compatible";
-							}
 						}
 						else if (pci->subclass==4){
 							pci->subclass_str="PCI Hot-Plug Controller";
@@ -456,12 +287,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						}
 						else if (pci->subclass==4){
 							pci->subclass_str="Gameport Controller";
-							if (!pci->interface){
-								pci->interface_str="Generic";
-							}
-							else if (pci->interface==16){
-								pci->interface_str="Extended";
-							}
 						}
 						else if (pci->subclass==128){
 							pci->subclass_str="Other";
@@ -510,12 +335,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						pci->class_code_str="Serial Bus Controller";
 						if (!pci->subclass){
 							pci->subclass_str="FireWire (IEEE 1394) Controller";
-							if (!pci->interface){
-								pci->interface_str="Generic";
-							}
-							else if (pci->interface==16){
-								pci->interface_str="OHCI";
-							}
 						}
 						else if (pci->subclass==1){
 							pci->subclass_str="ACCESS Bus";
@@ -525,21 +344,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						}
 						else if (pci->subclass==3){
 							pci->subclass_str="USB Controller";
-							if (!pci->interface){
-								pci->interface_str="UHCI Controller";
-							}
-							else if (pci->interface==16){
-								pci->interface_str="OHCI Controller";
-							}
-							else if (pci->interface==32){
-								pci->interface_str="EHCI (USB2) Controller";
-							}
-							else if (pci->interface==48){
-								pci->interface_str="XHCI (USB3) Controller";
-							}
-							else if (pci->interface==254){
-								pci->interface_str="USB Device (Not a host controller)";
-							}
 						}
 						else if (pci->subclass==4){
 							pci->subclass_str="Fibre Channel";
@@ -552,15 +356,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 						}
 						else if (pci->subclass==7){
 							pci->subclass_str="IPMI Interface";
-							if (!pci->interface){
-								pci->interface_str="SMIC";
-							}
-							else if (pci->interface==1){
-								pci->interface_str="Keyboard Controller Style";
-							}
-							else if (pci->interface==2){
-								pci->interface_str="Block Transfer";
-							}
 						}
 						else if (pci->subclass==8){
 							pci->subclass_str="SERCOS Interface (IEC 61491)";
@@ -659,7 +454,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 					else if (pci->class_code==64){
 						pci->class_code_str="Co-Processor";
 					}
-					console_log("PCI Device:\n  bus:       %hhu\n  device:    %hhu\n  function:  %hhu\n  class:     %hhu (%s)\n  subclass:  %hhu (%s)\n  interface: %hhu (%s)\n",b,d,f,pci->class_code,pci->class_code_str,pci->subclass,pci->subclass_str,pci->interface,pci->interface_str);
+					console_log("PCI Device:\n  Bus:       %hhu\n  Device:    %hhu\n  Function:  %hhu\n  Class:     %hhu (%s)\n  Subclass:  %hhu (%s)\n  Interface: %hhu\n",b,d,f,pci->class_code,pci->class_code_str,pci->subclass,pci->subclass_str,pci->interface);
 					driver_list_load(pci);
 					pci++;
 				}

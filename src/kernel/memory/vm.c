@@ -91,6 +91,16 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c){
 
 
 
+vaddr_t KERNEL_CALL vm_commit_fixed(paddr_t pa){
+	vaddr_t o=_vm_dt->n_va;
+	_vm_dt->e[PAGE_GET_ARRAY_INDEX(o-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(o-_vm_dt->b));
+	paging_map_page(o,pa);
+	_vm_dt->n_va+=PAGE_4KB_SIZE;
+	return o;
+}
+
+
+
 void KERNEL_CALL vm_release(vaddr_t va,uint64_t c){
 	while (c){
 		paddr_t pa=paging_reverse_translate(va);

@@ -1,3 +1,3 @@
-# `cpu.asm`
+# `cpu`
 
 *No Description*

@@ -1,3 +1,0 @@
-# `ide.h`
-
-*No Description*

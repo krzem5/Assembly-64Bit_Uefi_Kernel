@@ -1,3 +1,0 @@
-# `lock.asm`
-
-*No Description*

@@ -10,7 +10,7 @@ structures:
 		ebx
 		ecx
 		edx
-	__IDE_DEVICE_CHANNEL:
+	__IDE_CONTROLLER_CHANNEL:
 		base
 		ctrl
 		bmide
