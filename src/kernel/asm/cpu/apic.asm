@@ -11,6 +11,7 @@ extern hpet_timer_spinwait
 
 
 %define APIC_TIMER_TARGET_US 10
+%define PIT_FREQUENCY 1193180
 
 
 
@@ -64,19 +65,36 @@ asm_apic_setup:
 	mov dword [rcx + (__C_APIC_SPURIOUS_REGISTER__ * __C_SIZEOF_UINT32_T__)], (__C_APIC_SPURIOUS_INTERRUPT__ | __C_APIC_SVR_ENABLE__)
 	mov dword [rcx + (__C_APIC_LVT_TIMER_REGISER__ * __C_SIZEOF_UINT32_T__)], __C_APIC_SPURIOUS_INTERRUPT__
 	mov dword [rcx + (__C_APIC_TIMER_DIVISOR_REGISER__ * __C_SIZEOF_UINT32_T__)], 0xb
-	xor rdx, rdx
-	dec edx
-	mov dword [rcx + (__C_APIC_TIMER_INIT_REGISER__ * __C_SIZEOF_UINT32_T__)], edx
-	push rdx
-	push rcx
-	mov rcx, __C_APIC_TIMER_CALIB_US__
-	call hpet_timer_spinwait
-	pop r8
-	pop rdx
+	mov dx, 0x61
+	in al, dx
+	and al, 0xfd
+	or al, 1
+	out dx, al
+	mov al, 10110010b
+	out 0x43, al
+	mov al, ((PIT_FREQUENCY * __C_APIC_TIMER_CALIB_US__ / __C_MICROSECONDS_IN_SECOND__) % 256)
+	out 0x42, al
+	in al, 0x60
+	mov al, ((PIT_FREQUENCY * __C_APIC_TIMER_CALIB_US__ / __C_MICROSECONDS_IN_SECOND__) / 256)
+	out 0x42, al
+	in al, dx
+	and al, 0xfe
+	out dx, al
+	or al, 1
+	out dx, al
+	xor r9d, r9d
+	dec r9d
+	mov dword [rcx + (__C_APIC_TIMER_INIT_REGISER__ * __C_SIZEOF_UINT32_T__)], r9d
+._wait:
+	in al, dx
+	and al, 0x20
+	jz ._wait
+	mov dword [rcx + (__C_APIC_LVT_TIMER_REGISER__ * __C_SIZEOF_UINT32_T__)], __C_APIC_TIMER_DISABLE__
+	mov r8, rcx
 	xor rax, rax
 	mov eax, dword [r8 + (__C_APIC_TIMER_VALUE_REGISER__ * __C_SIZEOF_UINT32_T__)]
-	sub edx, eax
-	mov eax, edx
+	sub r9d, eax
+	mov eax, r9d
 	xor rdx, rdx
 	div rcx
 	mov rcx, qword [gs:__C_CPU_STRUCT_S_OFFSET__]

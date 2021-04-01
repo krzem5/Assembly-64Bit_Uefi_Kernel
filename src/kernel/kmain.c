@@ -62,12 +62,12 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	setup_irq();
 	console_log("Reading CPU Info...\n");
 	cpu_info_init();
-	console_log("Setting Up PCI...\n");
-	pci_init();
 	console_log("Parsing ACPI...\n");
 	acpi_init(ka);
 	console_log("Initialising APIC Interrupts...\n");
 	apic_init();
+	console_log("Setting Up PCI...\n");
+	pci_init();
 	console_log("Setting Up CPUs...\n");
 	cpu_init();
 	console_log("Setting Up Process List...\n");

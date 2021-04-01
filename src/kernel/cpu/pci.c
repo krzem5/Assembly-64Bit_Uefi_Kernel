@@ -1,6 +1,5 @@
 #include <shared.h>
 #include <cpu/pci.h>
-#include <cpu/ports.h>
 #include <driver/driver_list.h>
 #include <gfx/console.h>
 #include <memory/paging.h>
@@ -25,10 +24,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 			uint8_t i=b>>1;
 			uint64_t bi=1ull<<(((b&1)<<5)|d);
 			for (uint8_t f=0;f<8;f++){
-				uint32_t p=0x80000000|(b<<16)|(d<<11)|(f<<8);
-				asm_port_out32(0xcf8,p);
-				uint32_t v=asm_port_in32(0xcfc);
-				if ((v&0xffff)!=0xffff){
+				if ((asm_pci_read(0x80000000|(b<<16)|(d<<11)|(f<<8)|PCI_VENDOR_REGISTER)&0xffff)!=0xffff){
 					d_pci[i]|=bi;
 					pci_list.l++;
 				}
@@ -670,5 +666,4 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pci_init(void){
 			}
 		}
 	}
-	for (;;);
 }

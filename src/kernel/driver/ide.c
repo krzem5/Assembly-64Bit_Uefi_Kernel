@@ -1,4 +1,5 @@
 #include <shared.h>
+#include <cpu/hpet_timer.h>
 #include <cpu/pci.h>
 #include <driver/ide.h>
 #include <gfx/console.h>
@@ -33,10 +34,10 @@ void KERNEL_CALL ide_init(pci_device_t* pci){
 	for (uint8_t i=0;i<2;i++){
 		for (uint8_t j=0;j<2;j++){
 			asm_ide_write(&d.c[i],IDE_HDDEVSEL_REGISTER,0xa0|(j<<4));
-			for (uint32_t __tmp=0;__tmp<10000000;__tmp++);
+			hpet_timer_spinwait(1000);
 			asm_ide_write(&d.c[i],IDE_COMMAND_REGISTER,IDE_COMMAND_IDENTIFY);
-			for (uint32_t __tmp=0;__tmp<10000000;__tmp++);
-			if (asm_ide_read(&d.c[i],IDE_STATUS_REGISTER)==0){
+			hpet_timer_spinwait(1000);
+			if (!asm_ide_read(&d.c[i],IDE_STATUS_REGISTER)){
 				console_log("Failed!\n");
 				continue;
 			}
