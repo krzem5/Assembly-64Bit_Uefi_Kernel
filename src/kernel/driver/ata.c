@@ -11,6 +11,13 @@
 
 
 
+#define IO_WAIT(c) hpet_timer_spinwait(2500)
+// #define IO_WAIT(c) (asm_port_in8(ATA_DRIVER_ALT_STATUS_REGISTER(c)),asm_port_in8(ATA_DRIVER_ALT_STATUS_REGISTER(c)),asm_port_in8(ATA_DRIVER_ALT_STATUS_REGISTER(c)),asm_port_in8(ATA_DRIVER_ALT_STATUS_REGISTER(c)))
+#undef ATA_DRIVER_CONTROL_ZERO
+#define ATA_DRIVER_CONTROL_ZERO 2
+
+
+
 uint8_t _bf[512];
 ata_device_list_t dl={
 	ATA_DEVICE_LIST_SET_LENGTH(0)|ATA_DEVICE_LIST_SET_FREE_INDEX(0)
@@ -40,27 +47,29 @@ void KERNEL_CALL ata_init(pci_device_t* pci){
 		ide_controller_channel_t c={
 			(!i?b0:b2)&0xfffffffc,
 			(!i?b1:b3)&0xfffffffc,
-			b4&0xfffffffc,
-			ATA_DRIVER_CONTROL_DISABLE_INTERRUPTS
+			b4&0xfffffffc
 		};
 		if (!c.base){
-			c.base=0x170+(i?0x80:0);
+			c.base=0x170+(!i?0x80:0);
 		}
 		if (!c.ctrl){
-			c.ctrl=0x376+(i?0x80:0);
+			c.ctrl=0x376+(!i?0x80:0);
 		}
 		if (i){
 			c.bmide+=8;
 		}
-		asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(c),ATA_DRIVER_CONTROL_DISABLE_INTERRUPTS);
 		for (uint8_t j=0;j<2;j++){
-			asm_port_out8(ATA_DRIVER_SELECT_DRIVE_REGISTER(c),ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG|ATA_DRIVER_SELECT_DRIVE_SET_DRIVER(j));
+			asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(c),ATA_DRIVER_CONTROL_SOFTWARE_RESET|ATA_DRIVER_CONTROL_ZERO);
+			IO_WAIT(c);
+			asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(c),ATA_DRIVER_CONTROL_ZERO);
+			IO_WAIT(c);
+			asm_port_out8(ATA_DRIVER_SELECT_DRIVE_REGISTER(c),ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG|ATA_DRIVER_SELECT_DRIVE_SET_DRIVE(j));
 			asm_port_out8(ATA_DRIVER_SECTOR_COUNT0_REGISTER(c),0);
 			asm_port_out8(ATA_DRIVER_LBA0_REGISTER(c),0);
 			asm_port_out8(ATA_DRIVER_LBA1_REGISTER(c),0);
 			asm_port_out8(ATA_DRIVER_LBA2_REGISTER(c),0);
 			asm_port_out8(ATA_DRIVER_COMMAND_REGISTER(c),ATA_DRIVER_COMMAND_IDENTIFY);
-			hpet_timer_spinwait(400);
+			IO_WAIT(c);
 			uint8_t s=asm_port_in8(ATA_DRIVER_STATUS_REGISTER(c));
 			if (!s){
 				continue;
@@ -74,7 +83,7 @@ void KERNEL_CALL ata_init(pci_device_t* pci){
 					if ((lba1==0x14&&lba2==0xeb)||(lba1==0x69&&lba2==0x96)){
 						t=ATA_DEVICE_TYPE_ATAPI;
 						asm_port_out8(ATA_DRIVER_COMMAND_REGISTER(c),ATA_DRIVER_COMMAND_IDENTIFY);
-						hpet_timer_spinwait(400);
+						IO_WAIT(c);
 						break;
 					}
 					err=1;
@@ -112,10 +121,12 @@ void KERNEL_CALL ata_init(pci_device_t* pci){
 			dv.sz=(*((uint64_t*)(_bf+(dv.cmd_set&0x4000000?ATA_DRIVER_IDENTIFY_MAX_LBA_EXT_OFFSET:ATA_DRIVER_IDENTIFY_MAX_LBA_OFFSET))))*ATA_SECTOR_SIZE;
 			dv.pa=pm_get_free();
 			dv.va=vm_commit_fixed(dv.pa);
+			for (uint16_t i=0;i<512;i++){
+				*((uint64_t*)dv.va+i)=0;
+			}
 			console_log("ATA Device:\n  Flags:        %.2hhx\n  Name:         %s\n  Signature:    %.4hx\n  Capabilities: %.4x\n  Command Set:  %.8x\n  Size:         %lu (%u.%.2u Gb)\n  Buffer PA:   %p\n  Buffer VA:   %p\n",dv.f,dv.nm,dv.sig,dv.cap,dv.cmd_set,dv.sz,dv.sz/1073741824,(dv.sz/10737418)%100,dv.pa,dv.va);
 		}
 	}
-	for (;;);
 }
 
 
@@ -127,26 +138,33 @@ uint8_t KERNEL_CALL ata_read_sectors(ata_device_t* dv,uint64_t lba,uint16_t c){
 	if (ATA_DEVICE_GET_TYPE(*dv)==ATA_DEVICE_TYPE_ATA&&lba+c>dv->sz){
 		return ATA_ERROR_INVALID_POSITION;
 	}
+	if (!c){
+		return ATA_ERROR_OK;
+	}
 	asm_port_out8(ATA_DRIVER_BUS_MASTERING_COMMAND_REGISTER(dv->ch),0);
-	asm_port_out32(ATA_DRIVER_BUS_MASTERING_POINTER_REGISTER(dv->ch),(uint32_t)dv->pa);
-	asm_port_out8(ATA_DRIVER_SELECT_DRIVE_REGISTER(dv->ch),ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG|ATA_DRIVER_SELECT_DRIVE_LBA_FLAG|ATA_DRIVER_SELECT_DRIVE_SET_DRIVER(ATA_DEVICE_GET_DRIVE(*dv)));
+	asm_port_out32(ATA_DRIVER_BUS_MASTERING_POINTER_REGISTER(dv->ch),(uint32_t)(dv->pa));
+	asm_port_out8(ATA_DRIVER_SELECT_DRIVE_REGISTER(dv->ch),ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG|ATA_DRIVER_SELECT_DRIVE_LBA_FLAG|ATA_DRIVER_SELECT_DRIVE_SET_DRIVE(ATA_DEVICE_GET_DRIVE(*dv)));
 	asm_port_out8(ATA_DRIVER_SECTOR_COUNT0_REGISTER(dv->ch),c&0xff);
 	asm_port_out8(ATA_DRIVER_LBA0_REGISTER(dv->ch),lba&0xff);
 	asm_port_out8(ATA_DRIVER_LBA1_REGISTER(dv->ch),(lba>>8)&0xff);
 	asm_port_out8(ATA_DRIVER_LBA2_REGISTER(dv->ch),(lba>>16)&0xff);
-	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),ATA_DRIVER_CONTROL_ENABLE_HIGH_FUNCTIONS|dv->ch.int_);
+	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),ATA_DRIVER_CONTROL_ENABLE_HIGH_FUNCTIONS|ATA_DRIVER_CONTROL_ZERO);
 	asm_port_out8(ATA_DRIVER_SECTOR_COUNT1_REGISTER(dv->ch),c>>8);
 	asm_port_out8(ATA_DRIVER_LBA3_REGISTER(dv->ch),(lba>>24)&0xff);
 	asm_port_out8(ATA_DRIVER_LBA4_REGISTER(dv->ch),(lba>>32)&0xff);
 	asm_port_out8(ATA_DRIVER_LBA5_REGISTER(dv->ch),(lba>>40)&0xff);
-	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),dv->ch.int_);
+	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),ATA_DRIVER_CONTROL_ZERO);
 	asm_port_out8(ATA_DRIVER_COMMAND_REGISTER(dv->ch),ATA_DRIVER_COMMAND_READ_DMA);
 	asm_port_out8(ATA_DRIVER_BUS_MASTERING_COMMAND_REGISTER(dv->ch),ATA_DRIVER_BUS_MASTERING_COMMAND_READ|ATA_DRIVER_BUS_MASTERING_COMMAND_DMA_START);
 	while (1){
+		uint8_t s=asm_port_in8(ATA_DRIVER_STATUS_REGISTER(dv->ch));
+		if (s&ATA_DRIVER_STATUS_ERROR){
+			return ATA_ERROR_INTERNAl_ERROR;
+		}
 		if (!(asm_port_in8(ATA_DRIVER_BUS_MASTERING_STATUS_REGISTER(dv->ch))&ATA_DRIVER_BUS_MASTERING_STATUS_INTERRUPT)){
 			continue;
 		}
-		if (!(asm_port_in8(ATA_DRIVER_STATUS_REGISTER(dv->ch))&ATA_DRIVER_STATUS_BUSY)){
+		if (!(s&ATA_DRIVER_STATUS_BUSY)){
 			break;
 		}
 	}
@@ -162,26 +180,33 @@ uint8_t KERNEL_CALL ata_write_sectors(ata_device_t* dv,uint64_t lba,uint16_t c){
 	if (ATA_DEVICE_GET_TYPE(*dv)==ATA_DEVICE_TYPE_ATA&&lba+c>dv->sz){
 		return ATA_ERROR_INVALID_POSITION;
 	}
+	if (!c){
+		return ATA_ERROR_OK;
+	}
 	asm_port_out8(ATA_DRIVER_BUS_MASTERING_COMMAND_REGISTER(dv->ch),0);
+	asm_port_out8(ATA_DRIVER_SELECT_DRIVE_REGISTER(dv->ch),ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG|ATA_DRIVER_SELECT_DRIVE_LBA_FLAG|ATA_DRIVER_SELECT_DRIVE_SET_DRIVE(ATA_DEVICE_GET_DRIVE(*dv)));
 	asm_port_out32(ATA_DRIVER_BUS_MASTERING_POINTER_REGISTER(dv->ch),(uint32_t)dv->pa);
-	asm_port_out8(ATA_DRIVER_SELECT_DRIVE_REGISTER(dv->ch),ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG|ATA_DRIVER_SELECT_DRIVE_LBA_FLAG|ATA_DRIVER_SELECT_DRIVE_SET_DRIVER(ATA_DEVICE_GET_DRIVE(*dv)));
 	asm_port_out8(ATA_DRIVER_SECTOR_COUNT0_REGISTER(dv->ch),c&0xff);
 	asm_port_out8(ATA_DRIVER_LBA0_REGISTER(dv->ch),lba&0xff);
 	asm_port_out8(ATA_DRIVER_LBA1_REGISTER(dv->ch),(lba>>8)&0xff);
 	asm_port_out8(ATA_DRIVER_LBA2_REGISTER(dv->ch),(lba>>16)&0xff);
-	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),ATA_DRIVER_CONTROL_ENABLE_HIGH_FUNCTIONS|dv->ch.int_);
+	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),ATA_DRIVER_CONTROL_ENABLE_HIGH_FUNCTIONS|ATA_DRIVER_CONTROL_ZERO);
 	asm_port_out8(ATA_DRIVER_SECTOR_COUNT1_REGISTER(dv->ch),c>>8);
 	asm_port_out8(ATA_DRIVER_LBA3_REGISTER(dv->ch),(lba>>24)&0xff);
 	asm_port_out8(ATA_DRIVER_LBA4_REGISTER(dv->ch),(lba>>32)&0xff);
 	asm_port_out8(ATA_DRIVER_LBA5_REGISTER(dv->ch),(lba>>40)&0xff);
-	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),dv->ch.int_);
+	asm_port_out8(ATA_DRIVER_CONTROL_REGISTER(dv->ch),ATA_DRIVER_CONTROL_ZERO);
 	asm_port_out8(ATA_DRIVER_COMMAND_REGISTER(dv->ch),ATA_DRIVER_COMMAND_WRITE_DMA);
 	asm_port_out8(ATA_DRIVER_BUS_MASTERING_COMMAND_REGISTER(dv->ch),ATA_DRIVER_BUS_MASTERING_COMMAND_DMA_START);
 	while (1){
+		uint8_t s=asm_port_in8(ATA_DRIVER_STATUS_REGISTER(dv->ch));
+		if (s&ATA_DRIVER_STATUS_ERROR){
+			return ATA_ERROR_INTERNAl_ERROR;
+		}
 		if (!(asm_port_in8(ATA_DRIVER_BUS_MASTERING_STATUS_REGISTER(dv->ch))&ATA_DRIVER_BUS_MASTERING_STATUS_INTERRUPT)){
 			continue;
 		}
-		if (!(asm_port_in8(ATA_DRIVER_STATUS_REGISTER(dv->ch))&ATA_DRIVER_STATUS_BUSY)){
+		if (!(s&ATA_DRIVER_STATUS_BUSY)){
 			break;
 		}
 	}

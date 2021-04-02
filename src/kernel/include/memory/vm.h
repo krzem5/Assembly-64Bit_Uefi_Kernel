@@ -2,6 +2,7 @@
 #define __KERNEL_MEMORY_VM_H__ 1
 #include <shared.h>
 #include <kmain.h>
+#include <memory/pm.h>
 #include <stdint.h>
 
 

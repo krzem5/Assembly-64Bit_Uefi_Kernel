@@ -16,7 +16,7 @@
 #define GET_CHAR(v) ((v)>>24)
 #define GET_COLOR(v) ((v)&0xffffff)
 #define DEFAULT_FONT FONT_SPLEEN
-#define SCALE 1
+#define SCALE 2
 
 
 

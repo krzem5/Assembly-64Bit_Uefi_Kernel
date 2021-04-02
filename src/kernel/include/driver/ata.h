@@ -22,6 +22,7 @@
 #define ATA_DRIVER_LBA3_REGISTER(c) ((c).base+3)
 #define ATA_DRIVER_LBA4_REGISTER(c) ((c).base+4)
 #define ATA_DRIVER_LBA5_REGISTER(c) ((c).base+5)
+#define ATA_DRIVER_ALT_STATUS_REGISTER(c) ((c).ctrl)
 #define ATA_DRIVER_CONTROL_REGISTER(c) ((c).ctrl+2)
 #define ATA_DRIVER_BUS_MASTERING_COMMAND_REGISTER(c) ((c).bmide)
 #define ATA_DRIVER_BUS_MASTERING_STATUS_REGISTER(c) ((c).bmide+2)
@@ -31,7 +32,7 @@
 #define ATA_DRIVER_BUS_MASTERING_COMMAND_READ 0x8
 #define ATA_DRIVER_BUS_MASTERING_STATUS_ERROR 0x2
 #define ATA_DRIVER_BUS_MASTERING_STATUS_INTERRUPT 0x4
-#define ATA_DRIVER_SELECT_DRIVE_SET_DRIVER(d) ((d)<<4)
+#define ATA_DRIVER_SELECT_DRIVE_SET_DRIVE(d) ((d)<<4)
 #define ATA_DRIVER_SELECT_DRIVE_CHS_FLAG 0x00
 #define ATA_DRIVER_SELECT_DRIVE_LBA_FLAG 0x40
 #define ATA_DRIVER_SELECT_DRIVE_OBSOLETE_FLAG 0xa0
@@ -91,6 +92,7 @@
 #define ATA_ERROR_OK 0
 #define ATA_ERROR_NO_DEVICE 1
 #define ATA_ERROR_INVALID_POSITION 2
+#define ATA_ERROR_INTERNAl_ERROR 3
 
 
 
@@ -98,7 +100,7 @@ typedef struct __IDE_CONTROLLER_CHANNEL{
 	uint16_t base;
 	uint16_t ctrl;
 	uint16_t bmide;
-	uint8_t int_;
+	uint8_t cr;
 } ide_controller_channel_t;
 
 
