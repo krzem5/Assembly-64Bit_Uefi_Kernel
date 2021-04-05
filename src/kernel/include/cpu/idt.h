@@ -54,7 +54,7 @@ extern void asm_setup_idt(void);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_idt(KernelArgs* ka);
+void KERNEL_CALL setup_idt(KernelArgs* ka);
 
 
 

@@ -1,3 +1,0 @@
-# `main.asm`
-
-*No Description*

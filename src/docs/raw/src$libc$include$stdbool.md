@@ -1,3 +1,0 @@
-# `stdbool.h`
-
-*No Description*

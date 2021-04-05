@@ -1,3 +1,0 @@
-# `kentry.asm`
-
-*No Description*

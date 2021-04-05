@@ -1,3 +1,0 @@
-# `paging.h`
-
-*No Description*

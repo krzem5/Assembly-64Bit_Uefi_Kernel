@@ -1,3 +1,0 @@
-# `idt.c`
-
-*No Description*

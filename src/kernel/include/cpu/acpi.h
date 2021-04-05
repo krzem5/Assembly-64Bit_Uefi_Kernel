@@ -13,15 +13,15 @@ typedef struct __ACPI_DATA{
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_init(KernelArgs* ka);
+void KERNEL_CALL acpi_init(KernelArgs* ka);
 
 
 
-acpi_data_t* KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_get_data(void);
+acpi_data_t* KERNEL_CALL acpi_get_data(void);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_free_data(void);
+void KERNEL_CALL acpi_free_data(void);
 
 
 

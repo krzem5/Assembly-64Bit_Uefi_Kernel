@@ -1,3 +1,0 @@
-# `apic.c`
-
-*No Description*

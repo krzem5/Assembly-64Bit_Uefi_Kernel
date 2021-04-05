@@ -1,3 +1,0 @@
-# `vm.c`
-
-*No Description*

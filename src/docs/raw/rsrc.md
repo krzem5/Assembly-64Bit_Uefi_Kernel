@@ -1,3 +1,0 @@
-# `rsrc`
-
-*No Description*

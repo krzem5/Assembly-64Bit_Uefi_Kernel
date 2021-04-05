@@ -9,7 +9,7 @@ cpu_info_t cpu_info_data;
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_info_init(void){
+void KERNEL_CALL cpu_info_init(void){
 	cpuid_t dt;
 	asm_cpuid(0,&dt);
 	cpu_info_data.mx=dt.eax;
@@ -96,7 +96,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_info_init(void){
 		cpu_info_data.nm[10]='U';
 		cpu_info_data.nm[11]=0;
 	}
-	console_log("CPU Data:\n  Max CPUID: %u\n  ID:        %s\n  Features: ",cpu_info_data.mx,cpu_info_data.id);
+	console_log("CPU Data:\n  Max CPUID: %u\n  ID: %s\n  Features:",cpu_info_data.mx,cpu_info_data.id);
 	if (cpu_info_data.f&CPU_INFO_FEATURE_FPU){
 		console_log(" FPU");
 	}
@@ -265,5 +265,5 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_info_init(void){
 	if (cpu_info_data.f&CPU_INFO_FEATURE_AVX){
 		console_log(" AVX");
 	}
-	console_log("\n  Name:      %s\n",cpu_info_data.nm);
+	console_log("\n  Name: %s\n",cpu_info_data.nm);
 }

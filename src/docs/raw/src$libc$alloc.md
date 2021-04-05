@@ -1,3 +1,0 @@
-# `alloc.c`
-
-*No Description*

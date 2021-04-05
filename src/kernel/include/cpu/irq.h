@@ -78,7 +78,7 @@ void KERNEL_CALL _handle_irq(registers_t* r);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_irq(void);
+void KERNEL_CALL setup_irq(void);
 
 
 

@@ -1,3 +1,0 @@
-# `shared.h`
-
-*No Description*

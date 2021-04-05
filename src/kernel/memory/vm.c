@@ -1,6 +1,7 @@
 #include <shared.h>
 #include <cpu/fatal_error.h>
 #include <cpu/isr.h>
+#include <gfx/console.h>
 #include <kmain.h>
 #include <memory/paging.h>
 #include <memory/pm.h>
@@ -10,13 +11,14 @@
 
 
 
-#define MAX_PROCESS_RAM 0x40000000
+#define MIN_RAM_RESERVE_FOR_SYSTEM 0x40000000
 #define PAGE_GET_ARRAY_INDEX(a) ((a)>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)
 #define PAGE_GET_BIT_INDEX(a) ((uint8_t)(((a)>>PAGE_4KB_POWER_OF_2)%(sizeof(VmMemMapData)*BITS_IN_BYTE)))
 #define COMBINE_PAGE_INDEX(i,bi) (((i)*(sizeof(VmMemMapData)*BITS_IN_BYTE)+(bi))<<PAGE_4KB_POWER_OF_2)
 
 
 
+uint64_t MAX_PROCESS_RAM=0x10000000000;
 vaddr_t _n_va;
 VmMemMap* _vm_dt;
 
@@ -30,7 +32,7 @@ uint8_t KERNEL_CALL _vm_pg_f_handler(registers_t* r){
 			fatal_error("Not enought Memory!\n");
 			return 0;
 		}
-		paging_map_page(cr2,pa);
+		paging_set_page(cr2,pa);
 		return 1;
 	}
 	return 0;
@@ -38,8 +40,17 @@ uint8_t KERNEL_CALL _vm_pg_f_handler(registers_t* r){
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_init(KernelArgs* ka){
+void KERNEL_CALL vm_init(KernelArgs* ka){
 	_n_va=ka->n_va;
+	uint64_t mx=KERNEL_MEM_MAP_GET_BASE(ka->mmap[ka->mmap_l-1].b)+ka->mmap[ka->mmap_l-1].l-MIN_RAM_RESERVE_FOR_SYSTEM;
+	if (mx<MAX_PROCESS_RAM){
+		MAX_PROCESS_RAM=mx;
+	}
+}
+
+
+
+void KERNEL_CALL vm_after_pm_init(KernelArgs* ka){
 	uint64_t pg_c=(((MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)*sizeof(VmMemMapData)+sizeof(sizeof(VmMemMap)))+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
 	_vm_dt=(VmMemMap*)(void*)_vm_dt->n_va;
 	while (pg_c){
@@ -47,8 +58,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_init(KernelArgs* ka){
 		if (!pa){
 			fatal_error("Not enought memory!");
 		}
-		paging_map_page(_n_va,pa);
-		_n_va+=PAGE_4KB_SIZE;
+		paging_set_page(vm_get_top(),pa);
 		pg_c--;
 	}
 	_vm_dt->n_va=_n_va;
@@ -82,7 +92,7 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c){
 			return 0;
 		}
 		_vm_dt->e[PAGE_GET_ARRAY_INDEX(_vm_dt->n_va-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(_vm_dt->n_va-_vm_dt->b));
-		paging_map_page(_vm_dt->n_va,pa);
+		paging_set_page(_vm_dt->n_va,pa);
 		_vm_dt->n_va+=PAGE_4KB_SIZE;
 		c--;
 	}
@@ -91,25 +101,24 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c){
 
 
 
-vaddr_t KERNEL_CALL vm_commit_fixed(paddr_t pa){
-	vaddr_t o=_vm_dt->n_va;
-	_vm_dt->e[PAGE_GET_ARRAY_INDEX(o-_vm_dt->b)]|=1ull<<(PAGE_GET_BIT_INDEX(o-_vm_dt->b));
-	paging_map_page(o,pa);
-	_vm_dt->n_va+=PAGE_4KB_SIZE;
+vaddr_t KERNEL_CALL vm_current_top(void){
+	return _n_va;
+}
+
+
+
+vaddr_t KERNEL_CALL vm_get_top(void){
+	vaddr_t o=_n_va;
+	_n_va+=PAGE_4KB_SIZE;
 	return o;
 }
 
 
 
-void KERNEL_CALL vm_release(vaddr_t va,uint64_t c){
+void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c){
 	while (c){
-		paddr_t pa=paging_reverse_translate(va);
-		if (pa){
-			pm_set_free(pa);
-			paging_unmap_page(va);
-		}
-		_vm_dt->e[PAGE_GET_ARRAY_INDEX(va-_vm_dt->b)]&=~(1ull<<(PAGE_GET_BIT_INDEX(va-_vm_dt->b)));
-		va+=PAGE_4KB_SIZE;
+		paging_set_page(a,a);
+		a+=PAGE_4KB_SIZE;
 		c--;
 	}
 }

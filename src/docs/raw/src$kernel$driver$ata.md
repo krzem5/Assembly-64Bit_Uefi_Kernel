@@ -1,3 +1,0 @@
-# `ata.c`
-
-*No Description*

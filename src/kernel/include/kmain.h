@@ -43,18 +43,14 @@ typedef struct __KERNEL_ARGS{
 typedef void (KERNEL_CALL *kmain)(KernelArgs* ka);
 #else
 #define __KERNEL_BASE_VA__ ((uint64_t)___KERNEL_BASE_VA__)
-#define __KERNEL_UNMAP_START__ ((uint64_t)___KERNEL_UNMAP_START__)
-#define __KERNEL_UNMAP_END__ ((uint64_t)___KERNEL_UNMAP_END__)
 
 
 
 extern uint64_t ___KERNEL_BASE_VA__[];
-extern uint64_t ___KERNEL_UNMAP_START__[];
-extern uint64_t ___KERNEL_UNMAP_END__[];
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka);
+void KERNEL_CALL kmain(KernelArgs* ka);
 
 
 

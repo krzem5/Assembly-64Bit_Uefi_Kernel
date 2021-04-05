@@ -1,3 +1,0 @@
-# `scheduler.c`
-
-*No Description*

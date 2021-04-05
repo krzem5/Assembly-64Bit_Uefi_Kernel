@@ -8,14 +8,13 @@
 #include <cpu/idt.h>
 #include <cpu/irq.h>
 #include <cpu/isr.h>
-#include <cpu/pci.h>
 #include <gfx/console.h>
 #include <gfx/gfx.h>
 #include <kmain.h>
 #include <memory/paging.h>
 #include <memory/pm.h>
 #include <memory/vm.h>
-#include <process/lock.h>
+#include <process/mutex.h>
 #include <process/process.h>
 #include <process/scheduler.h>
 #include <process/thread.h>
@@ -36,12 +35,13 @@ void KERNEL_CALL thread2(void* ta){
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
+void KERNEL_CALL kmain(KernelArgs* ka){
 	paging_init(ka);
-	pm_init(ka);
 	vm_init(ka);
+	pm_init(ka);
+	vm_after_pm_init(ka);
 	gfx_init(ka);
-	lock_init();
+	mutex_init();
 	console_init(ka);
 	console_log("Starting System...\n");
 	console_log("Memory Map (%llu):\n",ka->mmap_l);
@@ -64,10 +64,9 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	cpu_info_init();
 	console_log("Parsing ACPI...\n");
 	acpi_init(ka);
+	hpet_timer_set_frequency(1000);
 	console_log("Initialising APIC Interrupts...\n");
 	apic_init();
-	console_log("Setting Up PCI...\n");
-	pci_init();
 	console_log("Setting Up CPUs...\n");
 	cpu_init();
 	console_log("Setting Up Process List...\n");
@@ -81,7 +80,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);
-	console_log("Kernel '.text_unmap' Section: %p -> +%llu (Pages: %p -> %llu * 4KB)\n",__KERNEL_UNMAP_START__,__KERNEL_UNMAP_END__-__KERNEL_UNMAP_START__,((__KERNEL_UNMAP_START__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)<<PAGE_4KB_POWER_OF_2,((__KERNEL_UNMAP_END__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)-((__KERNEL_UNMAP_START__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2));
 	console_ok("Starting Scheduler...\n");
-	// scheduler_start();
+	scheduler_start();
 }

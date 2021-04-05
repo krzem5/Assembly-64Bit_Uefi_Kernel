@@ -1,3 +1,0 @@
-# `paging.c`
-
-*No Description*

@@ -1,3 +1,0 @@
-# `console.h`
-
-*No Description*

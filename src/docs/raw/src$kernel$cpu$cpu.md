@@ -1,3 +1,0 @@
-# `cpu.c`
-
-*No Description*

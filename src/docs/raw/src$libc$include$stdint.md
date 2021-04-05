@@ -1,3 +1,0 @@
-# `stdint.h`
-
-*No Description*

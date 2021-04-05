@@ -1,3 +1,0 @@
-# `stdlib.h`
-
-*No Description*

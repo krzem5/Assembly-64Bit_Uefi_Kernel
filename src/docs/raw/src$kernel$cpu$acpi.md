@@ -1,3 +1,0 @@
-# `acpi.c`
-
-*No Description*

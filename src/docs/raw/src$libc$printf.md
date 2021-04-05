@@ -1,3 +1,0 @@
-# `printf.c`
-
-*No Description*

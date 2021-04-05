@@ -5,11 +5,11 @@
 
 
 
-extern void KERNEL_CALL asm_setup_ap_startup_code(uint64_t pml4);
+extern void KERNEL_CALL asm_init_ap_startup_code(uint64_t pml4);
 
 
 
-extern void KERNEL_CALL asm_setup_ap_startup_data(uint64_t cpu_dt);
+extern void KERNEL_CALL asm_setup_ap_startup_vars(uint64_t cpu_dt);
 
 
 

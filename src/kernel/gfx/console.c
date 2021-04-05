@@ -5,7 +5,7 @@
 #include <gfx/gfx.h>
 #include <kmain.h>
 #include <memory/vm.h>
-#include <process/lock.h>
+#include <process/mutex.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -16,7 +16,7 @@
 #define GET_CHAR(v) ((v)>>24)
 #define GET_COLOR(v) ((v)&0xffffff)
 #define DEFAULT_FONT FONT_SPLEEN
-#define SCALE 2
+#define SCALE 1
 
 
 
@@ -25,7 +25,7 @@ uint64_t _console_y=0;
 uint64_t _console_w;
 uint64_t _console_h;
 uint32_t* _console_bf=NULL;
-lock_t _console_l;
+mutex_t _console_l;
 
 
 
@@ -78,11 +78,11 @@ void LIBC_CALL _console_vprintf_write_func(char c,void* ctx){
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD console_init(KernelArgs* ka){
+void KERNEL_CALL console_init(KernelArgs* ka){
 	_console_w=ka->vmem_w/(8*SCALE);
 	_console_h=ka->vmem_h/(16*SCALE);
 	_console_bf=(uint32_t*)(void*)vm_commit((_console_w*_console_h*sizeof(uint32_t)+4095)>>12);
-	_console_l=lock_create();
+	_console_l=mutex_create();
 	for (uint64_t i=0;i<_console_w*_console_h;i++){
 		*(_console_bf+i)=CHAR_AND_COLOR(' ',COLOR(0,0,0));
 	}
@@ -94,12 +94,12 @@ void KERNEL_CALL _console_print(const char* s,color_t cl){
 	if (!_console_bf){
 		return;
 	}
-	asm_lock_acquire(_console_l);
+	asm_mutex_acquire(_console_l);
 	while (*s){
 		_console_print_char(*s,cl,DEFAULT_FONT);
 		s++;
 	}
-	asm_lock_release(_console_l);
+	asm_mutex_release(_console_l);
 }
 
 
@@ -108,10 +108,10 @@ void KERNEL_CALL _console_vprint(const char* s,color_t cl,...){
 	if (!_console_bf){
 		return;
 	}
-	asm_lock_acquire(_console_l);
+	asm_mutex_acquire(_console_l);
 	va_list v;
 	va_start(v,cl);
 	__vprintf_raw(&cl,NULL,_console_vprintf_write_func,s,v);
 	va_end(v);
-	asm_lock_release(_console_l);
+	asm_mutex_release(_console_l);
 }

@@ -1,3 +1,0 @@
-# `console.c`
-
-*No Description*

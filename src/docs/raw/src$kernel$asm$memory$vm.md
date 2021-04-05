@@ -1,3 +1,0 @@
-# `vm.asm`
-
-*No Description*

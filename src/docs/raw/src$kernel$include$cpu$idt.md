@@ -1,3 +1,0 @@
-# `idt.h`
-
-*No Description*

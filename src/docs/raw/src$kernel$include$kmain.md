@@ -1,3 +1,0 @@
-# `kmain.h`
-
-*No Description*

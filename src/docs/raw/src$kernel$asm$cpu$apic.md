@@ -1,3 +1,0 @@
-# `apic.asm`
-
-*No Description*

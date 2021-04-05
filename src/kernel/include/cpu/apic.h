@@ -80,7 +80,7 @@ void KERNEL_CALL _handle_apic_int(apic_interrupt_registers_t* r);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD apic_init(void);
+void KERNEL_CALL apic_init(void);
 
 
 

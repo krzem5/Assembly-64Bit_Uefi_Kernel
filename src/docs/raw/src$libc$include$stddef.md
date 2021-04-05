@@ -1,3 +1,0 @@
-# `stddef.h`
-
-*No Description*

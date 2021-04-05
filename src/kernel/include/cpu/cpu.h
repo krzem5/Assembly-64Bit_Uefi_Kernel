@@ -25,7 +25,7 @@ extern cpu_t* KERNEL_CALL asm_current_cpu(void);
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD cpu_init(void);
+void KERNEL_CALL cpu_init(void);
 
 
 

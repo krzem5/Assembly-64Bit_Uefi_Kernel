@@ -1,3 +1,0 @@
-# `acpi.h`
-
-*No Description*

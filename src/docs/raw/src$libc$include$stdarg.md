@@ -1,3 +1,0 @@
-# `stdarg.h`
-
-*No Description*

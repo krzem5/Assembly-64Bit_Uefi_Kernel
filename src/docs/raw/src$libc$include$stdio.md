@@ -1,3 +1,0 @@
-# `stdio.h`
-
-*No Description*

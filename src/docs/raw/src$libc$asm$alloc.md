@@ -1,3 +1,0 @@
-# `alloc.asm`
-
-*No Description*

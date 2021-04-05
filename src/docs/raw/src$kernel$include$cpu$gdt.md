@@ -1,3 +1,0 @@
-# `gdt.h`
-
-*No Description*

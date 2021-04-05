@@ -1,3 +1,0 @@
-# `thread.c`
-
-*No Description*

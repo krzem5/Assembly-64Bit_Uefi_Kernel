@@ -1,3 +1,0 @@
-# `irq.h`
-
-*No Description*

@@ -1,3 +1,0 @@
-# `vm.h`
-
-*No Description*

@@ -1,3 +1,0 @@
-# `gdt.asm`
-
-*No Description*

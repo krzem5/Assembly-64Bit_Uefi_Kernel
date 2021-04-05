@@ -21,7 +21,7 @@ uint32_t _nti=0;
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD thread_init(void){
+void KERNEL_CALL thread_init(void){
 	tl=(thread_t*)(void*)vm_commit(THREAD_4KB_PAGES_COUNT);
 	for (uint32_t i=0;i<MAX_THREAD_ID+1;i++){
 		(tl+i)->f=0;

@@ -1,3 +1,0 @@
-# `libc`
-
-*No Description*

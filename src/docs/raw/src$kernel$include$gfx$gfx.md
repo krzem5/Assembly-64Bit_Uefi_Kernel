@@ -1,3 +1,0 @@
-# `gfx.h`
-
-*No Description*

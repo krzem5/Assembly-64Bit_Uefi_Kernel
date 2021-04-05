@@ -1,3 +1,0 @@
-# `ata.h`
-
-*No Description*

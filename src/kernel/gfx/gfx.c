@@ -13,7 +13,7 @@ uint64_t _gfx_vmem_h;
 
 
 
-void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD gfx_init(KernelArgs* ka){
+void KERNEL_CALL gfx_init(KernelArgs* ka){
 	_gfx_vmem=ka->vmem;
 	_gfx_vmem_l=ka->vmem_l;
 	_gfx_vmem_w=ka->vmem_w;

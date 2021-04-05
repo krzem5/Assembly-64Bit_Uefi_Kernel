@@ -1,3 +1,0 @@
-# `lock.h`
-
-*No Description*
