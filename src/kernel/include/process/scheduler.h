@@ -9,7 +9,7 @@ extern uint8_t scheduler_ready;
 
 
 
-void KERNEL_CALL scheduler_init(void);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD scheduler_init(void);
 
 
 

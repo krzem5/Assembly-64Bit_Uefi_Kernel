@@ -5,6 +5,7 @@
 #include <cpu/hpet_timer.h>
 #include <gfx/console.h>
 #include <kmain.h>
+#include <memory/paging.h>
 #include <memory/vm.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -58,10 +59,11 @@ struct _ACPI_HPET{
 
 
 acpi_data_t* _dt_ptr;
+uint64_t _dt_len;
 
 
 
-void KERNEL_CALL acpi_init(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_init(KernelArgs* ka){
 	console_log("ACPI Pointers: APIC = %p, FADT = %p, HPET = %p\n",ka->apic,ka->fadt,ka->hpet);
 	struct _ACPI_APIC* apic=(struct _ACPI_APIC*)ka->apic;
 	uint32_t i=0;
@@ -85,7 +87,8 @@ void KERNEL_CALL acpi_init(KernelArgs* ka){
 		i+=*(apic->dt+i+1);
 	}
 	console_log("lAPIC = %u, ioAPIC = %u, Override = %u, NMI = %x\n",lapic_c,ioapic_c,ov_c,nmi_c);
-	_dt_ptr=(acpi_data_t*)(void*)vm_commit((sizeof(acpi_data_t)+sizeof(uint8_t)*lapic_c+4095)>>12);
+	_dt_len=(sizeof(acpi_data_t)+sizeof(uint8_t)*lapic_c+PAGE_4KB_SIZE)>>PAGE_4KB_POWER_OF_2;
+	_dt_ptr=(acpi_data_t*)(void*)vm_commit(_dt_len);
 	_dt_ptr->cpu_c=lapic_c;
 	i=0;
 	uint32_t j=0;
@@ -144,12 +147,12 @@ void KERNEL_CALL acpi_init(KernelArgs* ka){
 
 
 
-acpi_data_t* KERNEL_CALL acpi_get_data(void){
+acpi_data_t* KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_get_data(void){
 	return _dt_ptr;
 }
 
 
 
-void KERNEL_CALL acpi_free_data(void){
-	console_warn("Not Implemented!\n");
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD acpi_free_data(void){
+	vm_release((vaddr_t)(void*)_dt_ptr,_dt_len);
 }

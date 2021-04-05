@@ -17,7 +17,7 @@ idt_table_t idt={
 
 
 
-void KERNEL_CALL setup_idt(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_idt(KernelArgs* ka){
 	idt_l=(idt_entry_t*)ka->idt;
 	idt.b=(uint64_t)idt_l;
 	asm_setup_idt();

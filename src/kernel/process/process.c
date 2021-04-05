@@ -25,7 +25,7 @@ process_t* kernel_process;
 
 
 
-void KERNEL_CALL process_init(void){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD process_init(void){
 	pl=(process_t*)(void*)vm_commit(PROCESS_4KB_PAGES_COUNT);
 	for (uint32_t i=0;i<MAX_PROCESS_ID+1;i++){
 		(pl+i)->f=0;

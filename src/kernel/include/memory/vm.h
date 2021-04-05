@@ -2,6 +2,7 @@
 #define __KERNEL_MEMORY_VM_H__ 1
 #include <shared.h>
 #include <kmain.h>
+#include <memory/pm.h>
 #include <stdint.h>
 
 
@@ -24,11 +25,7 @@ extern uint64_t KERNEL_CALL asm_get_cr2(void);
 
 
 
-void KERNEL_CALL vm_init(KernelArgs* ka);
-
-
-
-void KERNEL_CALL vm_after_pm_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_init(KernelArgs* ka);
 
 
 
@@ -40,19 +37,11 @@ vaddr_t KERNEL_CALL vm_commit(uint64_t c);
 
 
 
-vaddr_t KERNEL_CALL vm_commit_2mb(uint64_t c);
+vaddr_t KERNEL_CALL vm_commit_fixed(paddr_t pa);
 
 
 
-vaddr_t KERNEL_CALL vm_current_top(void);
-
-
-
-vaddr_t KERNEL_CALL vm_get_top(void);
-
-
-
-void KERNEL_CALL vm_identity_map(vaddr_t a,uint64_t c);
+void KERNEL_CALL vm_release(vaddr_t va,uint64_t c);
 
 
 

@@ -18,11 +18,15 @@ typedef struct __PAGE_ARRAY_DATA{
 
 
 
-void KERNEL_CALL pm_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pm_init(KernelArgs* ka);
 
 
 
 paddr_t KERNEL_CALL pm_get_free(void);
+
+
+
+void KERNEL_CALL pm_set_free(paddr_t pa);
 
 
 

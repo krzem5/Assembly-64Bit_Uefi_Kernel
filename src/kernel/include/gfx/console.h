@@ -27,7 +27,7 @@
 
 
 
-void KERNEL_CALL console_init(KernelArgs* ka);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD console_init(KernelArgs* ka);
 
 
 

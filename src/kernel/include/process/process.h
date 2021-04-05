@@ -23,7 +23,7 @@ extern process_t* kernel_process;
 
 
 
-void KERNEL_CALL process_init(void);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD process_init(void);
 
 
 

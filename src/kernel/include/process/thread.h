@@ -43,7 +43,7 @@ extern void KERNEL_CALL asm_clear_thread_data(thread_data_t* dt);
 
 
 
-void KERNEL_CALL thread_init(void);
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD thread_init(void);
 
 
 

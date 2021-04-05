@@ -1,6 +1,5 @@
 #include <shared.h>
 #include <cpu/fatal_error.h>
-#include <gfx/console.h>
 #include <kmain.h>
 #include <memory/paging.h>
 #include <memory/pm.h>
@@ -19,11 +18,12 @@ PageArrayData* _pg_dt;
 
 
 
-void KERNEL_CALL pm_init(KernelArgs* ka){
+void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD pm_init(KernelArgs* ka){
 	uint64_t sz=((((KERNEL_MEM_MAP_GET_BASE(ka->mmap[ka->mmap_l-1].b)+ka->mmap[ka->mmap_l-1].l-1+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)+sizeof(PageData)*BITS_IN_BYTE-1)/(sizeof(PageData)*BITS_IN_BYTE)*sizeof(PageData)+sizeof(PageArrayData)+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
-	_pg_dt=(PageArrayData*)(void*)vm_current_top();
+	_pg_dt=(PageArrayData*)(void*)ka->n_va;
 	while (sz){
-		paging_set_page(vm_get_top(),ka->n_pa);
+		paging_map_page(ka->n_va,ka->n_pa);
+		ka->n_va+=PAGE_4KB_SIZE;
 		ka->n_pa+=PAGE_4KB_SIZE;
 		sz--;
 		if (ka->n_pa>=KERNEL_MEM_MAP_GET_BASE(ka->mmap[ka->n_pa_idx].b)+ka->mmap[ka->n_pa_idx].l){
@@ -84,4 +84,18 @@ paddr_t KERNEL_CALL pm_get_free(void){
 		_pg_dt->abi=__builtin_ctzll(_pg_dt->e[_pg_dt->ai]);
 	}
 	return o;
+}
+
+
+
+void KERNEL_CALL pm_set_free(paddr_t pa){
+	uint64_t ai=PAGE_GET_ARRAY_INDEX(pa);
+	uint8_t abi=PAGE_GET_BIT_INDEX(pa);
+	_pg_dt->e[ai]|=1ull<<abi;
+	if (ai<_pg_dt->ai){
+		_pg_dt->ai=ai;
+		if (abi<_pg_dt->abi){
+			_pg_dt->abi=abi;
+		}
+	}
 }
