@@ -1,4 +1,5 @@
 queries:
+  - include: "*"
   - exclude: cpp/short-global-name
   - exclude: py/unused-import
 extraction:
@@ -8,9 +9,6 @@ extraction:
         - python3.8
         - gnu-efi
         - nasm
-    configure:
-      command:
-        - python3.8 src/_build/main.py -R
     index:
       build_command:
         - python3.8 src/_build/main.py -k
