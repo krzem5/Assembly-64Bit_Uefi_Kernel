@@ -17,16 +17,15 @@
 
 
 
-lock_t sl;
-uint32_t sll=0;
+lock_t _sl;
 uint32_t _nsi=0;
 
 
 
 void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD lock_init(void){
-	sl=(lock_t)(void*)vm_commit(LOCK_4KB_PAGES_COUNT);
+	_sl=(lock_t)(void*)vm_commit(LOCK_4KB_PAGES_COUNT);
 	for (uint32_t i=0;i<LOCK_COUNT;i++){
-		*(sl+i)=UINT8_MAX;
+		*(_sl+i)=UINT8_MAX;
 	}
 	console_log("Lock List Len: %llu\n",LOCK_COUNT);
 }
@@ -34,10 +33,10 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD lock_init(void){
 
 
 lock_t KERNEL_CALL lock_create(void){
-	lock_t o=sl+_nsi;
+	lock_t o=_sl+_nsi;
 	*o=0;
 	_nsi++;
-	while (*(sl+_nsi)!=UINT8_MAX){
+	while (*(_sl+_nsi)!=UINT8_MAX){
 		_nsi++;
 		if (_nsi>=LOCK_COUNT){
 			fatal_error("Final Lock Allocated!\n");

@@ -18,18 +18,17 @@
 
 
 
-process_t* pl;
-uint32_t pll=0;
+process_t* _pl;
 uint32_t _npi=0;
 process_t* kernel_process;
 
 
 
 void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD process_init(void){
-	pl=(process_t*)(void*)vm_commit(PROCESS_4KB_PAGES_COUNT);
+	_pl=(process_t*)(void*)vm_commit(PROCESS_4KB_PAGES_COUNT);
 	for (uint32_t i=0;i<MAX_PROCESS_ID+1;i++){
-		(pl+i)->f=0;
-		(pl+i)->id=i;
+		(_pl+i)->f=0;
+		(_pl+i)->id=i;
 	}
 	console_log("Max Process ID: %llu\n",MAX_PROCESS_ID);
 	kernel_process=process_create(0);
@@ -38,11 +37,11 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD process_init(void){
 
 
 process_t* KERNEL_CALL process_create(uint8_t p){
-	process_t* o=pl+_npi;
+	process_t* o=_pl+_npi;
 	o->f|=PROCESS_SET_PRESENT|PROCESS_SET_PRIORITY(p);
 	o->tll=0;
 	_npi++;
-	while (PROCESS_GET_PRESENT(pl+_npi)){
+	while (PROCESS_GET_PRESENT(_pl+_npi)){
 		_npi++;
 		if (_npi>MAX_PROCESS_ID){
 			fatal_error("Final Process Allocated!\n");

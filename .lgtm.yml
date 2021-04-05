@@ -1,0 +1,25 @@
+path_classifiers:
+  docs:
+    - src/_build/create_docs.py
+    - src/_build/minify.py
+queries:
+  - exclude: cpp/short-global-name
+  - exclude: py/unused-import
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - python3.8
+        - gnu-efi
+        - nasm
+    configure:
+      command:
+        - python3.8 src/_build/main.py -r
+    index:
+      build_command:
+        - python3.8 src/_build/main.py -k
+  python:
+    python_setup:
+      requirements:
+        - requests
+      version: 3

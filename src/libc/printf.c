@@ -549,8 +549,8 @@ int LIBC_CALL __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_writ
 						cb('_',ctx);
 					}
 #endif
-					uint8_t v=(p>>j)%16;
-					cb(48+(v>9?39:0)+v,ctx);
+					uint8_t c=(p>>j)%16;
+					cb(48+(c>9?39:0)+c,ctx);
 				}
 			}
 		}

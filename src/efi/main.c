@@ -516,7 +516,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 	}
-	for (uint16_t i=0;i<ka->t_pg>>9;i++){
+	for (uint16_t i=0;i<(uint16_t)(ka->t_pg>>9);i++){
 		Print(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<21));
 		*(pt[2]+li[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<21))|0x083;
 	}

@@ -74,8 +74,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	process_init();
 	console_log("Setting Up Thread List...\n");
 	thread_init();
-	console_log("Setting Up Scheduler...\n");
-	scheduler_init();
 	console_log("Clearing ACPI Data...\n");
 	acpi_free_data();
 	console_log("Registering Kernel Threads...\n");

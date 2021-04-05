@@ -16,16 +16,16 @@
 
 
 
-thread_t* tl;
+thread_t* _tl;
 uint32_t _nti=0;
 
 
 
 void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD thread_init(void){
-	tl=(thread_t*)(void*)vm_commit(THREAD_4KB_PAGES_COUNT);
+	_tl=(thread_t*)(void*)vm_commit(THREAD_4KB_PAGES_COUNT);
 	for (uint32_t i=0;i<MAX_THREAD_ID+1;i++){
-		(tl+i)->f=0;
-		(tl+i)->id=i;
+		(_tl+i)->f=0;
+		(_tl+i)->id=i;
 	}
 	console_log("Max Thread ID: %llu\n",MAX_THREAD_ID);
 }
@@ -35,7 +35,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD thread_init(void){
 thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t e,void* a){
 	CHECK_NOT_NULL_STATIC(p);
 	CHECK_NOT_NULL_STATIC(e);
-	thread_t* o=tl+_nti;
+	thread_t* o=_tl+_nti;
 	o->f|=THREAD_SET_PRESENT;
 	o->p=p;
 	asm_clear_thread_data(&o->dt);
@@ -46,6 +46,6 @@ thread_t* KERNEL_CALL create_thread(process_t* p,thread_start_t e,void* a){
 		if (_nti>MAX_THREAD_ID){
 			fatal_error("Final Thread Allocated!\n");
 		}
-	} while (THREAD_GET_PRESENT(tl+_nti));
+	} while (THREAD_GET_PRESENT(_tl+_nti));
 	return o;
 }
