@@ -22,7 +22,7 @@ uint64_t _tm_us_r=1;
 
 
 
-void _hpet_timer_irq_cb(registers_t* r){
+void KERNEL_CALL _hpet_timer_irq_cb(registers_t* r){
 	*(_tm_ptr+33)=HPET_TIMER_TARGET_FREQUENCY*FEMPTOSECONDS_IN_MICROSECOND/_tm_p;
 }
 
