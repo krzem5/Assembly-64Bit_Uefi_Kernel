@@ -11,7 +11,7 @@
 
 idt_entry_t* idt_l=NULL;
 idt_table_t idt={
-	TOTAL_INTERRUPT_NUMBER*sizeof(idt_entry_t)-1,
+	IDT_INTERRUPT_COUNT*sizeof(idt_entry_t)-1,
 	0
 };
 

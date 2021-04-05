@@ -1,9 +1,7 @@
 #ifndef __KERNEL_KMAIN_H__
 #define __KERNEL_KMAIN_H__ 1
 #include <shared.h>
-#ifndef KERNEL_ARGS_STRUCT_ONLY
 #include <stdint.h>
-#endif
 
 
 
@@ -39,7 +37,7 @@ typedef struct __KERNEL_ARGS{
 
 
 
-#ifdef KERNEL_ARGS_STRUCT_ONLY
+#ifdef __EFI_LOADER__
 typedef void (KERNEL_CALL *kmain)(KernelArgs* ka);
 #else
 #define __KERNEL_BASE_VA__ ((uint64_t)___KERNEL_BASE_VA__)

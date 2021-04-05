@@ -1,21 +1,24 @@
-#define KERNEL_ARGS_STRUCT_ONLY 1
+#include <cpu/idt.h>
 #include <efi.h>
 #include <efilib.h>
 #include <efiprot.h>
 #include <kmain.h>
+#include <memory/paging.h>
 #include <stdint.h>
 
 
 
+#ifdef __DEBUG_BUILD__
+#define EFI_LOADER_LOG(...) Print(__VA_ARGS__)
+#else
+#define EFI_LOADER_LOG(...)
+#endif
 #define MIN_MEM_ADDRESS 0x100000
-#define PAGE_SIZE 0x1000
-#define PAGE_TABLE_MAX_ENTRIES 0x200
-#define IDT_SIZE 4096
-#define STACK_SIZE 65536
-#define OTHER_PAGE_COUNT ((IDT_SIZE+STACK_SIZE+4095)>>12)
+#define IDT_SIZE (IDT_INTERRUPT_COUNT*sizeof(idt_entry_t))
+#define KERNEL_STACK_SIZE (PAGE_4KB_SIZE*16)
+#define KERNEL_DATA_PAGE_COUNT ((IDT_SIZE+KERNEL_STACK_SIZE+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)
 #define MAX_KERNEL_FILE_SIZE 0x1000000
 #define PML4_PHYSICAL_ADDRESS 0x200000
-#define PAGE_2MB 0x200000
 #define ELF_HEADER_MAGIC 0x464c457f
 #define ELF_HEADER_WORD_SIZE 2
 #define ELF_HEADER_ENDIANESS 1
@@ -57,7 +60,6 @@ struct ELF_HEADER{
 	uint16_t sh_n;
 	uint16_t sh_str_i;
 } __attribute__((packed));
-
 
 
 
@@ -165,13 +167,13 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	(void)my;
 	s=gop->SetMode(gop,m);
 	if (EFI_ERROR(s)){
-		Print(L"Unable to set mode %03d\r\n",m);
+		Print(L"Unable to Set Display Mode: %03d\r\n",m);
 		goto _end;
 	}
 	else{
-		Print(L"%x -> +%d, %d x %d\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution);
+		EFI_LOADER_LOG(L"Display Mode: %x -> +%d, %d x %d\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution);
 	}
-	Print(L"Starting Loader...\r\n");
+	EFI_LOADER_LOG(L"Starting Loader...\r\n");
 	struct ACPI_RSDP* acpi=NULL;
 	(void)efi_acpi2_guid;
 	for (uint64_t i=0;i<st->NumberOfTableEntries;i++){
@@ -184,7 +186,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"No ACPI Table Found!\r\n");
 		goto _end;
 	}
-	Print(L"Found ACPI Table: %llx\r\n",acpi);
+	EFI_LOADER_LOG(L"Found ACPI Table: %llx\r\n",acpi);
 	for (uint8_t i=0;i<8;i++){
 		if (*(acpi->sig+i)!=*(acpi_rsdp_sig+i)){
 			Print(L"ACPI RSDP Signature not Matching!\r\n");
@@ -213,10 +215,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			hpet=acpi->xsdt->hl[i];
 		}
 		else{
-			Print(L"Unknown XSDT Entry Type: %llx (%c%c%c%c)\r\n",acpi->xsdt->hl[i]->t,acpi->xsdt->hl[i]->t&0xff,(acpi->xsdt->hl[i]->t>>8)&0xff,(acpi->xsdt->hl[i]->t>>16)&0xff,(acpi->xsdt->hl[i]->t>>24)&0xff);
+			EFI_LOADER_LOG(L"Unknown XSDT Entry Type: %llx (%c%c%c%c)\r\n",acpi->xsdt->hl[i]->t,acpi->xsdt->hl[i]->t&0xff,(acpi->xsdt->hl[i]->t>>8)&0xff,(acpi->xsdt->hl[i]->t>>16)&0xff,(acpi->xsdt->hl[i]->t>>24)&0xff);
 		}
 	}
-	Print(L"APIC = %llx, FADT = %llx, HPET = %llx\r\n",apic,fadt,hpet);
+	EFI_LOADER_LOG(L"APIC = %llx, FADT = %llx, HPET = %llx\r\n",apic,fadt,hpet);
 	uint64_t mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	uint64_t mm_k=0;
 	uint64_t mm_ds=0;
@@ -234,7 +236,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 	} while (s!=EFI_SUCCESS);
 	if (bf==NULL){
-		Print(L"Error!\r\n");
+		Print(L"Error Reading Memory Map!\r\n");
 		goto _end;
 	}
 	uint64_t sz=0;
@@ -248,12 +250,12 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 				sz++;
 				lt=t;
 			}
-			le=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)nbf)->NumberOfPages*PAGE_SIZE;
+			le=((EFI_MEMORY_DESCRIPTOR*)nbf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)nbf)->NumberOfPages*PAGE_4KB_SIZE;
 		}
 		nbf+=mm_ds;
 	}
 	KernelArgs* ka;
-	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(sizeof(KernelArgs)+sizeof(KernelArgsMemEntry)*sz+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&ka);
+	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(sizeof(KernelArgs)+sizeof(KernelArgsMemEntry)*sz+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2,(EFI_PHYSICAL_ADDRESS*)&ka);
 	if (EFI_ERROR(s)){
 		Print(L"Unable Allocate Pages for Kernel Args!\r\n");
 		goto _end;
@@ -286,14 +288,14 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 				ka->mmap[j].l=0;
 				lt=t;
 			}
-			ka->mmap[j].l+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
-			le=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
-			tm+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_SIZE;
+			ka->mmap[j].l+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_4KB_SIZE;
+			le=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart+((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_4KB_SIZE;
+			tm+=((EFI_MEMORY_DESCRIPTOR*)bf)->NumberOfPages*PAGE_4KB_SIZE;
 		}
 		bf+=mm_ds;
 	}
 	FreePool(bf);
-	Print(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b),ka->mmap[j].l,KERNEL_MEM_MAP_GET_ACPI(ka->mmap[j].b),tm,sz);
+	EFI_LOADER_LOG(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b),ka->mmap[j].l,KERNEL_MEM_MAP_GET_ACPI(ka->mmap[j].b),tm,sz);
 	EFI_LOADED_IMAGE_PROTOCOL* lip;
 	s=st->BootServices->HandleProtocol(ih,&efi_lip_guid,(void**)&lip);
 	if (EFI_ERROR(s)){
@@ -330,9 +332,9 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Kernel Too Big! (0x%llx > 0x%llx)\r\n",kf_i->FileSize,MAX_KERNEL_FILE_SIZE);
 		goto _end;
 	}
-	Print(L"Kernel File Size: %llu (%llu Pages)\r\n",kf_i->FileSize,(kf_i->FileSize+PAGE_SIZE-1)>>12);
+	EFI_LOADER_LOG(L"Kernel File Size: %llu (%llu Pages)\r\n",kf_i->FileSize,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);
 	void* k_dt;
-	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(kf_i->FileSize+PAGE_SIZE-1)>>12,(EFI_PHYSICAL_ADDRESS*)&k_dt);
+	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2,(EFI_PHYSICAL_ADDRESS*)&k_dt);
 	if (EFI_ERROR(s)){
 		Print(L"Unable to Allocate Memory for Kernel!\r\n");
 		goto _end;
@@ -386,10 +388,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			pe=(k_ph+i)->va+(k_ph+i)->m_sz;
 		}
 	}
-	ka->t_pg=2+PAGE_TABLE_MAX_ENTRIES;
+	ka->t_pg=2+PAGE_TABLE_ENTRIES;
 	ka->u_pg=1;
 	uint16_t li[4]={-1,-1,-1,0};
-	for (uint64_t i=pb;i<pe;i+=PAGE_SIZE){
+	for (uint64_t i=pb;i<pe;i+=PAGE_4KB_SIZE){
 		for (uint8_t k=0;k<3;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;
 			if (li[k]!=l){
@@ -400,13 +402,13 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 	}
-	ka->t_pg=((ka->t_pg+511)>>9)<<9;
-	uint64_t k_pg=(pe-pb+PAGE_SIZE-1)>>12;
-	uint64_t* k_pg_pa=AllocatePool((k_pg+OTHER_PAGE_COUNT)*sizeof(uint64_t));
+	ka->t_pg=((ka->t_pg+PAGE_TABLE_ENTRIES-1)>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2))<<(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2);
+	uint64_t k_pg=(pe-pb+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
+	uint64_t* k_pg_pa=AllocatePool((k_pg+KERNEL_DATA_PAGE_COUNT)*sizeof(uint64_t));
 	uint64_t i=0;
 	j=0;
 	uint64_t k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[0].b);
-	while (i<k_pg+OTHER_PAGE_COUNT){
+	while (i<k_pg+KERNEL_DATA_PAGE_COUNT){
 		if (k>=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b)+ka->mmap[j].l){
 			j++;
 			if (j>=ka->mmap_l){
@@ -416,9 +418,9 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b);
 		}
 		*(k_pg_pa+i)=k;
-		Print(L"Page[%llu] = %llx\r\n",i,k);
+		EFI_LOADER_LOG(L"Page[%llu] = %llx\r\n",i,k);
 		i++;
-		k+=PAGE_SIZE;
+		k+=PAGE_4KB_SIZE;
 	}
 	if (k>=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b)+ka->mmap[j].l){
 		j++;
@@ -431,7 +433,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->n_pa=k;
 	ka->n_pa_idx=j;
 	uint64_t ke=kh->e;
-	Print(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
+	EFI_LOADER_LOG(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
 	j=0;
 	k=-1;
 	for (uint64_t i=0;i<k_pg;i++){
@@ -441,20 +443,20 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if (k==-1){
 			k=(k_ph+j)->f_sz;
 		}
-		st->BootServices->CopyMem((void*)*(k_pg_pa+i),k_dt+(k_ph+j)->off+i*PAGE_SIZE,(k>PAGE_SIZE?PAGE_SIZE:k));
-		Print(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,k_dt+(k_ph+j)->off+i*PAGE_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_SIZE);
-		k-=PAGE_SIZE;
+		st->BootServices->CopyMem((void*)*(k_pg_pa+i),k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,(k>PAGE_4KB_SIZE?PAGE_4KB_SIZE:k));
+		EFI_LOADER_LOG(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_4KB_SIZE);
+		k-=PAGE_4KB_SIZE;
 	}
-	s=st->BootServices->FreePages((EFI_PHYSICAL_ADDRESS)k_dt,(kf_i->FileSize+PAGE_SIZE-1)>>12);
+	s=st->BootServices->FreePages((EFI_PHYSICAL_ADDRESS)k_dt,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);
 	if (EFI_ERROR(s)){
 		Print(L"Error Freeing Kernel File Pages!\r\n");
 		goto _end;
 	}
 	ka->pml4=(uint64_t*)PML4_PHYSICAL_ADDRESS;
-	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,ka->t_pg<<12,(EFI_PHYSICAL_ADDRESS*)&ka->pml4);
+	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,ka->t_pg<<PAGE_4KB_POWER_OF_2,(EFI_PHYSICAL_ADDRESS*)&ka->pml4);
 	uint64_t* cr3=asm_clear_pages_get_cr3((uint64_t)ka->pml4,ka->t_pg);
-	Print(L"PML4 PA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
-	for (uint16_t i=0;i<PAGE_TABLE_MAX_ENTRIES/2;i++){
+	EFI_LOADER_LOG(L"PML4 PA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
+	for (uint16_t i=0;i<PAGE_TABLE_ENTRIES/2;i++){
 		*(ka->pml4+i)=*(cr3+i);
 	}
 	li[0]=-1;
@@ -464,44 +466,44 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t* pt[4]={ka->pml4,NULL,NULL,NULL};
 	j=0;
 	ka->k_sp=0;
-	for (uint64_t i=pb;i<pe+IDT_SIZE+STACK_SIZE;i+=PAGE_SIZE){
+	for (uint64_t i=pb;i<pe+IDT_SIZE+KERNEL_STACK_SIZE;i+=PAGE_4KB_SIZE){
 		for (uint8_t k=0;k<4;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;
 			if (li[k]!=l){
 				li[k]=l;
 				if (k<3){
-					Print(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_MAX_ENTRIES);
-					pt[k+1]=(uint64_t*)((uint8_t*)ka->pml4+(ka->u_pg<<12));
-					*(pt[k]+l)=((uint64_t)pt[k+1])|0x003;
+					EFI_LOADER_LOG(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_ENTRIES);
+					pt[k+1]=(uint64_t*)((uint8_t*)ka->pml4+(ka->u_pg<<PAGE_4KB_POWER_OF_2));
+					*(pt[k]+l)=((uint64_t)pt[k+1])|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 					ka->u_pg++;
 				}
 				else{
-					*(pt[3]+l)=(*(k_pg_pa+j))|0x003;
+					*(pt[3]+l)=(*(k_pg_pa+j))|PAGE_READ_WRITE|PAGE_PRESENT;
 					j++;
 				}
 			}
 		}
 		if (i<pe){
-			Print(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
+			EFI_LOADER_LOG(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 		}
 		else if (i<pe+IDT_SIZE){
-			Print(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
+			EFI_LOADER_LOG(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 			ka->idt=(void*)i;
 		}
 		else{
-			Print(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
+			EFI_LOADER_LOG(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 			if (!ka->k_sp){
-				ka->k_sp=i+STACK_SIZE;
+				ka->k_sp=i+KERNEL_STACK_SIZE;
 			}
 		}
 	}
-	uint64_t pml4_va=pb+((k_pg+OTHER_PAGE_COUNT)<<12);
-	pml4_va+=PAGE_2MB-(pml4_va&(PAGE_2MB-1));
-	Print(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<12,ka->t_pg,(pml4_va>>39)&0x1ff,(pml4_va>>30)&0x1ff,(pml4_va>>21)&0x1ff,(pml4_va>>12)&0x1ff);
-	ka->n_va=pml4_va+(ka->t_pg<<12);
+	uint64_t pml4_va=pb+((k_pg+KERNEL_DATA_PAGE_COUNT)<<PAGE_4KB_POWER_OF_2);
+	pml4_va+=PAGE_2MB_SIZE-(pml4_va&(PAGE_2MB_SIZE-1));
+	EFI_LOADER_LOG(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<PAGE_4KB_POWER_OF_2,ka->t_pg,(pml4_va>>39)&0x1ff,(pml4_va>>PAGE_1GB_POWER_OF_2)&0x1ff,(pml4_va>>PAGE_2MB_POWER_OF_2)&0x1ff,(pml4_va>>PAGE_4KB_POWER_OF_2)&0x1ff);
+	ka->n_va=pml4_va+(ka->t_pg<<PAGE_4KB_POWER_OF_2);
 	ka->va_to_pa=pml4_va-(uint64_t)(void*)ka->pml4;
-	if ((ka->t_pg>>9)>PAGE_TABLE_MAX_ENTRIES){
-		Print(L"Too Many Page Tables! (%llu / %llu)\r\n",ka->t_pg,PAGE_TABLE_MAX_ENTRIES<<9);
+	if ((ka->t_pg>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2))>PAGE_TABLE_ENTRIES){
+		Print(L"Too Many Page Tables! (%llu / %llu)\r\n",ka->t_pg,PAGE_TABLE_ENTRIES<<(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2));
 		goto _end;
 	}
 	for (uint8_t k=0;k<3;k++){
@@ -509,18 +511,18 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if (li[k]!=l){
 			li[k]=l;
 			if (k<2){
-				Print(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_MAX_ENTRIES);
-				pt[k+1]=(uint64_t*)((uint8_t*)ka->pml4+(ka->u_pg<<12));
-				*(pt[k]+l)=((uint64_t)pt[k+1])|0x003;
+				EFI_LOADER_LOG(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_ENTRIES);
+				pt[k+1]=(uint64_t*)((uint8_t*)ka->pml4+(ka->u_pg<<PAGE_4KB_POWER_OF_2));
+				*(pt[k]+l)=((uint64_t)pt[k+1])|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 				ka->u_pg++;
 			}
 		}
 	}
-	for (uint16_t i=0;i<(uint16_t)(ka->t_pg>>9);i++){
-		Print(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<21));
-		*(pt[2]+li[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<21))|0x083;
+	for (uint64_t i=0;i<(ka->t_pg>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2));i++){
+		EFI_LOADER_LOG(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<PAGE_2MB_POWER_OF_2));
+		*(pt[2]+li[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<PAGE_2MB_POWER_OF_2))|PAGE_DIR_SIZE|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 	}
-	Print(L"Extra Page Tables: %llu (%llu Used)\r\n",ka->t_pg-ka->u_pg,ka->u_pg);
+	EFI_LOADER_LOG(L"Extra Page Tables: %llu (%llu Used)\r\n",ka->t_pg-ka->u_pg,ka->u_pg);
 	mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	mm_k=0;
 	mm_ds=0;

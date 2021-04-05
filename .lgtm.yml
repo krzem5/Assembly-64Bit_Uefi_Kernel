@@ -1,7 +1,6 @@
 queries:
   - include: "*"
   - exclude: cpp/short-global-name
-  - exclude: py/unused-import
 extraction:
   cpp:
     prepare:

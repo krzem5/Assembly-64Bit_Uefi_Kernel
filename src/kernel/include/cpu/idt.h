@@ -1,12 +1,14 @@
 #ifndef __KERNEL_CPU_IDT_H__
 #define __KERNEL_CPU_IDT_H__ 1
 #include <shared.h>
+#ifndef __EFI_LOADER__
 #include <kmain.h>
+#endif
 #include <stdint.h>
 
 
 
-#define TOTAL_INTERRUPT_NUMBER 256
+#define IDT_INTERRUPT_COUNT 256
 
 
 
@@ -50,6 +52,7 @@ typedef struct __IDT_ENTRY{
 
 
 
+#ifndef __EFI_LOADER__
 extern void asm_setup_idt(void);
 
 
@@ -59,6 +62,7 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD setup_idt(KernelArgs* ka);
 
 
 void KERNEL_CALL set_idt_entry(uint8_t i,void* a,uint16_t s,uint8_t f);
+#endif
 
 
 
