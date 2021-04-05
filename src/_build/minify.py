@@ -1,4 +1,3 @@
-import base64
 import hashlib
 import os
 import re
@@ -33,7 +32,7 @@ CSS_SELECTOR_WHITESPACE_REGEX=re.compile(br"(?<=[\[\(>+=])\s+|\s+(?=[=~^$|>+\]\)
 CSS_KEYFRAMES_VALUE_REGEX=re.compile(br"\s*([^{]+?)\s*{\s*([^}]*?)\s*}")
 CSS_PROPERTY_KEY_VALUE_REGEX=re.compile(br"\s*(.*?)\s*:\s*(.*?)\s*(?:;|$)")
 CSS_SELECTOR_COMMA_REGEX=re.compile(br",\s+")
-JS_REGEX_LIST={"dict":re.compile(br"""{\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|^"(?:[^"\\]|\\.)*"|^`(?:[^`\\]|\\.)*`)\s*:\s*"""),"dict_elem":re.compile(br""",\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|^"(?:[^"\\]|\\.)*"|^`(?:[^`\\]|\\.)*`)\s*:\s*"""),"float":re.compile(br"\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?"),"int":re.compile(br"0[xX][\da-fA-F]+|0[0-7]*|\d+"),"identifier":re.compile(br"\.?[$_a-zA-Z0-9_]+(?:\.[$_a-zA-Z0-9_]+)*"),"string":re.compile(br"""'(?:[^'\\]|\\.)*'|^"(?:[^"\\]|\\.)*"|^`(?:[^`\\]|\\.)*`"""),"regex":re.compile(br"\/(?:\\.|\[(?:\\.|[^\]])*\]|[^\/])+\/[gimy]*"),"line_break":re.compile(br"[\n\r]+|/\*(?:.|[\r\n])*?\*/"),"whitespace":re.compile(br"[\ \t]+|//.*?(?:[\r\n]|$)"),"operator":re.compile(bytes("|".join([re.sub(r"([\?\|\^\&\(\)\{\}\[\]\+\-\*\/\.])",r"\\\1",e) for e in JS_OPERATORS]),"utf-8"))}
+JS_REGEX_LIST={"dict":re.compile(br"""{\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)\s*:\s*"""),"dict_elem":re.compile(br""",\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)\s*:\s*"""),"float":re.compile(br"\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?"),"int":re.compile(br"0[xX][\da-fA-F]+|0[0-7]*|\d+"),"identifier":re.compile(br"\.?[$_a-zA-Z0-9]+(?:\.[$_a-zA-Z0-9]+)*"),"string":re.compile(br"""'(?:[^'\\]|\\.)*'|^"(?:[^"\\]|\\.)*"|^`(?:[^`\\]|\\.)*`"""),"regex":re.compile(br"\/(?:\\.|\[(?:\\.|[^\]])*\]|[^\/])+\/[gimy]*"),"line_break":re.compile(br"[\n\r]+|/\*(?:.|[\r\n])*?\*/"),"whitespace":re.compile(br"[\ \t]+|//.*?(?:[\r\n]|$)"),"operator":re.compile(bytes("|".join([re.sub(r"([\?\|\^\&\(\)\{\}\[\]\+\-\*\/\.])",r"\\\1",e) for e in JS_OPERATORS]),"utf-8"))}
 JS_STRING_HTML_TAG_REGEX=re.compile(br"<(/?(?:"+bytes(r"|".join(sorted(HTML_TAGS,key=lambda e:-len(e))),"utf-8")+b"))")
 JS_HTML_STRING_UNESCAPE=re.compile(br"""([^\\])\\(['"])""")
 
@@ -77,7 +76,7 @@ def minify_html(html,fp,fp_b):
 					v=v//len(b)
 				o=b[0]*(n-len(o))+o
 			return bytes(o,"utf-8")
-		if (r==None):
+		if (r is None):
 			r=JS_RESERVED_IDENTIFIERS[:]
 		for k in il:
 			r+=k.values()
@@ -183,7 +182,6 @@ def minify_html(html,fp,fp_b):
 					continue
 				raise RuntimeError(f"Unable to Match JS Regex: {str(s[i:],'utf-8')}")
 			return (o,i)
-		ofl=len(js)
 		print("    Tokenizing...")
 		tl,_=_tokenize(js)
 		i=0
@@ -227,7 +225,7 @@ def minify_html(html,fp,fp_b):
 							if (bl not in vdl):
 								vdl[bl]=None
 							else:
-								if (vdl[bl]==None):
+								if (vdl[bl] is None):
 									raise RuntimeError
 								tl=tl[:i-1]+tl[i:]
 								i-=1
@@ -235,7 +233,7 @@ def minify_html(html,fp,fp_b):
 								vdl[bl]=(vdl[bl],i)
 						elif (str(idl[0],"utf-8") not in JS_RESERVED_IDENTIFIERS and (i==0 or (tl[i-1][0]!="operator" or tl[i-1][1]!=b"."))):
 							mv=_map_value(idl[0],vm)
-							if (mv==None):
+							if (mv is None):
 								print(f"      Variable '{str(idl[0],'utf-8')}' is not mapped!")
 								v_nm=True
 							else:
@@ -284,7 +282,6 @@ def minify_html(html,fp,fp_b):
 					efbl[bl]+=[len(ef)-1]
 			elif (tl[i][0]=="operator"):
 				s_ee=True
-				ot=tl[i][1]
 				if (tl[i][1]==b"{"):
 					vm+=[{}]
 					dl+=[False]
@@ -306,12 +303,12 @@ def minify_html(html,fp,fp_b):
 							if (bl in vdl and nm!=None):
 								ftl=ftl[1:]
 								tl[vdl[bl]]=("operator",b",")
-								tl=tl[:vdl[bl]+1]+ftl+([("operator",b"{")] if cbl==None else [])+tl[si+fl+j:i]+([("operator",b"}")] if cbl==None else [])+[("operator",b";")]+tl[vdl[bl]+1:si]+tl[i+1:]
-								i+=-fl+len(ftl)-2+(2 if cbl==None else 0)-j+1
+								tl=tl[:vdl[bl]+1]+ftl+([("operator",b"{")] if cbl is None else [])+tl[si+fl+j:i]+([("operator",b"}")] if cbl is None else [])+[("operator",b";")]+tl[vdl[bl]+1:si]+tl[i+1:]
+								i+=-fl+len(ftl)-2+(2 if cbl is None else 0)-j+1
 								vdl[bl]=i+1
 							else:
-								tl=tl[:si]+ftl+([("operator",b"{")] if cbl==None else [])+tl[si+fl+j:i]+([("operator",b"}")] if cbl==None else [])+[("operator",b";")]+tl[i+1:]
-								i+=-fl+len(ftl)-2+(2 if cbl==None else 0)-j+1
+								tl=tl[:si]+ftl+([("operator",b"{")] if cbl is None else [])+tl[si+fl+j:i]+([("operator",b"}")] if cbl is None else [])+[("operator",b";")]+tl[i+1:]
+								i+=-fl+len(ftl)-2+(2 if cbl is None else 0)-j+1
 								if (nm!=None):
 									vdl[bl]=i+1
 						vm=vm[:-1]
@@ -325,7 +322,7 @@ def minify_html(html,fp,fp_b):
 					s_ee=False
 				elif (tl[i][1]==b";"):
 					if (bl in vdl):
-						if (vdl[bl]==None):
+						if (vdl[bl] is None):
 							vdl[bl]=i
 						elif (type(vdl[bl])!=int):
 							ti,si=vdl[bl]
@@ -381,7 +378,7 @@ def minify_html(html,fp,fp_b):
 							vm[-1][tl[i][1]]=_gen_i(vm,JS_VAR_LETTERS)
 							al+=[(vm[-1][tl[i][1]],va)]
 							i+=1
-						if (al==None or tl[i][0]!="operator" or tl[i][1]!=b"=>"):
+						if (al is None or tl[i][0]!="operator" or tl[i][1]!=b"=>"):
 							i=si
 							vm=vm[:-1]
 						else:
@@ -489,19 +486,18 @@ def minify_html(html,fp,fp_b):
 					ev=None
 					e_nc=False
 					while (e!=b">" and i<len(bf)):
-						if (e in b" \t\r\n\f\v" and (ev==None or ev[0]==b"\"")):
+						if (e in b" \t\r\n\f\v" and (ev is None or ev[0]==b"\"")):
 							if (ev!=None):
 								raise RuntimeError("Not-Quoted JS String HTML not Supported!")
-							pass
 						elif (e_nc):
 							e_nc=False
-							if (ev==None):
+							if (ev is None):
 								ek+=e
 							else:
 								ev+=e
 						elif (e==b"\\"):
 							e_nc=True
-							if (ev==None):
+							if (ev is None):
 								ek+=b"\\"
 							else:
 								ev+=b"\\"
@@ -555,7 +551,7 @@ def minify_html(html,fp,fp_b):
 							else:
 								ev+=b"\""
 						else:
-							if (ev==None):
+							if (ev is None):
 								ek+=e
 							else:
 								ev+=e
@@ -566,12 +562,9 @@ def minify_html(html,fp,fp_b):
 				il=[]
 		print(f"    Finding Global Object Substitutions ({len(vfm.keys())} object{('s' if len(vfm.keys())!=1 else '')})...")
 		cvml=[]
-		dpc=False
 		for k,v in vfm.items():
 			if (v>1):
 				cvml+=[(len(k)*v,k,v,False)]
-				if (b"." in k):
-					dpc=True
 		print(f"    Finding Attribute Substitutions ({len(vfma.keys())} attribute{('s' if len(vfma.keys())!=1 else '')})...")
 		for k,v in vfma.items():
 			if (v>1 and len(k)>2):
@@ -864,11 +857,11 @@ def minify_html(html,fp,fp_b):
 	print("  Parsing HTML...")
 	while (i<len(html)):
 		m=HTML_TAG_REGEX.search(html[i:])
-		if (m==None):
+		if (m is None):
 			break
 		j=m.start(0)
 		if (j!=0):
-			if (r==None):
+			if (r is None):
 				raise RuntimeError("Text Before <html> Tag")
 			c[-1][2].append(("__text__",html[i:i+j]))
 		t_nm=m.group(1)
@@ -897,9 +890,10 @@ def minify_html(html,fp,fp_b):
 						else:
 							vfm[sm[0]]+=1
 						for sme in sm[1:]:
-							vfma[sme]=1
-						else:
-							vfma[sme]+=1
+							if (sme not in vfma):
+								vfma[sme]=1
+							else:
+								vfma[sme]+=1
 				pm[k]=v
 		v=None
 		if (t_nm==b"script" and b"type" in pm and pm[b"type"]==b"text/javascript" and b"src" in pm and b"async" not in pm and b"defer" not in pm):
@@ -941,7 +935,7 @@ def minify_html(html,fp,fp_b):
 			svg+=1
 		elif (t_nm==b"/svg"):
 			svg-=1
-		if (t_nm.lower()!=b"!doctype" and (v==None or ((v[0]=="__css__" and css_t==None) or (v[0]=="__js__" and js_t==None)))):
+		if (t_nm.lower()!=b"!doctype" and (v is None or ((v[0]=="__css__" and css_t is None) or (v[0]=="__js__" and js_t is None)))):
 			if (b"class" in pm):
 				cs=b""
 				for ce in c:
@@ -956,7 +950,7 @@ def minify_html(html,fp,fp_b):
 						stcm[tc]=[cs]
 					elif (cs not in stcm[tc]):
 						stcm[tc]+=[cs]
-			if (r==None):
+			if (r is None):
 				ttc+=1
 				r=(t_nm,pm,[])
 				c=[r]
@@ -974,13 +968,13 @@ def minify_html(html,fp,fp_b):
 						c+=[c[-1][2][-1]]
 		if (v!=None):
 			if (v[0]=="__js__"):
-				if (js_t==None):
+				if (js_t is None):
 					c[-1][2].append((v[1],1))
 					js_t=c[-1][2]
 				else:
 					js_t[0]=(v[1]+b"\n\n\n"+js_t[0][0],js_t[0][1]+1)
 			else:
-				if (css_t==None):
+				if (css_t is None):
 					c[-1][2].append((v[1],1))
 					css_t=c[-1][2]
 					c=c[:-1]
