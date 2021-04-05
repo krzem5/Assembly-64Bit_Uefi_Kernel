@@ -14,7 +14,7 @@ extraction:
         - nasm
     configure:
       command:
-        - python3.8 src/_build/main.py -r
+        - python3.8 src/_build/main.py -R
     index:
       build_command:
         - python3.8 src/_build/main.py -k
