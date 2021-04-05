@@ -1,7 +1,3 @@
-path_classifiers:
-  docs:
-    - src/_build/create_docs.py
-    - src/_build/minify.py
 queries:
   - exclude: cpp/short-global-name
   - exclude: py/unused-import

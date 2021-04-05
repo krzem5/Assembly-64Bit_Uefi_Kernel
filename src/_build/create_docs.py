@@ -30,7 +30,7 @@ with open("src/_build/exports.txt","rb") as f:
 			c=k[:-1]
 		else:
 			if (c==b"structures"):
-				if (c_s==None or len(c_i)==len(c_s_i)):
+				if (c_s is None or len(c_i)==len(c_s_i)):
 					c_s=k[:-1]
 					c_s_i=c_i
 				else:
