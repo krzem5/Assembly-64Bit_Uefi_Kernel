@@ -1,3 +1,3 @@
-# `efi`
+# `uefi`
 
 *No Description*

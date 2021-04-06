@@ -262,7 +262,7 @@ def create_kernel(dbg):
 	for r,_,fl in src_fl:
 		r=r.replace("\\","/")+"/"
 		for f in fl:
-			if (r[:7]=="src/efi"):
+			if (r[:8]=="src/uefi"):
 				if (f[-2:]==".c"):
 					ss=_check_new(f_h_dt,n_f_h_dt,f_inc,r+f,f"build/efi/{(r+f).replace('/','$')}.o")
 					if (ss is not None):
