@@ -5,36 +5,40 @@ import requests
 
 
 
-USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4356.6 Safari/537.36"
-HTML_AUTO_CLOSE_TAGS=["area","base","br","col","embed","hr","img","input","link","meta","param","source","track","wbr"]
-HTML_TAGS=["!doctype","a","abbr","address","area","article","aside","audio","b","base","bdi","bdo","blockquote","body","br","button","canvas","caption","cite","code","col","colgroup","data","datalist","dd","del","details","dfn","dialog","div","dl","dt","em","embed","fieldset","figcaption","figure","footer","form","h1","head","header","hr","html","i","iframe","img","input","ins","kbd","label","legend","li","link","main","map","mark","meta","meter","nav","noscript","object","ol","optgroup","option","output","p","param","picture","pre","progress","q","rp","rt","ruby","s","samp","script","section","select","small","source","span","strong","style","sub","summary","sup","svg","table","tbody","td","template","textarea","tfoot","th","thead","time","title","tr","track","u","ul","var","video","wbr"]
-HTML_TAG_ATTRIBUTE_MAP={"accept":["input"],"accept-charset":["form"],"accesskey":None,"action":["form"],"alt":["area","img","input"],"async":["script"],"autocomplete":["form","input"],"autofocus":["button","input","select","textarea"],"autoplay":["audio","video"],"charset":["meta","script"],"checked":["input"],"cite":["blockquote","del","ins","q"],"class":None,"cols":["textarea"],"colspan":["td","th"],"content":["meta"],"contenteditable":None,"controls":["audio","video"],"coords":["area"],"data":["object"],"datetime":["del","ins","time"],"default":["track"],"defer":["script"],"dir":None,"dirname":["input","textarea"],"disabled":["button","fieldu-ch-t-set","input","optgroup","option","select","textarea"],"download":["a","area"],"draggable":None,"enctype":["form"],"for":["label","output"],"form":["button","fieldset","input","label","meter","object","output","select","textarea"],"formaction":["button","input"],"headers":["td","th"],"height":["canvas","embed","iframe","img","input","object","video"],"hidden":None,"high":["meter"],"href":["a","area","base","link"],"hreflang":["a","area","link"],"http-equiv":["meta"],"id":None,"ismap":["img"],"kind":["track"],"label":["track","option","optgroup"],"lang":None,"list":["input"],"loop":["audio","video"],"low":["meter"],"max":["input","meter","progress"],"maxlength":["input","textarea"],"media":["a","area","link","source","style"],"method":["form"],"min":["input","meter"],"multiple":["input","select"],"muted":["video","audio"],"name":["button","fieldset","form","iframe","input","map","meta","object","output","param","select","textarea"],"novalidate":["form"],"onabort":["audio","embed","img","object","video"],"onafterprint":["body"],"onbeforeprint":["body"],"onbeforeunload":["body"],"onblur":None,"oncanplay":["audio","embed","object","video"],"oncanplaythrough":["audio","video"],"onchange":None,"onclick":None,"oncontextmenu":None,"oncopy":None,"oncuechange":["track"],"oncut":None,"ondblclick":None,"ondrag":None,"ondragend":None,"ondragenter":None,"ondragleave":None,"ondragover":None,"ondragstart":None,"ondrop":None,"ondurationchange":["audio","video"],"onemptied":["audio","video"],"onended":["audio","video"],"onerror":["audio","body","embed","img","object","script","style","video"],"onfocus":None,"onhashchange":["body"],"oninput":None,"oninvalid":None,"onkeydown":None,"onkeypress":None,"onkeyup":None,"onload":["body","iframe","img","input","link","script","style"],"onloadeddata":["audio","video"],"onloadedmetadata":["audio","video"],"onloadstart":["audio","video"],"onmousedown":None,"onmousemove":None,"onmouseout":None,"onmouseover":None,"onmouseup":None,"onmousewheel":None,"onoffline":["body"],"ononline":["body"],"onpagehide":["body"],"onpageshow":["body"],"onpaste":None,"onpause":["audio","video"],"onplay":["audio","video"],"onplaying":["audio","video"],"onpopstate":["body"],"onprogress":["audio","video"],"onratechange":["audio","video"],"onreset":["form"],"onresize":["body"],"onscroll":None,"onsearch":["input"],"onseeked":["audio","video"],"onseeking":["audio","video"],"onselect":None,"onstalled":["audio","video"],"onstorage":["body"],"onsubmit":["form"],"onsuspend":["audio","video"],"ontimeupdate":["audio","video"],"ontoggle":["details"],"onunload":["body"],"onvolumechange":["audio","video"],"onwaiting":["audio","video"],"onwheel":None,"open":["details"],"optimum":["meter"],"pattern":["input"],"placeholder":["input","textarea"],"poster":["video"],"preload":["audio","video"],"readonly":["input","textarea"],"rel":["a","area","form","link"],"required":["input","select","textarea"],"reversed":["ol"],"rows":["textarea"],"rowspan":["td","th"],"sandbox":["iframe"],"scope":["th"],"selected":["option"],"shape":["area"],"size":["input","select"],"sizes":["img","link","source"],"span":["col","colgroup"],"spellcheck":None,"src":["audio","embed","iframe","img","input","script","source","track","video"],"srcdoc":["iframe"],"srclang":["track"],"srcset":["img","source"],"start":["ol"],"step":["input"],"style":None,"tabindex":None,"target":["a","area","base","form"],"title":None,"translate":None,"type":["a","button","embed","input","link","menu","object","script","source","style"],"usemap":["img","object"],"value":["button","input","li","option","meter","progress","param"],"width":["canvas","embed","iframe","img","input","object","video"],"wrap":["textarea"]}
-HTML_TAG_JS_ATTRIBUTES=["onabort","onafterprint","onbeforeprint","onbeforeunload","onblur","oncanplay","oncanplaythrough","onchange","onclick","oncontextmenu","oncopy","oncuechange","oncut","ondblclick","ondrag","ondragend","ondragenter","ondragleave","ondragover","ondragstart","ondrop","ondurationchange","onemptied","onended","onerror","onfocus","onhashchange","oninput","oninvalid","onkeydown","onkeypress","onkeyup","onload","onloadeddata","onloadedmetadata","onloadstart","onmousedown","onmousemove","onmouseout","onmouseover","onmouseup","onmousewheel","onoffline","ononline","onpagehide","onpageshow","onpaste","onpause","onplay","onplaying","onpopstate","onprogress","onratechange","onreset","onresize","onscroll","onsearch","onseeked","onseeking","onselect","onstalled","onstorage","onsubmit","onsuspend","ontimeupdate","ontoggle","onunload","onvolumechange","onwaiting","onwheel"]
+CSS_BRACKET_REGEX=re.compile(br"\([^\)]*?\)")
 CSS_CLASS_LETTERS="abcdefghijklmnopqrstuvwxyz"
-JS_OPERATORS=["()=>","_=>","=>","...",">>>=",">>=","<<=","|=","^=","&=","+=","-=","*=","/=","%=",";",",","?",":","||","&&","|","^","&","===","==","=","!==","!=","<<","<=","<",">>>",">>",">=",">","++","--","+","-","*","/","%","!","~",".","[","]","{","}","(",")"]
-JS_KEYWORDS=["break","case","catch","const","const","continue","debugger","default","delete","do","else","enum","false","finally","for","function","if","in","instanceof","let","new","null","of","return","switch","this","throw","true","try","typeof","var","var","void","while","with"]
-JS_RESERVED_IDENTIFIERS=JS_KEYWORDS+["AggregateError","alert","arguments","Array","ArrayBuffer","AsyncFunction","AsyncGenerator","AsyncGeneratorFunction","atob","Atomics","BigInt","BigInt64Array","BigUint64Array","blur","Boolean","btoa","caches","cancelAnimationFrame","cancelIdleCallback","captureEvents","chrome","clearInterval","clearTimeout","clientInformation","close","closed","confirm","console","cookieStore","createImageBitmap","crossOriginIsolated","crypto","customElements","DataView","Date","decodeURI","decodeURIComponent","defaultStatus","defaultstatus","devicePixelRatio","document","encodeURI","encodeURIComponent","Error","escape","eval","EvalError","external","fetch","find","Float32Array","Float64Array","focus","frameElement","frames","Function","Generator","GeneratorFunction","getComputedStyle","getSelection","globalThis","history","Image","indexedDB","Infinity","innerHeight","innerWidth","Int16Array","Int32Array","Int8Array","InternalError","Intl","isFinite","isNaN","isSecureContext","JSON","length","localStorage","location","locationbar","Map","matchMedia","Math","menubar","moveBy","moveTo","NaN","navigator","Number","Object","open","openDatabase","opener","origin","originIsolated","outerHeight","outerWidth","pageXOffset","pageYOffset","parent","parseFloat","parseInt","performance","personalbar","postMessage","print","Promise","prompt","Proxy","queueMicrotask","RangeError","ReferenceError","Reflect","RegExp","releaseEvents","requestAnimationFrame","requestIdleCallback","resizeBy","resizeTo","screen","screenLeft","screenTop","screenX","screenY","scroll","scrollbars","scrollBy","scrollTo","scrollX","scrollY","self","sessionStorage","Set","setInterval","setTimeout","SharedArrayBuffer","showDirectoryPicker","showOpenFilePicker","showSaveFilePicker","speechSynthesis","status","statusbar","stop","String","styleMedia","Symbol","SyntaxError","toolbar","top","trustedTypes","TypeError","Uint16Array","Uint32Array","Uint8Array","Uint8ClampedArray","undefined","unescape","uneval","URIError","visualViewport","WeakMap","WeakSet","WebAssembly","webkitCancelAnimationFrame","webkitRequestAnimationFrame","webkitRequestFileSystem","webkitResolveLocalFileSystemURL","WebSocket","window"]
-JS_DOCUMENT_CACHE_PROPERTIES=["adoptNode","captureEvents","caretRangeFromPoint","createAttribute","createAttributeNS","createCDATASection","createComment","createDocumentFragment","createElement","createElementNS","createEvent","createNodeIterator","createProcessingInstruction","createRange","createTextNode","createTouch","createTouchList","createTreeWalker","exitPictureInPicture","exitPointerLock","getElementsByClassName","getElementsByTagName","getElementsByTagNameNS","hasStorageAccess","importNode","releaseCapture","releaseEvents","requestStorageAccess","mozSetImageElement","getElementById","querySelector","querySelectorAll","createExpression","createNSResolver","evaluate","clear","close","getElementsByName","hasFocus","open","write","writeln","caretPositionFromPoint","elementFromPoint","elementsFromPoint","getAnimations","getSelection"]
-JS_VAR_LETTERS="abcdefghijklmnopqrstuvwxyz"
-JS_CONST_LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-HTML_REMOVE_WHITEPSACE_REGEX=re.compile(br"(?=(?P<tmp>[^\S ]\s*|\s{2,}))(?P=tmp)(?=(?P<txt>(?=(?P<tmp3>(?:(?=(?P<tmp2>[^<]+))(?P=tmp2)|<(?!\/?(?:textarea|pre)\b))*))(?P=tmp3))(?:<(?=(?P<tmp4>textarea|pre))(?P=tmp4)\b|$))",re.I|re.M|re.X)
-HTML_TAG_REGEX=re.compile(br"<([!/]?[a-zA-Z0-9\-_]+)\s*(.*?)\s*(/?)>",re.I|re.M|re.X)
-HTML_URL_REGEX=re.compile(br"^(?:(?:https?|ftp)://)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\xa1\xff0-9]+-?)*[a-z\xa1-\xff0-9]+)(?:\.(?:[a-z\xa1-\xff0-9]+-?)*[a-z\xa1-\xff0-9]+)*(?:\.(?:[a-z\xa1-\xff]{2,})))(?::\d{2,5})?(?:/[^\s]*)?$",re.I|re.S)
-HTML_ATTRIBUTE_REGEX=re.compile(br'''([a-zA-Z0-9\-_]+)\s*(?:=\s*"((?:[^\"\\]|\\.)*))?"''')
-HTML_QUOTED_ATTRIBUTE_REGEX=re.compile(br"[^a-z0-9\-_]")
-CSS_SELECTOR_REGEX=re.compile(br"([\>\+\~]|\s*)?(#[a-zA-Z0-9_\-]+|\*|(?:[a-zA-Z0-9\-]+)?)((?:\.[a-zA-Z0-9_\-]+)*)((?:\[[a-zA-Z0-9_]+[~|^$*]?=\])*)((?:\:{1,2}[a-zA-Z0-9_\-]+(?:\([^\)]+\))?)*)")
-CSS_UNIT_REGEX=re.compile(br":\s*0(\.\d+(?:[cm]m|e[mx]|in|p[ctx]|fr))\s*;")
 CSS_HEX_COLOR_REGEX=re.compile(br"#([0-9a-fA-F])\1([0-9a-fA-F])\2([0-9a-fA-F])\3(\s|;)")
-CSS_URL_REGEX=re.compile(br"""url\(([\"'])([^)]*)\1\)""")
-CSS_WHITESPACE_REGEX=re.compile(br"/\*[\s\S]*?\*/")
-CSS_SELECTOR_VALUE_REGEX=re.compile(br"\s*([^{]+?)\s*{")
-CSS_SELECTOR_WHITESPACE_REGEX=re.compile(br"(?<=[\[\(>+=])\s+|\s+(?=[=~^$|>+\]\)])")
+CSS_KEYFRAMES_LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+CSS_KEYFRAMES_NAME_REGEX=re.compile(br"^[a-zA-Z_][a-zA-Z0-9_]*$")
 CSS_KEYFRAMES_VALUE_REGEX=re.compile(br"\s*([^{]+?)\s*{\s*([^}]*?)\s*}")
 CSS_PROPERTY_KEY_VALUE_REGEX=re.compile(br"\s*(.*?)\s*:\s*(.*?)\s*(?:;|$)")
 CSS_SELECTOR_COMMA_REGEX=re.compile(br",\s+")
-JS_REGEX_LIST={"dict":re.compile(br"""{\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)\s*:\s*"""),"dict_elem":re.compile(br""",\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)\s*:\s*"""),"float":re.compile(br"\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?"),"int":re.compile(br"0[xX][\da-fA-F]+|0[0-7]*|\d+"),"identifier":re.compile(br"\.?[$_a-zA-Z0-9]+(?:\.[$_a-zA-Z0-9]+)*"),"string":re.compile(br"""'(?:[^'\\]|\\.)*'|^"(?:[^"\\]|\\.)*"|^`(?:[^`\\]|\\.)*`"""),"regex":re.compile(br"\/(?:\\.|\[(?:\\.|[^\]])*\]|[^\/])+\/[gimy]*"),"line_break":re.compile(br"[\n\r]+|/\*(?:.|[\r\n])*?\*/"),"whitespace":re.compile(br"[\ \t]+|//.*?(?:[\r\n]|$)"),"operator":re.compile(bytes("|".join([re.sub(r"([\?\|\^\&\(\)\{\}\[\]\+\-\*\/\.])",r"\\\1",e) for e in JS_OPERATORS]),"utf-8"))}
-JS_STRING_HTML_TAG_REGEX=re.compile(br"<(/?(?:"+bytes(r"|".join(sorted(HTML_TAGS,key=lambda e:-len(e))),"utf-8")+b"))")
+CSS_SELECTOR_REGEX=re.compile(br"([\>\+\~]|\s*)?(#[a-zA-Z0-9_\-]+|\*|(?:[a-zA-Z0-9\-]+)?)((?:\.[a-zA-Z0-9_\-]+)*)((?:\[[a-zA-Z0-9_]+[~|^$*]?=\])*)((?:\:{1,2}[a-zA-Z0-9_\-]+(?:\([^\)]+\))?)*)")
+CSS_SELECTOR_VALUE_REGEX=re.compile(br"\s*([^{]+?)\s*{")
+CSS_SELECTOR_WHITESPACE_REGEX=re.compile(br"(?<=[\[\(>+=])\s+|\s+(?=[=~^$|>+\]\)])")
+CSS_UNIT_REGEX=re.compile(br":\s*0(\.\d+(?:[cm]m|e[mx]|in|p[ctx]|fr))\s*;")
+CSS_URL_REGEX=re.compile(br"""url\(([\"'])([^)]*)\1\)""")
+CSS_WHITESPACE_REGEX=re.compile(br"/\*[\s\S]*?\*/")
+CSS_WHITESPACE_SPLIT_REGEX=re.compile(br"\s+?")
+HTML_ATTRIBUTE_REGEX=re.compile(br'''([a-zA-Z0-9\-_]+)\s*(?:=\s*"((?:[^\"\\]|\\.)*))?"''')
+HTML_AUTO_CLOSE_TAGS=["area","base","br","col","embed","hr","img","input","link","meta","param","source","track","wbr"]
+HTML_QUOTED_ATTRIBUTE_REGEX=re.compile(br"[^a-z0-9\-_]")
+HTML_REMOVE_WHITEPSACE_REGEX=re.compile(br"(?=(?P<tmp>[^\S ]\s*|\s{2,}))(?P=tmp)(?=(?P<txt>(?=(?P<tmp3>(?:(?=(?P<tmp2>[^<]+))(?P=tmp2)|<(?!\/?(?:textarea|pre)\b))*))(?P=tmp3))(?:<(?=(?P<tmp4>textarea|pre))(?P=tmp4)\b|$))",re.I|re.M|re.X)
+HTML_TAG_ATTRIBUTE_MAP={"accept":["input"],"accept-charset":["form"],"accesskey":None,"action":["form"],"alt":["area","img","input"],"async":["script"],"autocomplete":["form","input"],"autofocus":["button","input","select","textarea"],"autoplay":["audio","video"],"charset":["meta","script"],"checked":["input"],"cite":["blockquote","del","ins","q"],"class":None,"cols":["textarea"],"colspan":["td","th"],"content":["meta"],"contenteditable":None,"controls":["audio","video"],"coords":["area"],"data":["object"],"datetime":["del","ins","time"],"default":["track"],"defer":["script"],"dir":None,"dirname":["input","textarea"],"disabled":["button","fieldu-ch-t-set","input","optgroup","option","select","textarea"],"download":["a","area"],"draggable":None,"enctype":["form"],"for":["label","output"],"form":["button","fieldset","input","label","meter","object","output","select","textarea"],"formaction":["button","input"],"headers":["td","th"],"height":["canvas","embed","iframe","img","input","object","video"],"hidden":None,"high":["meter"],"href":["a","area","base","link"],"hreflang":["a","area","link"],"http-equiv":["meta"],"id":None,"ismap":["img"],"kind":["track"],"label":["track","option","optgroup"],"lang":None,"list":["input"],"loop":["audio","video"],"low":["meter"],"max":["input","meter","progress"],"maxlength":["input","textarea"],"media":["a","area","link","source","style"],"method":["form"],"min":["input","meter"],"multiple":["input","select"],"muted":["video","audio"],"name":["button","fieldset","form","iframe","input","map","meta","object","output","param","select","textarea"],"novalidate":["form"],"onabort":["audio","embed","img","object","video"],"onafterprint":["body"],"onbeforeprint":["body"],"onbeforeunload":["body"],"onblur":None,"oncanplay":["audio","embed","object","video"],"oncanplaythrough":["audio","video"],"onchange":None,"onclick":None,"oncontextmenu":None,"oncopy":None,"oncuechange":["track"],"oncut":None,"ondblclick":None,"ondrag":None,"ondragend":None,"ondragenter":None,"ondragleave":None,"ondragover":None,"ondragstart":None,"ondrop":None,"ondurationchange":["audio","video"],"onemptied":["audio","video"],"onended":["audio","video"],"onerror":["audio","body","embed","img","object","script","style","video"],"onfocus":None,"onhashchange":["body"],"oninput":None,"oninvalid":None,"onkeydown":None,"onkeypress":None,"onkeyup":None,"onload":["body","iframe","img","input","link","script","style"],"onloadeddata":["audio","video"],"onloadedmetadata":["audio","video"],"onloadstart":["audio","video"],"onmousedown":None,"onmousemove":None,"onmouseout":None,"onmouseover":None,"onmouseup":None,"onmousewheel":None,"onoffline":["body"],"ononline":["body"],"onpagehide":["body"],"onpageshow":["body"],"onpaste":None,"onpause":["audio","video"],"onplay":["audio","video"],"onplaying":["audio","video"],"onpopstate":["body"],"onprogress":["audio","video"],"onratechange":["audio","video"],"onreset":["form"],"onresize":["body"],"onscroll":None,"onsearch":["input"],"onseeked":["audio","video"],"onseeking":["audio","video"],"onselect":None,"onstalled":["audio","video"],"onstorage":["body"],"onsubmit":["form"],"onsuspend":["audio","video"],"ontimeupdate":["audio","video"],"ontoggle":["details"],"onunload":["body"],"onvolumechange":["audio","video"],"onwaiting":["audio","video"],"onwheel":None,"open":["details"],"optimum":["meter"],"pattern":["input"],"placeholder":["input","textarea"],"poster":["video"],"preload":["audio","video"],"readonly":["input","textarea"],"rel":["a","area","form","link"],"required":["input","select","textarea"],"reversed":["ol"],"rows":["textarea"],"rowspan":["td","th"],"sandbox":["iframe"],"scope":["th"],"selected":["option"],"shape":["area"],"size":["input","select"],"sizes":["img","link","source"],"span":["col","colgroup"],"spellcheck":None,"src":["audio","embed","iframe","img","input","script","source","track","video"],"srcdoc":["iframe"],"srclang":["track"],"srcset":["img","source"],"start":["ol"],"step":["input"],"style":None,"tabindex":None,"target":["a","area","base","form"],"title":None,"translate":None,"type":["a","button","embed","input","link","menu","object","script","source","style"],"usemap":["img","object"],"value":["button","input","li","option","meter","progress","param"],"width":["canvas","embed","iframe","img","input","object","video"],"wrap":["textarea"]}
+HTML_TAG_JS_ATTRIBUTES=["onabort","onafterprint","onbeforeprint","onbeforeunload","onblur","oncanplay","oncanplaythrough","onchange","onclick","oncontextmenu","oncopy","oncuechange","oncut","ondblclick","ondrag","ondragend","ondragenter","ondragleave","ondragover","ondragstart","ondrop","ondurationchange","onemptied","onended","onerror","onfocus","onhashchange","oninput","oninvalid","onkeydown","onkeypress","onkeyup","onload","onloadeddata","onloadedmetadata","onloadstart","onmousedown","onmousemove","onmouseout","onmouseover","onmouseup","onmousewheel","onoffline","ononline","onpagehide","onpageshow","onpaste","onpause","onplay","onplaying","onpopstate","onprogress","onratechange","onreset","onresize","onscroll","onsearch","onseeked","onseeking","onselect","onstalled","onstorage","onsubmit","onsuspend","ontimeupdate","ontoggle","onunload","onvolumechange","onwaiting","onwheel"]
+HTML_TAG_REGEX=re.compile(br"<([!/]?[a-zA-Z0-9\-_]+)\s*(.*?)\s*(/?)>",re.I|re.M|re.X)
+HTML_TAGS=["!doctype","a","abbr","address","area","article","aside","audio","b","base","bdi","bdo","blockquote","body","br","button","canvas","caption","cite","code","col","colgroup","data","datalist","dd","del","details","dfn","dialog","div","dl","dt","em","embed","fieldset","figcaption","figure","footer","form","h1","head","header","hr","html","i","iframe","img","input","ins","kbd","label","legend","li","link","main","map","mark","meta","meter","nav","noscript","object","ol","optgroup","option","output","p","param","picture","pre","progress","q","rp","rt","ruby","s","samp","script","section","select","small","source","span","strong","style","sub","summary","sup","svg","table","tbody","td","template","textarea","tfoot","th","thead","time","title","tr","track","u","ul","var","video","wbr"]
+HTML_URL_REGEX=re.compile(br"^(?:(?:https?|ftp)://)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\xa1\xff0-9]+-?)*[a-z\xa1-\xff0-9]+)(?:\.(?:[a-z\xa1-\xff0-9]+-?)*[a-z\xa1-\xff0-9]+)*(?:\.(?:[a-z\xa1-\xff]{2,})))(?::\d{2,5})?(?:/[^\s]*)?$",re.I|re.S)
+JS_CONST_LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+JS_DOCUMENT_CACHE_PROPERTIES=["adoptNode","captureEvents","caretRangeFromPoint","createAttribute","createAttributeNS","createCDATASection","createComment","createDocumentFragment","createElement","createElementNS","createEvent","createNodeIterator","createProcessingInstruction","createRange","createTextNode","createTouch","createTouchList","createTreeWalker","exitPictureInPicture","exitPointerLock","getElementsByClassName","getElementsByTagName","getElementsByTagNameNS","hasStorageAccess","importNode","releaseCapture","releaseEvents","requestStorageAccess","mozSetImageElement","getElementById","querySelector","querySelectorAll","createExpression","createNSResolver","evaluate","clear","close","getElementsByName","hasFocus","open","write","writeln","caretPositionFromPoint","elementFromPoint","elementsFromPoint","getAnimations","getSelection"]
 JS_HTML_STRING_UNESCAPE=re.compile(br"""([^\\])\\(['"])""")
+JS_KEYWORDS=["break","case","catch","const","const","continue","debugger","default","delete","do","else","enum","false","finally","for","function","if","in","instanceof","let","new","null","of","return","switch","this","throw","true","try","typeof","var","var","void","while","with"]
+JS_OPERATORS=["()=>","_=>","=>","...",">>>=",">>=","<<=","|=","^=","&=","+=","-=","*=","/=","%=",";",",","?",":","||","&&","|","^","&","===","==","=","!==","!=","<<","<=","<",">>>",">>",">=",">","++","--","+","-","*","/","%","!","~",".","[","]","{","}","(",")"]
+JS_REGEX_LIST={"dict":re.compile(br"""{\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)\s*:\s*"""),"dict_elem":re.compile(br""",\s*(?:[$a-zA-Z0-9_]+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)\s*:\s*"""),"float":re.compile(br"\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?"),"int":re.compile(br"0[xX][\da-fA-F]+|0[0-7]*|\d+"),"identifier":re.compile(br"\.?[$_a-zA-Z0-9]+(?:\.[$_a-zA-Z0-9]+)*"),"string":re.compile(br"""'(?:[^'\\]|\\.)*'|^"(?:[^"\\]|\\.)*"|^`(?:[^`\\]|\\.)*`"""),"regex":re.compile(br"\/(?![*+?])(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+\/(?!\/)[igm]{0,3}"),"line_break":re.compile(br"[\n\r]+|/\*(?:.|[\r\n])*?\*/"),"whitespace":re.compile(br"[\ \t]+|//.*?(?:[\r\n]|$)"),"operator":re.compile(bytes("|".join([re.sub(r"([\?\|\^\&\(\)\{\}\[\]\+\-\*\/\.])",r"\\\1",e) for e in JS_OPERATORS]),"utf-8"))}
+JS_RESERVED_IDENTIFIERS=JS_KEYWORDS+["AggregateError","alert","arguments","Array","ArrayBuffer","AsyncFunction","AsyncGenerator","AsyncGeneratorFunction","atob","Atomics","BigInt","BigInt64Array","BigUint64Array","blur","Boolean","btoa","caches","cancelAnimationFrame","cancelIdleCallback","captureEvents","chrome","clearInterval","clearTimeout","clientInformation","close","closed","confirm","console","cookieStore","createImageBitmap","crossOriginIsolated","crypto","customElements","DataView","Date","decodeURI","decodeURIComponent","defaultStatus","defaultstatus","devicePixelRatio","document","encodeURI","encodeURIComponent","Error","escape","eval","EvalError","external","fetch","find","Float32Array","Float64Array","focus","frameElement","frames","Function","Generator","GeneratorFunction","getComputedStyle","getSelection","globalThis","history","Image","indexedDB","Infinity","innerHeight","innerWidth","Int16Array","Int32Array","Int8Array","InternalError","Intl","isFinite","isNaN","isSecureContext","JSON","length","localStorage","location","locationbar","Map","matchMedia","Math","menubar","moveBy","moveTo","NaN","navigator","Number","Object","open","openDatabase","opener","origin","originIsolated","outerHeight","outerWidth","pageXOffset","pageYOffset","parent","parseFloat","parseInt","performance","personalbar","postMessage","print","Promise","prompt","Proxy","queueMicrotask","RangeError","ReferenceError","Reflect","RegExp","releaseEvents","requestAnimationFrame","requestIdleCallback","resizeBy","resizeTo","screen","screenLeft","screenTop","screenX","screenY","scroll","scrollbars","scrollBy","scrollTo","scrollX","scrollY","self","sessionStorage","Set","setInterval","setTimeout","SharedArrayBuffer","showDirectoryPicker","showOpenFilePicker","showSaveFilePicker","speechSynthesis","status","statusbar","stop","String","styleMedia","Symbol","SyntaxError","toolbar","top","trustedTypes","TypeError","Uint16Array","Uint32Array","Uint8Array","Uint8ClampedArray","undefined","unescape","uneval","URIError","visualViewport","WeakMap","WeakSet","WebAssembly","webkitCancelAnimationFrame","webkitRequestAnimationFrame","webkitRequestFileSystem","webkitResolveLocalFileSystemURL","WebSocket","window"]
+JS_STRING_HTML_TAG_REGEX=re.compile(br"<(/?(?:"+bytes(r"|".join(sorted(HTML_TAGS,key=lambda e:-len(e))),"utf-8")+b"))")
+JS_VAR_LETTERS="abcdefghijklmnopqrstuvwxyz"
+USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4356.6 Safari/537.36"
 
 
 
@@ -135,13 +139,15 @@ def minify_html(html,fp,fp_b):
 					o+=[("operator",b"...")]
 				o+=[("identifier",k[0])]
 			return o
-		def _tokenize(s):
+		def _tokenize(s,c_rgx):
 			i=0
 			o=[]
 			b=0
 			while (i<len(s)):
 				e=False
 				for k,v in JS_REGEX_LIST.items():
+					if (k=="regex" and c_rgx==False):
+						continue
 					mo=re.match(v,s[i:])
 					if (mo!=None):
 						m=mo.group(0)
@@ -153,7 +159,7 @@ def minify_html(html,fp,fp_b):
 							f=False
 							while (j<len(m)):
 								if (m[j:j+2]==b"${"):
-									l,tj=_tokenize(m[j+2:])
+									l,tj=_tokenize(m[j+2:],False)
 									j+=tj+2
 									o+=[("string"+("M" if f==True else "S"),(b"`"+ts[1:] if f==False else b"}"+ts)+b"${")]+l
 									ts=b""
@@ -183,7 +189,7 @@ def minify_html(html,fp,fp_b):
 				raise RuntimeError(f"Unable to Match JS Regex: {str(s[i:],'utf-8')}")
 			return (o,i)
 		print("    Tokenizing...")
-		tl,_=_tokenize(js)
+		tl,_=_tokenize(js,True)
 		i=0
 		vm=[{}]
 		ef=[]
@@ -686,12 +692,14 @@ def minify_html(html,fp,fp_b):
 		css=re.sub(CSS_UNIT_REGEX,br":\1;",re.sub(CSS_HEX_COLOR_REGEX,br"#\1\2\3\4",re.sub(CSS_URL_REGEX,br"url(\2)",re.sub(CSS_WHITESPACE_REGEX,b"",css))))
 		i=0
 		eo=b""
-		vm={}
-		vml=[]
+		kfdl=[]
+		kfl={}
 		gc=[]
 		sc=0
 		pc=0
 		ec=0
+		tl=[]
+		ml=[]
 		print("    Parsing Styles...")
 		while (i<len(css)):
 			m=re.match(CSS_SELECTOR_VALUE_REGEX,css[i:])
@@ -706,7 +714,10 @@ def minify_html(html,fp,fp_b):
 					if (css[i:i+1]==b"}"):
 						b-=1
 				s=[re.sub(CSS_SELECTOR_WHITESPACE_REGEX,b"",e.strip()) for e in m.group(1).split(b",")]
-				if (re.split(br"\s",s[0])[0]==b"@keyframes"):
+				if (CSS_WHITESPACE_SPLIT_REGEX.split(s[0])[0]==b"@keyframes"):
+					s=CSS_WHITESPACE_SPLIT_REGEX.split(s[0])
+					if (s[1] not in kfl):
+						kfl[s[1]]=0
 					v=[]
 					l=[]
 					t=[]
@@ -724,8 +735,16 @@ def minify_html(html,fp,fp_b):
 							l=l[:-1]
 							t=t[:-1]
 					if (len(t)>0):
-						eo+=b",".join(s)+b"{"+b"".join([k+b"{"+b";".join([e+b":"+re.sub(CSS_SELECTOR_COMMA_REGEX,b",",v[i][e]) for e in sorted(l[i])])+b"}" for i,k in enumerate(t)])+b"}"
+						kfdl+=[(s[1],b"{"+b"".join([k+b"{"+b";".join([e+b":"+re.sub(CSS_SELECTOR_COMMA_REGEX,b",",v[i][e]) for e in sorted(l[i])])+b"}" for i,k in enumerate(t)])+b"}")]
 						ec+=1
+				elif (CSS_WHITESPACE_SPLIT_REGEX.split(s[0])[0]==b"@media"):
+					mr=_parse_css(css[si:i],tcm)
+					sc+=mr[5]
+					pc+=mr[6]
+					ec+=mr[7]
+					gc+=mr[8]
+					ml+=[(s,mr[1:5])]
+					ec+=1
 				elif (len(s)==1 and s[0]==b"@font-face"):
 					v={}
 					l=[]
@@ -750,18 +769,58 @@ def minify_html(html,fp,fp_b):
 						v[k[0].lower()]=k[1]
 					pc+=len(l)
 					if (len(l)>0):
-						sc+=len(ns)
-						fs=b";".join([e+b":"+re.sub(CSS_SELECTOR_COMMA_REGEX,b",",v[e]) for e in l])
-						fsh=hashlib.sha1(fs).hexdigest()
-						if (fsh not in vm):
-							vml.append(fsh)
-							vm[fsh]=(fs,ns)
-						else:
-							vml.remove(fsh)
-							vml.append(fsh)
-							vm[fsh][1].extend(ns)
+						tl+=[(l,v,ns)]
+						for k in l:
+							if (k==b"animation"):
+								if (b"," in re.sub(CSS_BRACKET_REGEX,br"",v[k])):
+									raise RuntimeError("Commas in animation not yet implemented!")
+								nm=None
+								for e in CSS_WHITESPACE_SPLIT_REGEX.split(v[k]):
+									if (CSS_KEYFRAMES_NAME_REGEX.fullmatch(e) and e not in [b"running",b"paused",b"none",b"forwards",b"backwards",b"both",b"normal",b"reverse",b"alternate",b"alternate-reverse",b"infinite",b"linear",b"ease",b"ease-in",b"ease-out",b"ease-in-out",b"cubic-bezier",b"step-start",b"step-end",b"jump-start",b"jump-end",b"jump-none",b"jump-both",b"start",b"end"]):
+										nm=e
+										break
+								if (nm==None):
+									raise RuntimeError("No Animation Specified!")
+								if (nm not in kfl):
+									kfl[nm]=1
 			i+=1
-		return (sl,vm,vml,eo,sc,pc,ec,gc)
+		nkfl={}
+		kfl=[(k,v) for k,v in sorted(kfl.items(),key=lambda e:e[1]*len(e[0]))]
+		for k,v in kfl:
+			if (v==0):
+				raise RuntimeError(f"@keyframes '{str(k,'utf-8')}' not Used!")
+			nm=_gen_i((nkfl,),CSS_KEYFRAMES_LETTERS)
+			if (len(nm)<=len(k)):
+				nkfl[k]=nm
+		for k,v in kfdl:
+			eo+=b"@keyframes "+nkfl[k]+v
+		vm={}
+		vml=[]
+		for l,v,ns in tl:
+			sc+=len(ns)
+			fs=b""
+			for i,k in enumerate(l):
+				if (i>0):
+					fs+=b";"
+				if (k==b"animation"):
+					nv=b""
+					for j,e in enumerate(CSS_WHITESPACE_SPLIT_REGEX.split(v[k])):
+						if (CSS_KEYFRAMES_NAME_REGEX.fullmatch(e) and e not in [b"running",b"paused",b"none",b"forwards",b"backwards",b"both",b"normal",b"reverse",b"alternate",b"alternate-reverse",b"infinite",b"linear",b"ease",b"ease-in",b"ease-out",b"ease-in-out",b"cubic-bezier",b"step-start",b"step-end",b"jump-start",b"jump-end",b"jump-none",b"jump-both",b"start",b"end"]):
+							e=nkfl[e]
+						if (j>0):
+							nv+=b" "
+						nv+=e
+					v[k]=nv
+				fs+=k+b":"+re.sub(CSS_SELECTOR_COMMA_REGEX,b",",v[k])
+			fsh=hashlib.sha1(fs).hexdigest()
+			if (fsh not in vm):
+				vml.append(fsh)
+				vm[fsh]=(fs,ns)
+			else:
+				vml.remove(fsh)
+				vml.append(fsh)
+				vm[fsh][1].extend(ns)
+		return (sl,vm,vml,ml,eo,sc,pc,ec,gc)
 	def _write_css_selector(k,tcm):
 		o=b""
 		for ss,st,sc,sp,se in k:
@@ -811,6 +870,13 @@ def minify_html(html,fp,fp_b):
 					o+=b" "
 			i+=1
 		return (o,i)
+	def _write_css(vm,vml,ml,eo):
+		o=b""
+		for k in vml:
+			o+=b",".join([_write_css_selector(sk,ntcm) for sk in vm[k][1]])+b"{"+vm[k][0]+b"}"
+		for k,v in ml:
+			o+=b",".join(k)+b"{"+_write_css(*v)+b"}"
+		return o+eo
 	def _write_html(e,tcm,js_om):
 		o=b"<"+e[0]
 		for k,v in e[1].items():
@@ -991,13 +1057,22 @@ def minify_html(html,fp,fp_b):
 		print(f"  Parsing CSS ({css_t[0][1]} script{('s' if css_t[0][1]!=1 else '')}, {len(css_t[0][0])} byte{('s' if len(css_t[0][0])!=1 else '')})...")
 		l+=len(css_t[0][0])
 		css_t[0]=_parse_css(css_t[0][0],tcm)
-		for k in css_t[0][7]:
+		for k in css_t[0][8]:
 			if (k in stcm):
 				del stcm[k]
 	print(f"  Generating Class Names ({len(tcm.keys())} item{('s' if len(tcm.keys())!=1 else '')})...")
 	for k,v in stcm.items():
 		if (len(v)>1):
-			raise RuntimeError(f"Duplicate Non-Global Class '{str(k,'utf-8')}' in {len(v)} Tags: ['{(chr(39)+'; '+chr(39)).join([str(e,'utf-8').replace('$',' > ') for e in v])}']")
+			bl=v[0].count(b"$")
+			b=v[0][:-len(v[0].split(b"$")[-1])-1]
+			ok=True
+			for e in v[1:]:
+				if (e.count(b"$")!=bl or e[:-len(e.split(b"$")[-1])-1]!=b):
+					ok=False
+					break
+			if (ok==True):
+				continue
+			raise RuntimeError(f"Duplicate Non-Global Multi-Level Class '{str(k,'utf-8')}' in {len(v)} Tags: ['{(chr(39)+'; '+chr(39)).join([str(e,'utf-8').replace('$',' > ') for e in v])}']")
 	ntcm={}
 	for k,v in sorted(tcm.items(),key=lambda e:-len(e[0])*e[1]):
 		ntcm[k]=_gen_i([ntcm],CSS_CLASS_LETTERS)
@@ -1043,12 +1118,9 @@ def minify_html(html,fp,fp_b):
 		js_s=f"{ssl} -> {len(js_t[0][1])} (-{round(10000-10000*len(js_t[0][1])/ssl)/100}%)"
 	css_s="none"
 	if (css_t!=None):
-		sl,vm,vml,eo,sc,pc,ec,_=css_t[0]
+		sl,vm,vml,ml,eo,sc,pc,ec,_=css_t[0]
 		print(f"  Regenerating CSS ({len(vml)} style{('s' if len(vml)!=1 else '')}, {sc} selector{('s' if sc!=1 else '')}, {pc} propert{('ies' if pc!=1 else 'y')}, {ec} @-rule{('s' if ec!=1 else '')})...")
-		css_o=b""
-		for k in vml:
-			css_o+=b",".join([_write_css_selector(sk,ntcm) for sk in vm[k][1]])+b"{"+vm[k][0]+b"}"
-		css_o+=eo
+		css_o=_write_css(vm,vml,ml,eo)
 		css_t[0]=("__text__",css_o)
 		css_s=f"{sl} -> {len(css_o)} (-{round(10000-10000*len(css_o)/sl)/100}%)"
 	print(f"  Writing HTML ({ttc} tag{('s' if ttc!=1 else '')})...")
