@@ -9,9 +9,9 @@
 
 
 #ifdef __DEBUG_BUILD__
-#define EFI_LOADER_LOG(...) Print(__VA_ARGS__)
+#define UEFI_LOADER_LOG(...) Print(__VA_ARGS__)
 #else
-#define EFI_LOADER_LOG(...)
+#define UEFI_LOADER_LOG(...)
 #endif
 #define MIN_MEM_ADDRESS 0x100000
 #define IDT_SIZE (IDT_INTERRUPT_COUNT*sizeof(idt_entry_t))
@@ -171,9 +171,9 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		goto _end;
 	}
 	else{
-		EFI_LOADER_LOG(L"Display Mode: %x -> +%d, %d x %d\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution);
+		UEFI_LOADER_LOG(L"Display Mode: %x -> +%d, %d x %d\r\n",gop->Mode->FrameBufferBase,gop->Mode->FrameBufferSize,gop->Mode->Info->HorizontalResolution,gop->Mode->Info->VerticalResolution);
 	}
-	EFI_LOADER_LOG(L"Starting Loader...\r\n");
+	UEFI_LOADER_LOG(L"Starting Loader...\r\n");
 	struct ACPI_RSDP* acpi=NULL;
 	(void)efi_acpi2_guid;
 	for (uint64_t i=0;i<st->NumberOfTableEntries;i++){
@@ -186,7 +186,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"No ACPI Table Found!\r\n");
 		goto _end;
 	}
-	EFI_LOADER_LOG(L"Found ACPI Table: %llx\r\n",acpi);
+	UEFI_LOADER_LOG(L"Found ACPI Table: %llx\r\n",acpi);
 	for (uint8_t i=0;i<8;i++){
 		if (*(acpi->sig+i)!=*(acpi_rsdp_sig+i)){
 			Print(L"ACPI RSDP Signature not Matching!\r\n");
@@ -215,10 +215,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			hpet=acpi->xsdt->hl[i];
 		}
 		else{
-			EFI_LOADER_LOG(L"Unknown XSDT Entry Type: %llx (%c%c%c%c)\r\n",acpi->xsdt->hl[i]->t,acpi->xsdt->hl[i]->t&0xff,(acpi->xsdt->hl[i]->t>>8)&0xff,(acpi->xsdt->hl[i]->t>>16)&0xff,(acpi->xsdt->hl[i]->t>>24)&0xff);
+			UEFI_LOADER_LOG(L"Unknown XSDT Entry Type: %llx (%c%c%c%c)\r\n",acpi->xsdt->hl[i]->t,acpi->xsdt->hl[i]->t&0xff,(acpi->xsdt->hl[i]->t>>8)&0xff,(acpi->xsdt->hl[i]->t>>16)&0xff,(acpi->xsdt->hl[i]->t>>24)&0xff);
 		}
 	}
-	EFI_LOADER_LOG(L"APIC = %llx, FADT = %llx, HPET = %llx\r\n",apic,fadt,hpet);
+	UEFI_LOADER_LOG(L"APIC = %llx, FADT = %llx, HPET = %llx\r\n",apic,fadt,hpet);
 	uint64_t mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	uint64_t mm_k=0;
 	uint64_t mm_ds=0;
@@ -295,7 +295,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		bf+=mm_ds;
 	}
 	FreePool(bf);
-	EFI_LOADER_LOG(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b),ka->mmap[j].l,KERNEL_MEM_MAP_GET_ACPI(ka->mmap[j].b),tm,sz);
+	UEFI_LOADER_LOG(L"  %llx - +%llx (%d)\r\nTotal: %llu (%llu sectors)\r\nAllocating Pages...\r\n",KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b),ka->mmap[j].l,KERNEL_MEM_MAP_GET_ACPI(ka->mmap[j].b),tm,sz);
 	EFI_LOADED_IMAGE_PROTOCOL* lip;
 	s=st->BootServices->HandleProtocol(ih,&efi_lip_guid,(void**)&lip);
 	if (EFI_ERROR(s)){
@@ -332,7 +332,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Kernel Too Big! (0x%llx > 0x%llx)\r\n",kf_i->FileSize,MAX_KERNEL_FILE_SIZE);
 		goto _end;
 	}
-	EFI_LOADER_LOG(L"Kernel File Size: %llu (%llu Pages)\r\n",kf_i->FileSize,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);
+	UEFI_LOADER_LOG(L"Kernel File Size: %llu (%llu Pages)\r\n",kf_i->FileSize,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);
 	void* k_dt;
 	s=st->BootServices->AllocatePages(AllocateAnyPages,0x80000000,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2,(EFI_PHYSICAL_ADDRESS*)&k_dt);
 	if (EFI_ERROR(s)){
@@ -418,7 +418,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			k=KERNEL_MEM_MAP_GET_BASE(ka->mmap[j].b);
 		}
 		*(k_pg_pa+i)=k;
-		EFI_LOADER_LOG(L"Page[%llu] = %llx\r\n",i,k);
+		UEFI_LOADER_LOG(L"Page[%llu] = %llx\r\n",i,k);
 		i++;
 		k+=PAGE_4KB_SIZE;
 	}
@@ -433,7 +433,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->n_pa=k;
 	ka->n_pa_idx=j;
 	uint64_t ke=kh->e;
-	EFI_LOADER_LOG(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
+	UEFI_LOADER_LOG(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
 	j=0;
 	k=-1;
 	for (uint64_t i=0;i<k_pg;i++){
@@ -444,7 +444,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			k=(k_ph+j)->f_sz;
 		}
 		st->BootServices->CopyMem((void*)*(k_pg_pa+i),k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,(k>PAGE_4KB_SIZE?PAGE_4KB_SIZE:k));
-		EFI_LOADER_LOG(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_4KB_SIZE);
+		UEFI_LOADER_LOG(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_4KB_SIZE);
 		k-=PAGE_4KB_SIZE;
 	}
 	s=st->BootServices->FreePages((EFI_PHYSICAL_ADDRESS)k_dt,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);
@@ -455,7 +455,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	ka->pml4=(uint64_t*)PML4_PHYSICAL_ADDRESS;
 	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,ka->t_pg<<PAGE_4KB_POWER_OF_2,(EFI_PHYSICAL_ADDRESS*)&ka->pml4);
 	uint64_t* cr3=asm_clear_pages_get_cr3((uint64_t)ka->pml4,ka->t_pg);
-	EFI_LOADER_LOG(L"PML4 PA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
+	UEFI_LOADER_LOG(L"PML4 PA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
 	for (uint16_t i=0;i<PAGE_TABLE_ENTRIES/2;i++){
 		*(ka->pml4+i)=*(cr3+i);
 	}
@@ -472,7 +472,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			if (li[k]!=l){
 				li[k]=l;
 				if (k<3){
-					EFI_LOADER_LOG(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_ENTRIES);
+					UEFI_LOADER_LOG(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_ENTRIES);
 					pt[k+1]=(uint64_t*)((uint8_t*)ka->pml4+(ka->u_pg<<PAGE_4KB_POWER_OF_2));
 					*(pt[k]+l)=((uint64_t)pt[k+1])|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 					ka->u_pg++;
@@ -484,14 +484,14 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 		if (i<pe){
-			EFI_LOADER_LOG(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
+			UEFI_LOADER_LOG(L"Kernel 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 		}
 		else if (i<pe+IDT_SIZE){
-			EFI_LOADER_LOG(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
+			UEFI_LOADER_LOG(L"IDT 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 			ka->idt=(void*)i;
 		}
 		else{
-			EFI_LOADER_LOG(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
+			UEFI_LOADER_LOG(L"Kernel Stack 4KB Page: [%u : %u : %u : %u] -> %llx (%llx)\r\n",li[0],li[1],li[2],li[3],i,*(k_pg_pa+j-1));
 			if (!ka->k_sp){
 				ka->k_sp=i+KERNEL_STACK_SIZE;
 			}
@@ -499,7 +499,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	}
 	uint64_t pml4_va=pb+((k_pg+KERNEL_DATA_PAGE_COUNT)<<PAGE_4KB_POWER_OF_2);
 	pml4_va+=PAGE_2MB_SIZE-(pml4_va&(PAGE_2MB_SIZE-1));
-	EFI_LOADER_LOG(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<PAGE_4KB_POWER_OF_2,ka->t_pg,(pml4_va>>39)&0x1ff,(pml4_va>>PAGE_1GB_POWER_OF_2)&0x1ff,(pml4_va>>PAGE_2MB_POWER_OF_2)&0x1ff,(pml4_va>>PAGE_4KB_POWER_OF_2)&0x1ff);
+	UEFI_LOADER_LOG(L"Page Table Address: %llx - +%llx (%llu Tables) -> [%u : %u : %u : %u]\r\n",pml4_va,ka->t_pg<<PAGE_4KB_POWER_OF_2,ka->t_pg,(pml4_va>>39)&0x1ff,(pml4_va>>PAGE_1GB_POWER_OF_2)&0x1ff,(pml4_va>>PAGE_2MB_POWER_OF_2)&0x1ff,(pml4_va>>PAGE_4KB_POWER_OF_2)&0x1ff);
 	ka->n_va=pml4_va+(ka->t_pg<<PAGE_4KB_POWER_OF_2);
 	ka->va_to_pa=pml4_va-(uint64_t)(void*)ka->pml4;
 	if ((ka->t_pg>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2))>PAGE_TABLE_ENTRIES){
@@ -511,7 +511,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if (li[k]!=l){
 			li[k]=l;
 			if (k<2){
-				EFI_LOADER_LOG(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_ENTRIES);
+				UEFI_LOADER_LOG(L"New Page Table: #%lu [%u] -> %llx\r\n",ka->u_pg,k+1,ka->pml4+ka->u_pg*PAGE_TABLE_ENTRIES);
 				pt[k+1]=(uint64_t*)((uint8_t*)ka->pml4+(ka->u_pg<<PAGE_4KB_POWER_OF_2));
 				*(pt[k]+l)=((uint64_t)pt[k+1])|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 				ka->u_pg++;
@@ -519,10 +519,10 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		}
 	}
 	for (uint64_t i=0;i<(ka->t_pg>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2));i++){
-		EFI_LOADER_LOG(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<PAGE_2MB_POWER_OF_2));
+		UEFI_LOADER_LOG(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<PAGE_2MB_POWER_OF_2));
 		*(pt[2]+li[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<PAGE_2MB_POWER_OF_2))|PAGE_DIR_SIZE|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 	}
-	EFI_LOADER_LOG(L"Extra Page Tables: %llu (%llu Used)\r\n",ka->t_pg-ka->u_pg,ka->u_pg);
+	UEFI_LOADER_LOG(L"Extra Page Tables: %llu (%llu Used)\r\n",ka->t_pg-ka->u_pg,ka->u_pg);
 	mm_sz=sizeof(EFI_MEMORY_DESCRIPTOR)*32;
 	mm_k=0;
 	mm_ds=0;

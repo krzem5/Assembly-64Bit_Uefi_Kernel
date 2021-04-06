@@ -4,7 +4,11 @@
 
 
 
+#ifdef __KERNEL__
+#define printf(t,...) console_log(t,__VA_ARGS__)
+#else
 int LIBC_CALL printf(const char* t,...);
+#endif
 
 
 

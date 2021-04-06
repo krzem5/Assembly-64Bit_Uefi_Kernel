@@ -37,7 +37,7 @@ typedef struct __KERNEL_ARGS{
 
 
 
-#ifdef __EFI_LOADER__
+#ifdef __UEFI_LOADER__
 typedef void (KERNEL_CALL *kmain)(KernelArgs* ka);
 #else
 #define __KERNEL_BASE_VA__ ((uint64_t)___KERNEL_BASE_VA__)

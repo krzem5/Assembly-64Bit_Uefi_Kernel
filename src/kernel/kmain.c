@@ -9,6 +9,7 @@
 #include <cpu/irq.h>
 #include <cpu/isr.h>
 #include <cpu/pci.h>
+#include <driver/ata.h>
 #include <gfx/console.h>
 #include <gfx/gfx.h>
 #include <kmain.h>
@@ -76,6 +77,9 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	thread_init();
 	console_log("Clearing ACPI Data...\n");
 	acpi_free_data();
+	console_log("Testing Drives...\n");
+	ata_test_drives();
+	for (;;);
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);

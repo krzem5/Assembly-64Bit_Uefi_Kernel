@@ -1,7 +1,7 @@
 #ifndef __KERNEL_MEMORY_PAGING_H__
 #define __KERNEL_MEMORY_PAGING_H__ 1
 #include <shared.h>
-#ifndef __EFI_LOADER__
+#ifndef __UEFI_LOADER__
 #include <kmain.h>
 #include <memory/pm.h>
 #include <memory/vm.h>
@@ -36,7 +36,7 @@
 
 
 
-#ifndef __EFI_LOADER__
+#ifndef __UEFI_LOADER__
 void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD paging_init(KernelArgs* ka);
 
 

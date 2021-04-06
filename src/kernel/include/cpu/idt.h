@@ -1,7 +1,7 @@
 #ifndef __KERNEL_CPU_IDT_H__
 #define __KERNEL_CPU_IDT_H__ 1
 #include <shared.h>
-#ifndef __EFI_LOADER__
+#ifndef __UEFI_LOADER__
 #include <kmain.h>
 #endif
 #include <stdint.h>
@@ -52,7 +52,7 @@ typedef struct __IDT_ENTRY{
 
 
 
-#ifndef __EFI_LOADER__
+#ifndef __UEFI_LOADER__
 extern void asm_setup_idt(void);
 
 

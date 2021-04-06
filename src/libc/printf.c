@@ -577,6 +577,7 @@ int LIBC_CALL __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_writ
 
 
 
+#ifndef __KERNEL__
 int LIBC_CALL printf(const char* t,...){
 	va_list v;
 	va_start(v,t);
@@ -584,3 +585,4 @@ int LIBC_CALL printf(const char* t,...){
 	va_end(v);
 	return o;
 }
+#endif

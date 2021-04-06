@@ -1,6 +1,7 @@
 queries:
   - include: "*"
   - exclude: cpp/short-global-name
+  - exclude: py/redundant-global-declaration
 extraction:
   cpp:
     prepare:

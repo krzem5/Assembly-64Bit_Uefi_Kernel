@@ -1,11 +1,32 @@
-import sys
 from create_docs import create_docs
-from create_resource import create_resource
 from create_kernel import create_kernel
+from create_resource import create_resource
 from run import run
+import ctypes
+import ctypes.wintypes
+import os
+import sys
 
 
 
+class StdStreamWrapper(object):
+	def __init__(self,s):
+		self.__std_s=s
+	def __getattr__(self,k):
+		return getattr(self.__std_s,k)
+	def write(self,dt):
+		ctypes.windll.kernel32.SetConsoleMode(ctypes.windll.kernel32.GetStdHandle(-11),ctypes.wintypes.DWORD(7))
+		self.__std_s.write(dt)
+
+
+
+if (os.name=="nt"):
+	ctypes.windll.kernel32.SetConsoleMode.argtypes=(ctypes.wintypes.HANDLE,ctypes.wintypes.DWORD)
+	ctypes.windll.kernel32.SetConsoleMode.restype=ctypes.wintypes.BOOL
+	ctypes.windll.kernel32.GetStdHandle.argtypes=(ctypes.wintypes.DWORD,)
+	ctypes.windll.kernel32.GetStdHandle.restype=ctypes.wintypes.HANDLE
+	sys.stdout=StdStreamWrapper(sys.stdout)
+	sys.stderr=StdStreamWrapper(sys.stderr)
 dbg=("--debug" in sys.argv)
 if ("-a" in sys.argv or "--all" in sys.argv or "-R" in sys.argv or "--rsrc" in sys.argv):
 	create_resource(dbg)

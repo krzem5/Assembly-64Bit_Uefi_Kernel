@@ -60,6 +60,7 @@
 #define ATA_DRIVER_CONTROL_ZERO 0x00
 #define ATA_DRIVER_CONTROL_DISABLE_INTERRUPTS 0x02
 #define ATA_DRIVER_CONTROL_SOFTWARE_RESET 0x04
+#define ATA_DRIVER_CONTROL_OBSOLETE 0x08
 #define ATA_DRIVER_CONTROL_ENABLE_HIGH_FUNCTIONS 0x80
 #define ATA_DRIVER_IDENTIFY_DEVICE_TYPE_OFFSET 0
 #define ATA_DRIVER_IDENTIFY_CYLINDERS_OFFSET 2
@@ -126,6 +127,10 @@ typedef struct __ATA_DEVICE_LIST{
 
 
 
+extern ata_device_list_t dl;
+
+
+
 extern uint8_t KERNEL_CALL asm_ata_read(ide_controller_channel_t* c,uint8_t r);
 
 
@@ -135,6 +140,10 @@ extern void KERNEL_CALL asm_ata_write(ide_controller_channel_t* c,uint8_t r,uint
 
 
 void KERNEL_CALL ata_init(pci_device_t* pci);
+
+
+
+void KERNEL_CALL ata_test_drives(void);
 
 
 
