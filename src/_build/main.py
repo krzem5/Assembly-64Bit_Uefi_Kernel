@@ -1,7 +1,3 @@
-from create_docs import create_docs
-from create_kernel import create_kernel
-from create_resource import create_resource
-from run import run
 import ctypes
 import ctypes.wintypes
 import os
@@ -29,10 +25,14 @@ if (os.name=="nt"):
 	sys.stderr=StdStreamWrapper(sys.stderr)
 dbg=("--debug" in sys.argv)
 if ("-a" in sys.argv or "--all" in sys.argv or "-R" in sys.argv or "--rsrc" in sys.argv):
+	from create_resource import create_resource
 	create_resource(dbg)
 if ("-a" in sys.argv or "--all" in sys.argv or "-d" in sys.argv or "--docs" in sys.argv):
+	from create_docs import create_docs
 	create_docs(dbg)
 if ("-a" in sys.argv or "--all" in sys.argv or "-k" in sys.argv or "--kernel" in sys.argv):
+	from create_kernel import create_kernel
 	create_kernel(dbg)
 if ("-a" in sys.argv or "--all" in sys.argv or "-r" in sys.argv or "--run" in sys.argv):
+	from run import run
 	run(dbg)
