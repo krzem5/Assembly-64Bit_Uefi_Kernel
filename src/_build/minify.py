@@ -779,7 +779,7 @@ def minify_html(html,fp,fp_b):
 									if (CSS_KEYFRAMES_NAME_REGEX.fullmatch(e) and e not in [b"running",b"paused",b"none",b"forwards",b"backwards",b"both",b"normal",b"reverse",b"alternate",b"alternate-reverse",b"infinite",b"linear",b"ease",b"ease-in",b"ease-out",b"ease-in-out",b"cubic-bezier",b"step-start",b"step-end",b"jump-start",b"jump-end",b"jump-none",b"jump-both",b"start",b"end"]):
 										nm=e
 										break
-								if (nm==None):
+								if (nm is None):
 									raise RuntimeError("No Animation Specified!")
 								if (nm not in kfl):
 									kfl[nm]=1
