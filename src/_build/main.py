@@ -1,7 +1,8 @@
-import ctypes
-import ctypes.wintypes
 import os
 import sys
+if (os.name=="nt"):
+	import ctypes
+	import ctypes.wintypes
 
 
 
