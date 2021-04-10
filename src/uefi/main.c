@@ -436,7 +436,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	UEFI_LOADER_LOG(L"Kernel: %llx -> +%llx; Entrypoint: %llx\r\n",pb,pe-pb,ke);
 	j=0;
 	k=-1;
-	for (uint64_t i=0;i<k_pg;i++){
+	for (i=0;i<k_pg;i++){
 		while ((k_ph+j)->t!=ELF_PT_LOAD){
 			j++;
 		}
@@ -456,7 +456,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	s=st->BootServices->AllocatePages(AllocateAddress,0x80000000,ka->t_pg<<PAGE_4KB_POWER_OF_2,(EFI_PHYSICAL_ADDRESS*)&ka->pml4);
 	uint64_t* cr3=asm_clear_pages_get_cr3((uint64_t)ka->pml4,ka->t_pg);
 	UEFI_LOADER_LOG(L"PML4 PA Pointer: %llx\r\nSetting Up Tables...\r\n",ka->pml4);
-	for (uint16_t i=0;i<PAGE_TABLE_ENTRIES/2;i++){
+	for (i=0;i<PAGE_TABLE_ENTRIES/2;i++){
 		*(ka->pml4+i)=*(cr3+i);
 	}
 	li[0]=-1;
@@ -466,8 +466,8 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 	uint64_t* pt[4]={ka->pml4,NULL,NULL,NULL};
 	j=0;
 	ka->k_sp=0;
-	for (uint64_t i=pb;i<pe+IDT_SIZE+KERNEL_STACK_SIZE;i+=PAGE_4KB_SIZE){
-		for (uint8_t k=0;k<4;k++){
+	for (i=pb;i<pe+IDT_SIZE+KERNEL_STACK_SIZE;i+=PAGE_4KB_SIZE){
+		for (k=0;k<4;k++){
 			uint16_t l=(i>>(39-9*k))&0x1ff;
 			if (li[k]!=l){
 				li[k]=l;
@@ -506,7 +506,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Too Many Page Tables! (%llu / %llu)\r\n",ka->t_pg,PAGE_TABLE_ENTRIES<<(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2));
 		goto _end;
 	}
-	for (uint8_t k=0;k<3;k++){
+	for (k=0;k<3;k++){
 		uint16_t l=(pml4_va>>(39-9*k))&0x1ff;
 		if (li[k]!=l){
 			li[k]=l;
@@ -518,7 +518,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 			}
 		}
 	}
-	for (uint64_t i=0;i<(ka->t_pg>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2));i++){
+	for (i=0;i<(ka->t_pg>>(PAGE_2MB_POWER_OF_2-PAGE_4KB_POWER_OF_2));i++){
 		UEFI_LOADER_LOG(L"Page Table 2MB Page: [%u : %u : %u] -> %llx\r\n",li[0],li[1],li[2]+i,pml4_va+(i<<PAGE_2MB_POWER_OF_2));
 		*(pt[2]+li[2]+i)=(PML4_PHYSICAL_ADDRESS+(i<<PAGE_2MB_POWER_OF_2))|PAGE_DIR_SIZE|PAGE_DIR_READ_WRITE|PAGE_DIR_PRESENT;
 	}
@@ -548,7 +548,7 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		Print(L"Failed to Exit EFI Loader!\r\n");
 		goto _end;
 	}
-	for (uint64_t i=0;i<mm_sz/mm_ds;i++){
+	for (i=0;i<mm_sz/mm_ds;i++){
 		((EFI_MEMORY_DESCRIPTOR*)bf)->VirtualStart=((EFI_MEMORY_DESCRIPTOR*)bf)->PhysicalStart;
 	}
 	asm_enable_paging((uint64_t)ka->pml4);

@@ -541,7 +541,7 @@ int LIBC_CALL __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_writ
 				rs(sizeof(uintptr_t)*2,ctx);
 #endif
 			}
-			uintptr_t p=(uintptr_t)va_arg(v,void*);
+			uintptr_t ptr=(uintptr_t)va_arg(v,void*);
 			if (cb){
 				for (int8_t j=sizeof(uintptr_t)*8-4;j>=0;j-=4){
 #ifdef __KERNEL__
@@ -549,7 +549,7 @@ int LIBC_CALL __vprintf_raw(void* ctx,__vprintf_reserve_func_t rs,__vprintf_writ
 						cb('_',ctx);
 					}
 #endif
-					uint8_t c=(p>>j)%16;
+					uint8_t c=(ptr>>j)%16;
 					cb(48+(c>9?39:0)+c,ctx);
 				}
 			}

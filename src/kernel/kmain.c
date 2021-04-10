@@ -85,5 +85,5 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	create_thread(kernel_process,thread2,NULL);
 	console_log("Kernel '.text_unmap' Section: %p -> +%llu (Pages: %p -> %llu * 4KB)\n",__KERNEL_UNMAP_START__,__KERNEL_UNMAP_END__-__KERNEL_UNMAP_START__,((__KERNEL_UNMAP_START__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)<<PAGE_4KB_POWER_OF_2,((__KERNEL_UNMAP_END__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2)-((__KERNEL_UNMAP_START__+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2));
 	console_ok("Starting Scheduler...\n");
-	// scheduler_start();
+	scheduler_start();
 }

@@ -115,7 +115,7 @@ void KERNEL_CALL ata_init(pci_device_t* pci){
 			dl.f=ATA_DEVICE_LIST_INC_LENGTH(dl)|ATA_DEVICE_LIST_SET_FREE_INDEX(k);
 			dv->ch=c;
 			dv->f=ATA_DEVICE_SET_EXISTS|ATA_DEVICE_SET_DRIVE(j)|ATA_DEVICE_SET_TYPE(t);
-			for (uint8_t k=0;k<40;k+=2){
+			for (k=0;k<40;k+=2){
 				dv->nm[k]=_bf[ATA_DRIVER_IDENTIFY_MODEL_OFFSET+k+1];
 				dv->nm[k+1]=_bf[ATA_DRIVER_IDENTIFY_MODEL_OFFSET+k];
 			}
