@@ -102,11 +102,12 @@ void KERNEL_CALL ata_init(pci_device_t* pci){
 			if (err){
 				continue;
 			}
-			for (uint16_t k=0;k<256;k++){
+			uint16_t k;
+			for (k=0;k<256;k++){
 				*((uint16_t*)_bf+k)=asm_port_in16(ATA_DRIVER_DATA_REGISTER(c));
 			}
 			ata_device_t* dv=dl.dt+ATA_DEVICE_LIST_GET_FREE_INDEX(dl);
-			uint8_t k=ATA_DEVICE_LIST_GET_FREE_INDEX(dl);
+			k=ATA_DEVICE_LIST_GET_FREE_INDEX(dl);
 			for (;k<ATA_MAX_DEVICES;k++){
 				if (!ATA_DEVICE_GET_EXISTS(dl.dt[k])){
 					break;
@@ -126,7 +127,7 @@ void KERNEL_CALL ata_init(pci_device_t* pci){
 			dv->sz=(*((uint64_t*)(_bf+(dv->cmd_set&0x4000000?ATA_DRIVER_IDENTIFY_MAX_LBA_EXT_OFFSET:ATA_DRIVER_IDENTIFY_MAX_LBA_OFFSET))))*ATA_SECTOR_SIZE;
 			dv->pa=pm_get_free();
 			dv->va=vm_commit_fixed(dv->pa);
-			for (uint16_t k=0;k<512;k++){
+			for (k=0;k<512;k++){
 				*((uint64_t*)dv->va+k)=0;
 			}
 			console_log("ATA Device:\n  Flags:        %.2hhx\n  Name:         %s\n  Signature:    %.4hx\n  Capabilities: %.4x\n  Command Set:  %.8x\n  Size:         %lu (%u.%.2u Gb)\n  Buffer PA:   %p\n  Buffer VA:   %p\n",dv->f,dv->nm,dv->sig,dv->cap,dv->cmd_set,dv->sz,dv->sz/1073741824,(dv->sz/10737418)%100,dv->pa,dv->va);

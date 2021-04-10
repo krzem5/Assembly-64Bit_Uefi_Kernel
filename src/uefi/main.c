@@ -443,8 +443,8 @@ void efi_main(EFI_HANDLE ih,EFI_SYSTEM_TABLE* st){
 		if (k==-1){
 			k=(k_ph+j)->f_sz;
 		}
-		st->BootServices->CopyMem((void*)*(k_pg_pa+i),k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,(k>PAGE_4KB_SIZE?PAGE_4KB_SIZE:k));
-		UEFI_LOADER_LOG(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_4KB_SIZE);
+		st->BootServices->CopyMem((void*)*(k_pg_pa+i),(uint8_t*)k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,(k>PAGE_4KB_SIZE?PAGE_4KB_SIZE:k));
+		UEFI_LOADER_LOG(L"Kernel Section#%llu: %llx => %llx -> %llx\r\n",j,(uint8_t*)k_dt+(k_ph+j)->off+i*PAGE_4KB_SIZE,*(k_pg_pa+i),(k_ph+j)->va+i*PAGE_4KB_SIZE);
 		k-=PAGE_4KB_SIZE;
 	}
 	s=st->BootServices->FreePages((EFI_PHYSICAL_ADDRESS)k_dt,(kf_i->FileSize+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2);
