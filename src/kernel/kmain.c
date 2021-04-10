@@ -79,7 +79,6 @@ void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD kmain(KernelArgs* ka){
 	acpi_free_data();
 	console_log("Testing Drives...\n");
 	ata_test_drives();
-	for (;;);
 	console_log("Registering Kernel Threads...\n");
 	create_thread(kernel_process,thread1,NULL);
 	create_thread(kernel_process,thread2,NULL);

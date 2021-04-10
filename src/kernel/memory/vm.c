@@ -40,7 +40,7 @@ uint8_t KERNEL_CALL _vm_pg_f_handler(registers_t* r){
 
 void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD vm_init(KernelArgs* ka){
 	_n_va=ka->n_va;
-	uint64_t pg_c=(((MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)*sizeof(VmMemMapData)+sizeof(sizeof(VmMemMap)))+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
+	uint64_t pg_c=(((MAX_PROCESS_RAM>>PAGE_4KB_POWER_OF_2)/(sizeof(VmMemMapData)*BITS_IN_BYTE)*sizeof(VmMemMapData)+sizeof(VmMemMap))+PAGE_4KB_SIZE-1)>>PAGE_4KB_POWER_OF_2;
 	_vm_dt=(VmMemMap*)(void*)_vm_dt->n_va;
 	while (pg_c){
 		uint64_t pa=pm_get_free();
