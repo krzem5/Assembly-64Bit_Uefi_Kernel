@@ -8,6 +8,6 @@ def run(dbg):
 		quit()
 	print("Starting QEMU...")
 	try:
-		subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=1,cores=8,threads=1","-hda","build/hdd.qcow2","-boot","d","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])
+		subprocess.run(["qemu-system-x86_64","-bios","OVMF.fd","-cpu","max","-smp","cpus=8,sockets=1,cores=8,threads=1","-hda","build/hdd.qcow2","-drive","file=build/os.img,if=ide,format=raw","-m","4G"])
 	except KeyboardInterrupt:
 		pass

@@ -59,12 +59,13 @@ def create_kernel(dbg):
 		l=[INCLUDE_FILE_REGEX.search(e.strip()).group(1) for e in m.group(1).strip().split(b"\n")]
 		il.extend(l)
 		return (b"#include <shared.h>"+(b"\n" if len(l)>1 else b"") if b"shared.h" in l else b"")+b"\n".join([b"#include <"+e+b">" for e in sorted(l) if e!=b"shared.h"])
-	def _check_new(f_h_dt,n_f_h_dt,f_inc,fp,*o_fp):
-		if (fp not in f_h_dt or f_h_dt[fp]!=n_f_h_dt[fp]):
+	def _check_new(f_h_dt,n_f_h_dt,f_inc,fp,o_fp):
+		if (fp not in f_h_dt):
+			return "First Compilation"
+		if (f_h_dt[fp]!=n_f_h_dt[fp]):
 			return "Source Change"
-		for k in o_fp:
-			if (not os.path.exists(k)):
-				return "First Compilation"
+		if (not os.path.exists(o_fp)):
+			return "Compiled File Missing"
 		if (fp not in f_inc):
 			return None
 		for k in f_inc[fp]:
