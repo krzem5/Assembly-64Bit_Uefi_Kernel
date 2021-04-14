@@ -407,7 +407,7 @@ def create_kernel(dbg):
 	if (subprocess.run(["ld","-melf_x86_64","-o","build/libc.so","-s","-shared","-flinker-output=pie","--oformat","elf64-x86-64"]+l_fl).returncode!=0):
 		sys.exit(1)
 	print("  Creaing OS Image\x1b[38;2;100;100;100m...\x1b[0m")
-	if (subprocess.run(["dd","if=/dev/zero","of=build/os.img","bs=512","count=93750"]).returncode!=0 or subprocess.run(["bash","-c","parted build/os.img -s -a minimal mklabel gpt&&parted build/os.img -s -a minimal mkpart UEFI FAT32 2048s 93716s&&parted build/os.img -s -a minimal toggle 1 boot&&dd if=/dev/zero of=build/tmp.img bs=512 count=91669&&mformat -i build/tmp.img -h 32 -t 32 -n 64 -c 1&&mmd -i build/tmp.img ::/UEFI ::/UEFI/BOOT ::/os&&mcopy -i build/tmp.img build/kernel.elf ::/KERNEL.ELF&&mcopy -i build/tmp.img build/loader.efi ::/UEFI/BOOT/BOOTX64.UEFI&&mcopy -i build/tmp.img build/libc.so ::/os/libc.so&&dd if=build/tmp.img of=build/os.img bs=512 count=91669 seek=2048 conv=notrunc"]).returncode!=0):
+	if (subprocess.run(["dd","if=/dev/zero","of=build/os.img","bs=512","count=93750"]).returncode!=0 or subprocess.run(["bash","-c","parted build/os.img -s -a minimal mklabel gpt&&parted build/os.img -s -a minimal mkpart EFI FAT32 2048s 93716s&&parted build/os.img -s -a minimal toggle 1 boot&&dd if=/dev/zero of=build/tmp.img bs=512 count=91669&&mformat -i build/tmp.img -h 32 -t 32 -n 64 -c 1&&mmd -i build/tmp.img ::/EFI ::/EFI/BOOT ::/os&&mcopy -i build/tmp.img build/kernel.elf ::/KERNEL.ELF&&mcopy -i build/tmp.img build/loader.efi ::/EFI/BOOT/BOOTX64.EFI&&mcopy -i build/tmp.img build/libc.so ::/os/libc.so&&dd if=build/tmp.img of=build/os.img bs=512 count=91669 seek=2048 conv=notrunc"]).returncode!=0):
 		sys.exit(1)
 	print("  Cleaning Up\x1b[38;2;100;100;100m...\x1b[0m")
 	os.remove("build/loader.efi")
