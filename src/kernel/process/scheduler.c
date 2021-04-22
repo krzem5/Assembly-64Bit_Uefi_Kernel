@@ -8,10 +8,6 @@
 
 
 
-#define PROCESS_TIME_US 1000ull
-
-
-
 uint8_t scheduler_ready=0;
 
 

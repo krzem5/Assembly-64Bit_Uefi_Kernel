@@ -19,4 +19,7 @@ SECTIONS{
         . = ALIGN(8);
         ___KERNEL_UNMAP_END__ = .;
     }
+    /DISCARD/: {
+        *(.comment)
+    }
 }

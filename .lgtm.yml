@@ -18,7 +18,7 @@ extraction:
         - nasm
     index:
       build_command:
-        - python3.8 src/_build/main.py --kernel
+        - python3.8 src/_build/main.py --kernel --no-color
   python:
     python_setup:
       requirements:
