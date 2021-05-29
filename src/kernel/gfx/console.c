@@ -94,12 +94,12 @@ void KERNEL_CALL _console_print(const char* s,color_t cl){
 	if (!_console_bf){
 		return;
 	}
-	asm_lock_acquire(_console_l);
+	lock_acquire(_console_l);
 	while (*s){
 		_console_print_char(*s,cl,DEFAULT_FONT);
 		s++;
 	}
-	asm_lock_release(_console_l);
+	lock_release(_console_l);
 }
 
 
@@ -108,10 +108,10 @@ void KERNEL_CALL _console_vprint(const char* s,color_t cl,...){
 	if (!_console_bf){
 		return;
 	}
-	asm_lock_acquire(_console_l);
+	lock_acquire(_console_l);
 	va_list v;
 	va_start(v,cl);
 	__vprintf_raw(&cl,NULL,_console_vprintf_write_func,s,v);
 	va_end(v);
-	asm_lock_release(_console_l);
+	lock_release(_console_l);
 }

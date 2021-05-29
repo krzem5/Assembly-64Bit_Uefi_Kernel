@@ -9,19 +9,19 @@ typedef uint8_t* lock_t;
 
 
 
-extern uint64_t KERNEL_CALL asm_lock_acquire(lock_t s);
-
-
-
-extern void KERNEL_CALL asm_lock_release(lock_t s);
-
-
-
 void KERNEL_CALL KERNEL_UNMAP_AFTER_LOAD lock_init(void);
 
 
 
 lock_t KERNEL_CALL lock_create(void);
+
+
+
+void KERNEL_CALL lock_acquire(lock_t l);
+
+
+
+void KERNEL_CALL lock_release(lock_t l);
 
 
 

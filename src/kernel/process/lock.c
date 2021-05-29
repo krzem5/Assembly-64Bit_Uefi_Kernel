@@ -44,3 +44,17 @@ lock_t KERNEL_CALL lock_create(void){
 	}
 	return o;
 }
+
+
+
+void KERNEL_CALL lock_acquire(lock_t l){
+	while (!__sync_bool_compare_and_swap(l,0,1));
+	__sync_synchronize();
+}
+
+
+
+void KERNEL_CALL lock_release(lock_t l){
+	__sync_synchronize();
+	*l=0;
+}
